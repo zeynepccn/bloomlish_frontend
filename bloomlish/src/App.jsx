@@ -2,34 +2,26 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import React from "react";
+import BlogTab from "./components/BlogTab";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className="min-h-screen bg-pink-50">
+      <h1 className="text-3xl text-center font-bold text-pink-600 pt-6">
+        GÜNLÜK YAZILAR
+      </h1>
+      <div className="flex justify-center mt-4">
+        <button className="bg-pink-400 text-white px-6 py-2 rounded-lg mx-2">
+          BLOG
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+        <button className="border border-pink-400 px-6 py-2 rounded-lg mx-2">
+          GÜNLÜĞÜM
+        </button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <BlogTab />
+    </div>
+  );
 }
 
-export default App
+export default App;

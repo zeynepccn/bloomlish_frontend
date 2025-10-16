@@ -1,26 +1,26 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App.js
 import React from "react";
-import BlogTab from "./components/BlogTab";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import BlogPage from "./components/BlogPage";
+import GunlukPage from "./components/GunlukPage";
 
 function App() {
   return (
-    <div className="min-h-screen bg-pink-50">
-      <h1 className="text-3xl text-center font-bold text-pink-600 pt-6">
-        GÜNLÜK YAZILAR
-      </h1>
-      <div className="flex justify-center mt-4">
-        <button className="bg-pink-400 text-white px-6 py-2 rounded-lg mx-2">
-          BLOG
-        </button>
-        <button className="border border-pink-400 px-6 py-2 rounded-lg mx-2">
-          GÜNLÜĞÜM
-        </button>
+    <Router>
+      <div className="flex flex-col h-auto min-h-0 bg-pink-100">
+
+        {/* Navbar üstte sabit */}
+        <Navbar />
+        <div className="flex flex-col items-center py-10">
+          <Routes>
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/gunluk" element={<GunlukPage />} />
+            <Route path="*" element={<BlogPage />} /> {/* Default */}
+          </Routes>
+        </div>
       </div>
-      <BlogTab />
-    </div>
+    </Router>
   );
 }
 

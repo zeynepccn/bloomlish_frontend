@@ -57,7 +57,6 @@ export default function BloomlishStartScreen() {
         <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-100 py-10">
             <div className="max-w-6xl mx-auto px-6">
 
-                {/* === Başlık === */}
 
 
                 <Title
@@ -77,7 +76,6 @@ export default function BloomlishStartScreen() {
 
 
 
-                {/* Butonlar */}
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mt-12">
                     <Button
                         size="large"
@@ -96,7 +94,6 @@ export default function BloomlishStartScreen() {
                 </div>
 
 
-                {/* === 3 Kart (Ant Design Card ile) === */}
                 <Row gutter={[24, 24]} justify="center" className="mb-20">
                     {lessons.map((item, i) => (
                         <Col key={i} xs={24} sm={12} md={8}>
@@ -125,7 +122,7 @@ export default function BloomlishStartScreen() {
                     ))}
                 </Row>
 
-                {/* === Bugün Katılabileceğin Dersler === */}
+
                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-pink-100">
                     <Title
                         level={3}
@@ -144,7 +141,7 @@ export default function BloomlishStartScreen() {
                     />
                 </div>
 
-                {/* === Footer === */}
+
                 <footer className="mt-16 text-center text-gray-400 text-sm">
                     © 2025 <span className="text-pink-500 font-semibold">Bloomlish</span> 🌸 | İngilizceyi eğlenceli hale getir!
                 </footer>

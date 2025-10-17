@@ -1,13 +1,9 @@
-// src/components/Navbar.jsx
 import { NavLink } from "react-router-dom";
 
 function Navbar() {
     return (
         <nav className="w-full bg-pink-200 p-4 flex justify-between items-center shadow-md mb-6">
-            {/* Sol: Uygulama Adı */}
             <h1 className="text-2xl font-bold text-pink-700">Bloomlish</h1>
-
-            {/* Orta: Sekmeler */}
             <div className="flex gap-4">
                 {["Dersler", "Testler", "Oyunlar", "Yazılar"].map((item) => (
                     <NavLink
@@ -25,7 +21,6 @@ function Navbar() {
                 ))}
             </div>
 
-            {/* Sağ: Profil ikonu */}
             <NavLink
                 to="/profile"
                 className="bg-pink-300 p-2 rounded-full hover:bg-pink-400 transition"

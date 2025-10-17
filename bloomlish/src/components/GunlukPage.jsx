@@ -2,19 +2,17 @@ import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
 
 function GunlukPage() {
-    const username = "Zeynep"; // istersen backend’den de alabilirsin
+    const username = "Zeynep";
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);
 
-    // Sayfa açıldığında backend'den yazıları çek
     useEffect(() => {
-        fetch("http://localhost:5000/gunluk") // backend URL’i
+        fetch("http://localhost:5000/gunluk")
             .then((res) => res.json())
             .then((data) => setPosts(data))
             .catch((err) => console.error(err));
     }, []);
 
-    // Yeni yazı yayımla
     const handlePublish = async () => {
         if (text.trim() === "") return;
 

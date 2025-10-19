@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
+import { UserIcon } from "@heroicons/react/24/solid";
 
+import { useNavigate } from "react-router-dom";
 function GunlukPage() {
+    const navigate = useNavigate();
     const username = "Zeynep";
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);
@@ -31,6 +34,10 @@ function GunlukPage() {
             console.error(err);
         }
     };
+    const handleUserClick = (username) => {
+        navigate(`/profile/${username}`);
+    };
+
 
     return (
         <PageLayout title="GÜNLÜK YAZILAR">
@@ -56,7 +63,15 @@ function GunlukPage() {
                             className="border border-pink-200 bg-pink-50 shadow-md rounded-2xl p-4 transition hover:shadow-xl hover:bg-pink-100"
                         >
                             <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-semibold text-pink-600">@{post.username}</h3>
+                                <div
+                                    className="flex items-center gap-2 cursor-pointer hover:text-pink-600 transition"
+                                    onClick={() => handleUserClick(post.username)}
+                                >
+                                    <UserIcon className="h-5 w-5 text-pink-600" />
+                                    <span className="text-sm text-pink-600">@{post.username}</span>
+                                </div>
+
+
                                 <span className="text-sm text-pink-300">{post.date}</span>
                             </div>
                             <p className="text-pink-700 whitespace-pre-line">{post.content}</p>
@@ -65,7 +80,6 @@ function GunlukPage() {
                 </div>
             </div>
         </PageLayout>
-
     );
 }
 

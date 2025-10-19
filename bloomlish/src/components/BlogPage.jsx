@@ -66,37 +66,48 @@ function BlogPage() {
 
     return (
         <PageLayout title="GÜNLÜK YAZILAR">
-            <Card className="w-full max-w-2xl mx-auto bg-pink-50 mb-6">
-                <p className="text-pink-600 mb-4 text-center font-medium">
+            <div className="w-full max-w-md bg-pink-50 rounded-3xl shadow-lg p-6 border border-pink-200 mx-auto mb-6">
+                <p className="text-white drop-shadow-[0_0_3px_#ec4899] mb-4 text-center font-medium">
                     Kendi kısa yazılarını paylaş. Favori gönderilerini beğen ve yorum yap,
                     eğlenerek dil öğren 💗🌸
                 </p>
 
-                <TextArea
+
+                <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Bugün aklında ne var?"
-                    rows={3}
-                    className="mb-4"
+                    className="w-full border border-pink-300 rounded-2xl p-3 outline-none focus:ring-2 focus:ring-pink-300 mb-4 resize-none bg-pink-50 text-pink-800 placeholder-pink-400"
+                    rows="3"
                 />
-                <Button type="primary" block onClick={handlePublish} style={{ backgroundColor: "#ec4899", borderColor: "#ec4899" }}>
-                    Yayımla
-                </Button>
-            </Card>
 
-            <div className="space-y-6">
+                <button
+                    onClick={handlePublish}
+                    className="w-full bg-pink-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-500 transition shadow-md"
+                >
+                    Yayımla
+                </button>
+            </div>
+
+            <div className="space-y-4">
                 {posts.map((post) => (
-                    <Card
+                    <div
                         key={post.id}
-                        title={`@${post.username}`}
-                        extra={<span className="text-sm text-pink-300">{post.date}</span>}
-                        className="max-w-2xl mx-auto bg-pink-50"
+                        className="border border-pink-200 bg-pink-50 shadow-md rounded-2xl p-4 max-w-md mx-auto transition hover:shadow-xl hover:bg-pink-100"
                     >
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-semibold text-pink-600">@{post.username}</h3>
+                            <span className="text-sm text-pink-300">{post.date}</span>
+                        </div>
                         <p className="text-pink-700 whitespace-pre-line mb-4">{post.content}</p>
+
                         <div className="flex items-center gap-4">
-                            <Button type="link" onClick={() => handleLike(post.id)}>
+                            <button
+                                className="text-pink-500 hover:text-pink-600 transition"
+                                onClick={() => handleLike(post.id)}
+                            >
                                 ❤️ {post.likes}
-                            </Button>
+                            </button>
 
                             <CommentSection
                                 postId={post.id}
@@ -104,7 +115,7 @@ function BlogPage() {
                                 onAddComment={handleAddComment}
                             />
                         </div>
-                    </Card>
+                    </div>
                 ))}
             </div>
         </PageLayout>

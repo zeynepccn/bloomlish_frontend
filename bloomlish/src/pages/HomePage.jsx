@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Navbar from "../component/Navbar";
+import Navbar from "../components/Navbar";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
 
 import ing1 from "../assets/images/ing1.jpg";

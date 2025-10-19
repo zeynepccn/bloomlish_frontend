@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Navbar from "../component/Navbar";
+import Navbar from "../components/Navbar";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
-
+import { useNavigate } from "react-router-dom";
 import ing1 from "../assets/images/ing1.jpg";
 import ing2 from "../assets/images/ing2.jpg";
 import ing3 from "../assets/images/ing3.jpg";
@@ -11,7 +11,7 @@ function HomePage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const images = [ing1, ing2, ing3, ing4];
     const [current, setCurrent] = useState(0);
-
+    const navigate = useNavigate();
     const prevSlide = () => {
         setCurrent(current === 0 ? images.length - 1 : current - 1);
     };
@@ -19,7 +19,9 @@ function HomePage() {
     const nextSlide = () => {
         setCurrent(current === images.length - 1 ? 0 : current + 1);
     };
-
+    const handleStart = () => {
+        navigate("/start");
+    };
     const features = [
         {
             title: "DERSLER!",
@@ -52,7 +54,7 @@ function HomePage() {
         <div className="flex flex-col items-center justify-center min-h-screen bg-white font-sans">
             <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-            {/* Hero Section */}
+
             <section className="text-center mt-28 mb-16 px-4">
                 <h2 className="text-2xl md:text-3xl font-semibold text-pink-400 mb-2">
                     BLOOMLISH İLE İNGİLİZCE ÖĞRENMEK ARTIK ÇOK EĞLENCELİ 💖🌸✨
@@ -62,7 +64,10 @@ function HomePage() {
                 </p>
                 {!isLoggedIn && (
                     <div className="flex gap-4 justify-center">
-                        <button className="border border-gray-400 px-6 py-2 rounded-md hover:bg-pink-50 transition">
+                        <button
+                            onClick={handleStart}
+                            className="border border-gray-400 px-6 py-2 rounded-md hover:bg-pink-50 transition"
+                        >
                             Hemen Başla
                         </button>
                         <button className="border border-gray-400 px-6 py-2 rounded-md hover:bg-pink-50 transition">

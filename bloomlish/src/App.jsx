@@ -1,22 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
+import './App.css';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ChatWidget from "./components/ChatWidget";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import Navbar from "./components/Navbar";
 import BlogPage from "./components/BlogPage";
 import GunlukPage from "./components/GunlukPage";
-import RegisterPage from "./components/RegisterPage";
+import BloomlishStartScreen from "./pages/BloomlishStartScreen";
+import RegisterPage from "./pages/RegisterPage";
+
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
     <Router>
-      <div className="flex flex-col h-auto min-h-0 bg-pink-100">
-        <div className="flex flex-col items-center py-10">
-          <Routes>
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/gunluk" element={<GunlukPage />} />
-            <Route path="*" element={<BlogPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Routes>
-        </div>
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <div className="pt-20">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/register" element={<RegisterPage setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/gunluk" element={<GunlukPage />} />
+          <Route path="/start" element={<BloomlishStartScreen />} />
+        </Routes>
       </div>
+      <ChatWidget />
     </Router>
   );
 }

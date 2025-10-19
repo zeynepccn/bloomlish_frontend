@@ -55,7 +55,7 @@ function ChatWidget({ currentUserId }) {
             ],
         }));
 
-        // backenddd
+        // backendd
         /*
         fetch("/api/messages", {
             method: "POST",

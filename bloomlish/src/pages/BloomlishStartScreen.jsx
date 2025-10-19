@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Table, Card, Row, Col, Typography } from "antd";
 import { BookOutlined, MessageOutlined, EditOutlined } from "@ant-design/icons";
-import Footer from "../components/Footer";
+import Footer from "../component/Footer";
 
 
 const { Title, Paragraph } = Typography;

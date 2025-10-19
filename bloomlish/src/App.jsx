@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import ChatWidget from "./component/ChatWidget";
+import ChatWidget from "./components/ChatWidget";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
-import Navbar from "./component/Navbar";
+import Navbar from "./components/Navbar";
+import GunlukPage from "./components/GunlukPage";
+import BloomlishStartScreen from "./pages/BloomlishStartScreen";
+import RegisterPage from "./pages/RegisterPage";
+import BlogPage from "./components/BlogPage";
+import Foooter from "./components/Footer";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -15,14 +20,17 @@ function App() {
       <div className="pt-20">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route
-            path="/login"
-            element={<LoginPage setIsLoggedIn={setIsLoggedIn} />}
-          />
+          <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/gunluk" element={<GunlukPage />} />
+          <Route path="/footer" element={<Foooter />} />
+          <Route path="/start" element={<BloomlishStartScreen />} />
         </Routes>
       </div>
       <ChatWidget />
     </Router>
+
   );
 }
 

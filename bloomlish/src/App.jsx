@@ -1,4 +1,4 @@
-import BloomlishStartScreen from "./components/BloomlishStartScreen";
+import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 
 
 function App() {

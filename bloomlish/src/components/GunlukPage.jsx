@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
 import { UserIcon } from "@heroicons/react/24/solid";
 
-import { useNavigate } from "react-router-dom";
 function GunlukPage() {
-    const navigate = useNavigate();
     const username = "Zeynep";
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);

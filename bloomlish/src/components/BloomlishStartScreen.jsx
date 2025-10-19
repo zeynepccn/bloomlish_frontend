@@ -68,15 +68,19 @@ export default function BloomlishStartScreen() {
                     </span>
                 </Title>
 
-                <Paragraph className="text-gray-600 text-lg sm:text-xl max-w-2xl mx-auto mt-6 leading-relaxed">
-                    Yapay zeka destekli sistemimizle <span className="text-pink-500 font-medium">seviyene uygun</span>
-                    dersleri senin için öneriyoruz.
-                    İstersen birebir özel ders, istersen grup çalışmalarıyla öğrenmeye devam et 💫
+
+                {/* PARAGRAF – span’dan sonra boşluğu garantiye al */}
+                <Paragraph className="text-gray-600 text-lg sm:text-xl max-w-2xl mx-auto mt-6 leading-relaxed text-center">
+                    Yapay zeka destekli sistemimizle{" "}
+                    <span className="text-pink-500 font-medium">seviyene uygun</span>
+                    {" "}
+                    dersleri senin için öneriyoruz. İstersen birebir özel ders, istersen grup
+                    çalışmalarıyla öğrenmeye devam et 💫
                 </Paragraph>
 
 
 
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mt-12">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mt-12 mb-14">
                     <Button
                         size="large"
                         type="primary"

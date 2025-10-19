@@ -5,7 +5,7 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
     const navigate = useNavigate();
 
     return (
-        <nav className="w-full flex justify-between items-center px-10 py-4 shadow-sm bg-white fixed top-0 left-0 z-50">
+        <nav className="w-full flex justify-between items-center px-10 py-4 shadow-sm bg-black fixed top-0 left-0 z-50">
             <h1
                 className="text-2xl font-bold text-pink-400 cursor-pointer"
                 onClick={() => navigate("/")}

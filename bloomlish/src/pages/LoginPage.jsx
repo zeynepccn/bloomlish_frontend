@@ -13,19 +13,39 @@ function LoginPage() {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault();
 
-        // Basit doğrulama
+        
         if (!formData.email || !formData.password) {
             alert("Lütfen tüm alanları doldurunuz!");
             return;
         }
 
-        console.log("Giriş verisi:", formData);
-        // burada backend API ile login işlemi yapılabilir
-        alert("Giriş başarılı!");
-        //navigate("/"); // ana sayfaya yönlendirme
+        try {
+            const response = await fetch("http://localhost:8080/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert("Giriş başarısız: " + errorData.message);
+                return;
+            }
+            const data = await response.json();
+            alert("Giriş başarılı!");
+            localStorage.setItem("token", data.token);
+            navigate("/"); 
+            
+        }
+
+        catch (error) {
+            console.error("Giriş hatası:", error);
+            alert("Sunucuya bağlanırken hata oluştu.");
+        }
     };
 
     return (

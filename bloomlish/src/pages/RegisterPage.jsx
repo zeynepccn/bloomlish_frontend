@@ -35,12 +35,12 @@ function RegisterPage() {
         try {
             setLoading(true);
             const { data } = await axios.post(
-                "https://example.com/api/register",
+                "http://localhost:8080/api/auth/register",
                 {
-                    fullName: formData.fullName,
+                    username: formData.fullName,
                     email: formData.email,
                     password: formData.password,
-                    userType: formData.userType,
+                    role: formData.userType === "ogrenci" ? "STUDENT" : "TEACHER",
                 }
             );
 

@@ -12,16 +12,19 @@ function HomePage() {
     const images = [ing1, ing2, ing3, ing4];
     const [current, setCurrent] = useState(0);
     const navigate = useNavigate();
+
+    //önceki resme geçiş
     const prevSlide = () => {
         setCurrent(current === 0 ? images.length - 1 : current - 1);
     };
-
+    //sonraki resme geçiş
     const nextSlide = () => {
         setCurrent(current === images.length - 1 ? 0 : current + 1);
     };
     const handleStart = () => {
         navigate("/start");
     };
+    
     const features = [
         {
             title: "DERSLER!",

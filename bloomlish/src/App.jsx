@@ -12,6 +12,8 @@ import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
 
 import LessonsPage from "./components/LessonsPage";
+import ProfilePage from "./pages/ProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -29,6 +31,8 @@ function App() {
           <Route path="/footer" element={<Foooter />} />
           <Route path="/start" element={<BloomlishStartScreen />} />
           <Route path="/lessons" element={<LessonsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/edit" element={<EditProfilePage />} />
         </Routes>
       </div>
       <ChatWidget />

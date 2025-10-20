@@ -2,11 +2,13 @@ import React from "react";
 import { Button, Table, Card, Row, Col, Typography } from "antd";
 import { BookOutlined, MessageOutlined, EditOutlined } from "@ant-design/icons";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 
 const { Title, Paragraph } = Typography;
 
 export default function BloomlishStartScreen() {
+    const navigate = useNavigate();
     // Tablo verileri
     const data = [
         { key: 1, tarih: "16.10.2025", ders: "Kelime Geliştirme - A1", hoca: "Ayşe Yılmaz" },
@@ -87,6 +89,7 @@ export default function BloomlishStartScreen() {
                         size="large"
                         type="primary"
                         className="!bg-gradient-to-r !from-pink-500 !to-fuchsia-500 hover:!opacity-90 px-10 py-6 text-lg font-semibold rounded-2xl shadow-[0_10px_30px_rgba(236,72,153,0.25)] border-none transition-transform hover:scale-105"
+                        onClick={() => navigate("/lessons")}
                     >
                         🌸 Dersleri Keşfet
                     </Button>

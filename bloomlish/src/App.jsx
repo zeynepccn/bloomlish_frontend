@@ -11,6 +11,8 @@ import RegisterPage from "./pages/RegisterPage";
 import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
 
+import LessonsPage from "./components/LessonsPage";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -26,6 +28,7 @@ function App() {
           <Route path="/gunluk" element={<GunlukPage />} />
           <Route path="/footer" element={<Foooter />} />
           <Route path="/start" element={<BloomlishStartScreen />} />
+          <Route path="/lessons" element={<LessonsPage />} />
         </Routes>
       </div>
       <ChatWidget />

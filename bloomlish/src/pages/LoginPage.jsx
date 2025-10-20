@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: "",
@@ -13,7 +14,8 @@ function LoginPage() {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = async(e) => {
+    const handleSubmit = async (e) => {
+        setIsLoggedIn(true);
         e.preventDefault();
 
         

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import Navbar from "../components/Navbar";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,12 @@ function HomePage() {
     const [current, setCurrent] = useState(0);
     const navigate = useNavigate();
 
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) setIsLoggedIn(true);
+    }, []);
+    
     //önceki resme geçiş
     const prevSlide = () => {
         setCurrent(current === 0 ? images.length - 1 : current - 1);

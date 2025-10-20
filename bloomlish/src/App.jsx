@@ -14,6 +14,7 @@ import Foooter from "./components/Footer";
 import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
+import BillingSketchPage from "./pages/BillingSketchPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,6 +34,9 @@ function App() {
           <Route path="/lessons" element={<LessonsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
+          <Route path="/billing" element={<BillingSketchPage />} />
+          {/* kendi premium sayfanla doldur */}
+
         </Routes>
       </div>
       <ChatWidget />

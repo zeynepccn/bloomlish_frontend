@@ -81,14 +81,14 @@ export default function ProfilePage() {
                             className="!rounded-xl"
                             onClick={() => n("/profile/edit")}
                         >
-                            Edit Profile
+                            Profili Düzenle
                         </Button>
                         <Button
                             icon={<CreditCardOutlined />}
                             className="!rounded-xl"
                             onClick={() => n("/billing")}
                         >
-                            Payment Information
+                            Ödeme Bilgileri
                         </Button>
                         <Button
                             danger

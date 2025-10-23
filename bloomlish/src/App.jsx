@@ -15,7 +15,7 @@ import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
-import PricingTable from "./pages/PricingTable";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 

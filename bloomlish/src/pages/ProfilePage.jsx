@@ -155,8 +155,8 @@ export default function ProfilePage() {
                                 <Progress
                                     percent={progressPct}
                                     strokeColor={{
-                                        from: "#ec4899", // pink-500
-                                        to: "#a21caf", // fuchsia-700
+                                        from: "#ec4899",
+                                        to: "#a21caf",
                                     }}
                                     status="active"
                                     className="[&_.ant-progress-inner]:!rounded-lg"

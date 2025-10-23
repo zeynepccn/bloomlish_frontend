@@ -12,9 +12,7 @@ import { CheckOutlined } from "@ant-design/icons";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
-/**
- * Yardımcılar
- */
+
 const formatTR = (d) =>
     `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 
@@ -77,21 +75,6 @@ export default function PremiumPlanPage() {
     const handleDownloadPDF = () => {
         // Hızlı çözüm: yazdır/PDF’e kaydet
         window.print();
-
-        // Eğer jsPDF + html2canvas kullanmak istersen:
-        // 1) npm i jspdf html2canvas
-        // 2) aşağıyı aç:
-        // import jsPDF from "jspdf";
-        // import html2canvas from "html2canvas";
-        // const node = printableRef.current;
-        // html2canvas(node).then((canvas) => {
-        //   const imgData = canvas.toDataURL("image/png");
-        //   const pdf = new jsPDF("p", "mm", "a4");
-        //   const pageWidth = pdf.internal.pageSize.getWidth();
-        //   const pageHeight = (canvas.height * pageWidth) / canvas.width;
-        //   pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
-        //   pdf.save("faturalar.pdf");
-        // });
     };
 
     return (

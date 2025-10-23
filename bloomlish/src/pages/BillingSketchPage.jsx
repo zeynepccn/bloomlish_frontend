@@ -90,7 +90,7 @@ export default function BillingSketchPage() {
                         <Tag
                             color="pink"
                             className="!absolute -top-3 -right-3 !rounded-xl !px-3 !py-1 !text-xs shadow"
-                            icon={<CheckOutlined />}
+
                         >
                             %{plan.discount} indirim
                         </Tag>

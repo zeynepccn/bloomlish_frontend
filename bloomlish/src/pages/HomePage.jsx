@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import ing1 from "../assets/images/ing1.jpg";
 import ing2 from "../assets/images/ing2.jpg";
 import ing3 from "../assets/images/ing3.jpg";
 import ing4 from "../assets/images/ing4.jpg";
+
 
 function HomePage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -18,7 +19,7 @@ function HomePage() {
         const token = localStorage.getItem("token");
         if (token) setIsLoggedIn(true);
     }, []);
-    
+
     //önceki resme geçiş
     const prevSlide = () => {
         setCurrent(current === 0 ? images.length - 1 : current - 1);
@@ -30,7 +31,7 @@ function HomePage() {
     const handleStart = () => {
         navigate("/start");
     };
-    
+
     const features = [
         {
             title: "DERSLER!",
@@ -99,13 +100,23 @@ function HomePage() {
                         <p className="text-xs text-gray-500 mb-3">{item.desc}</p>
 
                         {isLoggedIn && (
-                            <button className="w-full text-sm border border-gray-300 rounded-md py-1 hover:bg-pink-50 transition">
+                            <button
+                                onClick={() => {
+                                    if (item.title === "DERSLER!") {
+                                        navigate("/lessons");
+                                    } else {
+                                        console.log(`${item.title} sayfası yakında eklenecek ✨`);
+                                    }
+                                }}
+                                className="w-full text-sm border border-gray-300 rounded-md py-1 hover:bg-pink-50 transition"
+                            >
                                 Keşfet ✨
                             </button>
                         )}
                     </div>
                 ))}
             </section>
+
 
             {/* Kaydırmalı Resim Alanı */}
             <div className="relative w-full max-w-7xl mx-auto mt-10 mb-10 px-4">

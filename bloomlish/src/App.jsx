@@ -5,10 +5,17 @@ import ChatWidget from "./components/ChatWidget";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import Navbar from "./components/Navbar";
-import BlogPage from "./components/BlogPage";
 import GunlukPage from "./components/GunlukPage";
-import BloomlishStartScreen from "./pages/BloomlishStartScreen";  
+import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 import RegisterPage from "./pages/RegisterPage";
+import BlogPage from "./components/BlogPage";
+import Foooter from "./components/Footer";
+
+import LessonsPage from "./components/LessonsPage";
+import ProfilePage from "./pages/ProfilePage";
+import EditProfilePage from "./pages/EditProfilePage";
+import BillingSketchPage from "./pages/BillingSketchPage";
+import PremiumPlanPage from "./pages/PremiumPlanPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,14 +32,22 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
-          <Route path="/register" element={<RegisterPage setIsLoggedIn={setIsLoggedIn} />} />
-          <Route path="/blog" element={<BlogPage/>} />
-          <Route path="/gunluk" element={<GunlukPage/>} />
-          <Route path="/start" element={<BloomlishStartScreen/>} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/gunluk" element={<GunlukPage />} />
+          <Route path="/footer" element={<Foooter />} />
+          <Route path="/start" element={<BloomlishStartScreen />} />
+          <Route path="/lessons" element={<LessonsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/edit" element={<EditProfilePage />} />
+          <Route path="/billing" element={<BillingSketchPage />} />
+          <Route path="/premium" element={<PremiumPlanPage />} />
+          {/* kendi premium sayfanla doldur */}
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}
     </Router>
+
   );
 }
 

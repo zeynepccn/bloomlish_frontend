@@ -4,6 +4,14 @@ import { useNavigate } from "react-router-dom";
 function Navbar({ isLoggedIn, setIsLoggedIn }) {
     const navigate = useNavigate();
 
+
+    const handlelogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        setIsLoggedIn(false);
+        navigate("/");
+    }
+
     return (
         <nav className="w-full flex justify-between items-center px-10 py-4 shadow-sm bg-white fixed top-0 left-0 z-50">
             <h1
@@ -23,7 +31,7 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
                             Ana Sayfa
                         </button>
                         <button
-                            onClick={() => setIsLoggedIn(false)}
+                            onClick={handlelogout}
                             className="border border-gray-300 rounded-md px-4 py-1 text-sm hover:bg-gray-100 transition"
                         >
                             Çıkış Yap

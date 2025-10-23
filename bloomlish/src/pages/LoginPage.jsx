@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function LoginPage() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    function LoginPage({ setIsLoggedIn }) {
+
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: "",
@@ -15,7 +15,6 @@ function LoginPage() {
     };
 
     const handleSubmit = async (e) => {
-        setIsLoggedIn(true);
         e.preventDefault();
 
         
@@ -40,6 +39,8 @@ function LoginPage() {
             const data = await response.json();
             alert("Giriş başarılı!");
             localStorage.setItem("token", data.token);
+            localStorage.setItem("userId", data.userId);
+            setIsLoggedIn(true);
             navigate("/"); 
             
         }

@@ -12,6 +12,11 @@ import RegisterPage from "./pages/RegisterPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const storedId = localStorage.getItem("userId");
+  const userId = storedId ? Number(storedId) : null;
+  console.log("✅ userId:", localStorage.getItem("userId"));
+  console.log("✅ userId (Number):", Number(localStorage.getItem("userId")));
+
 
   return (
     <Router>
@@ -26,7 +31,7 @@ function App() {
           <Route path="/start" element={<BloomlishStartScreen/>} />
         </Routes>
       </div>
-      <ChatWidget />
+      {userId && userId > 0 && <ChatWidget currentUserId={userId} />}
     </Router>
   );
 }

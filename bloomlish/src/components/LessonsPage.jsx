@@ -186,7 +186,7 @@ export default function LessonsPage() {
                         <Text className="text-gray-500">Açılmış güncel dersleri filtrele, karşılaştır ve kaydol.</Text>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-2">
+                    <div className="hidden md:flex items-center gap-3">
                         <Tooltip title="Popüler dersler">
                             <Button icon={<CrownOutlined />} className="!rounded-xl" />
                         </Tooltip>
@@ -198,6 +198,7 @@ export default function LessonsPage() {
 
                 {/* Filters */}
                 <Card className="!rounded-2xl !border-pink-100 shadow-sm mb-6">
+
                     <Row gutter={[16, 12]} align="middle">
                         <Col xs={24} md={8}>
                             <Input

@@ -12,16 +12,27 @@ import {
     Select,
     message,
 } from "antd";
-import {
-    CheckOutlined,
-    CloseOutlined,
-} from "@ant-design/icons";
+import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-export default function BillingSketchPage() {
+export default function PricingTable() {
+    // Sol başlık sütunu (satır isimleri)
+    const rows = ["FİYAT", "ÖZELLİK 1", "ÖZELLİK 2", "ÖZELLİK 3"];
+
+    // Aylık ve Yıllık sütun içerikleri (ilk eleman fiyat, devamı özellik durumu)
+    const monthly = { price: "200 TL", features: [true, false, false] };
+    const yearly = { price: "2000 TL", features: [true, true, true] };
+
+    const Icon = ({ ok }) =>
+        ok ? (
+            <CheckOutlined className="text-2xl" />
+        ) : (
+            <CloseOutlined className="text-2xl" />
+        );
+
     const [loading, setLoading] = useState(false);
 
     const onFinish = async () => {
@@ -30,11 +41,9 @@ export default function BillingSketchPage() {
         message.success("Ödeme başarıyla tamamlandı ✨");
         setLoading(false);
     };
-
     return (
         <Layout className="min-h-screen bg-white">
             <Content className="max-w-4xl mx-auto px-6 pb-20">
-                {/* Üst büyük CTA */}
                 <div className="pt-6 mb-10 flex justify-center">
                     <Button
                         size="large"
@@ -50,14 +59,13 @@ export default function BillingSketchPage() {
                         ABONELİK VE ÖDEME
                     </Title>
                 </div>
-
-                {/* Plan Karşılaştırma */}
                 <Card className="!rounded-2xl bg-white/90 border border-black/10 mb-12">
                     {/* Aylık / Yıllık butonları */}
                     <div className="flex items-center justify-center gap-6 mb-6">
-                        <Button className="!rounded-xl !h-10 !px-6 border border-black/30 bg-gray-100">
+                        <Button className="!rounded-xl !h-10 !px-6 border border-black/30 bg-gray-100 ">
                             AYLIK
                         </Button>
+
                         <div className="relative">
                             <Button className="!rounded-xl !h-10 !px-6 border border-black/30 bg-gray-100">
                                 YILLIK
@@ -71,11 +79,11 @@ export default function BillingSketchPage() {
                         </div>
                     </div>
 
-                    {/* Grid tablo düzeni */}
+                    {/* 3 sütunlu tablo: sol başlık + aylık + yıllık */}
                     <div className="grid grid-cols-3 gap-4 md:gap-6 items-start max-w-3xl mx-auto">
                         {/* Sol başlık sütunu */}
                         <div className="col-span-1 space-y-4">
-                            {["FİYAT", "ÖZELLİK 1", "ÖZELLİK 2", "ÖZELLİK 3"].map((t) => (
+                            {rows.map((t) => (
                                 <div
                                     key={t}
                                     className="px-4 py-2 rounded-xl bg-pink-300/80 text-white text-center font-semibold border border-black/10"
@@ -85,41 +93,59 @@ export default function BillingSketchPage() {
                             ))}
                         </div>
 
-                        {/* Aylık sütunu */}
-                        <div className="col-span-1 text-center space-y-6">
-                            <Text strong className="text-xl">200 TL</Text>
-                            <div className="text-2xl"><CheckOutlined className="text-black" /></div>
-                            <div className="text-2xl"><CloseOutlined className="text-black" /></div>
-                            <div className="text-2xl"><CloseOutlined className="text-black" /></div>
+                        {/* Aylık sütunu - dikey: fiyat → tik/çarpı sütunu → en altta satın al */}
+                        <div className="col-span-1">
 
-                            <Button
-                                type="primary"
-                                className="!mt-2 !rounded-xl !bg-amber-400 !border-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
-                            >
-                                Satın Al
-                            </Button>
+                            <div className="flex flex-col items-center text-center rounded-xl border border-black/10 bg-white/70 p-4 min-h-[248px]">
+                                {/* FİYAT satırı */}
+
+                                <Text strong className="text-xl">{monthly.price}</Text>
+
+                                {/* Özellikler (✓ ✗ ✗) dikey tek sütun */}
+                                <div className="mt-4 flex flex-col gap-6">
+                                    {monthly.features.map((ok, i) => (
+                                        <div key={i} className="flex justify-center">
+                                            <Icon ok={ok} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Buton en altta */}
+                                <Button
+                                    type="primary"
+                                    className="mt-auto !rounded-xl !bg-amber-400 !border-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
+                                >
+                                    Satın Al
+                                </Button>
+                            </div>
                         </div>
 
-                        {/* Yıllık sütunu */}
-                        <div className="col-span-1 text-center space-y-6">
-                            <Text strong className="text-xl">2000 TL</Text>
-                            <div className="text-2xl flex justify-center gap-2">
-                                <CheckOutlined className="text-black" />
-                            </div>
-                            <div className="text-2xl"><CheckOutlined className="text-black" /></div>
-                            <div className="text-2xl"><CheckOutlined className="text-black" /></div>
+                        {/* Yıllık sütunu - dikey: fiyat → tik/tik/tik → en altta satın al */}
+                        <div className="col-span-1">
+                            <div className="flex flex-col items-center text-center rounded-xl border border-black/10 bg-white/70 p-4 min-h-[248px]">
+                                {/* FİYAT satırı */}
+                                <Text strong className="text-xl">{yearly.price}</Text>
 
-                            <Button
-                                type="primary"
-                                className="!mt-2 !rounded-xl !bg-amber-400 !border-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
-                            >
-                                Satın Al
-                            </Button>
+                                {/* Özellikler (✓ ✓ ✓) dikey tek sütun */}
+                                <div className="mt-4 flex flex-col gap-6">
+                                    {yearly.features.map((ok, i) => (
+                                        <div key={i} className="flex justify-center">
+                                            <Icon ok={ok} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Buton en altta */}
+                                <Button
+                                    type="primary"
+                                    className="mt-auto !rounded-xl !bg-amber-400 !border-amber-400 !text-black border border-black/30 hover:!bg-amber-500 mb-0"
+                                >
+                                    Satın Al
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </Card>
-
-                {/* ÖDEME BİLGİLERİ başlığı */}
                 <div className="mb-6">
                     <Title level={3} className="!m-0">ÖDEME BİLGİLERİ</Title>
                 </div>
@@ -218,15 +244,17 @@ export default function BillingSketchPage() {
                                 </Form.Item>
                             </Col>
 
-                            <Col xs={24} md={12} className="flex items-end">
+                            <Col xs={24} md={12} className="flex md:items-end items-start mt-7">
+
                                 <Button
                                     htmlType="submit"
                                     size="large"
                                     loading={loading}
-                                    className="w-full !rounded-2xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
+                                    className="w-full !rounded-2xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500 mt-3"
                                 >
                                     ÖDEMEYİ TAMAMLA
                                 </Button>
+
                             </Col>
                         </Row>
                     </Form>

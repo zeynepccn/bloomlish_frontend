@@ -77,7 +77,7 @@ export default function EditProfilePage() {
                         />
                         <div>
                             <Title className="!m-0 !leading-tight">
-                                <span className="bg-gradient-to-r from-pink-600 to-fuchsia-600 text-transparent bg-clip-text">
+                                <span className="bg-gradient-to-r from-pink-600 to-fuchsia-600 text-transparent bg-clip-text text-large font-normal">
                                     Hesap Ayarları
                                 </span>
                             </Title>

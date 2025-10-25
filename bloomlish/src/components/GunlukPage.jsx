@@ -3,37 +3,74 @@ import PageLayout from "./PageLayout";
 import { UserIcon } from "@heroicons/react/24/solid";
 
 function GunlukPage() {
-    const username = "Zeynep";
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);
+    const token = localStorage.getItem("token");
+    const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
-        fetch("http://localhost:5000/gunluk")
+        fetch("http://localhost:8080/api/notes/get-all", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
             .then((res) => res.json())
-            .then((data) => setPosts(data))
+            .then((data) => {
+                setPosts(data.content);
+            })
             .catch((err) => console.error(err));
     }, []);
 
     const handlePublish = async () => {
         if (text.trim() === "") return;
 
-        const newPost = { username, content: text };
-
         try {
-            const res = await fetch("http://localhost:5000/gunluk", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newPost),
-            });
-            const savedPost = await res.json();
-            setPosts([savedPost, ...posts]);
-            setText("");
+            if (editingId) {
+                const res = await fetch(`http://localhost:8080/api/notes/update/${editingId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content: text })
+                });
+                const updatedPost = await res.json();
+                setPosts(posts.map((p) => (p.id === editingId ? updatedPost : p)));
+                setEditingId(null);
+                setText("");
+            } else {
+                const res = await fetch("http://localhost:8080/api/notes/create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content: text })
+                });
+                const savedPost = await res.json();
+                setPosts([savedPost, ...posts]);
+                setText("");
+            }
         } catch (err) {
             console.error(err);
         }
     };
-    const handleUserClick = (username) => {
-        navigate(`/profile/${username}`);
+    const handleDelete = async (id) => {
+        try {
+            await fetch(`http://localhost:8080/api/notes/delete/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            setPosts(posts.filter((p) => p.id !== id));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+    const handleEdit = (post) => {
+        setEditingId(post.id);
+        setText(post.content);
     };
 
 
@@ -51,7 +88,7 @@ function GunlukPage() {
                     onClick={handlePublish}
                     className="w-full bg-pink-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-500 transition mb-6 shadow-md"
                 >
-                    Yeni Yazı Yaz
+                    {editingId ? "Kaydet" : "Yeni Yazı Yaz"}
                 </button>
 
                 <div className="space-y-4">
@@ -61,16 +98,23 @@ function GunlukPage() {
                             className="border border-pink-200 bg-pink-50 shadow-md rounded-2xl p-4 transition hover:shadow-xl hover:bg-pink-100"
                         >
                             <div className="flex justify-between items-center mb-2">
-                                <div
-                                    className="flex items-center gap-2 cursor-pointer hover:text-pink-600 transition"
-                                    onClick={() => handleUserClick(post.username)}
-                                >
-                                    <UserIcon className="h-5 w-5 text-pink-600" />
-                                    <span className="text-sm text-pink-600">@{post.username}</span>
+                                <span className="text-sm text-pink-300">
+                                    {new Date(post.createdAt).toLocaleString()}
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleEdit(post)}
+                                        className="text-xs bg-yellow-400 text-white px-2 py-1 rounded-xl hover:bg-yellow-500"
+                                    >
+                                        Düzenle
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(post.id)}
+                                        className="text-xs bg-red-400 text-white px-2 py-1 rounded-xl hover:bg-red-500"
+                                    >
+                                        Sil
+                                    </button>
                                 </div>
-
-
-                                <span className="text-sm text-pink-300">{post.date}</span>
                             </div>
                             <p className="text-pink-700 whitespace-pre-line">{post.content}</p>
                         </div>

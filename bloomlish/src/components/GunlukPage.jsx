@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
-import { UserIcon } from "@heroicons/react/24/solid";
+import { Modal, message } from "antd";
 
 function GunlukPage() {
     const [text, setText] = useState("");
@@ -56,23 +56,30 @@ function GunlukPage() {
         }
     };
     const handleDelete = async (id) => {
-        try {
-            await fetch(`http://localhost:8080/api/notes/delete/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`
+        Modal.confirm({
+            title: "Emin misiniz?",
+            content: "Bu günlük yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+            okText: "Evet, sil",
+            okType: "danger",
+            cancelText: "Vazgeç",
+            onOk: async () => {
+                try {
+                    const res = await fetch(`http://localhost:8080/api/notes/delete/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+                    if (!res.ok) throw new Error("Yazı silinemedi");
+                    setPosts(posts.filter((p) => p.id !== id));
+                    message.success("Yazı silindi ✅");
+                } catch (err) {
+                    console.error(err);
+                    message.error("Yazı silinemedi ❌");
                 }
-            });
-            setPosts(posts.filter((p) => p.id !== id));
-        } catch (err) {
-            console.error(err);
-        }
+            }
+        });
     };
-    const handleEdit = (post) => {
-        setEditingId(post.id);
-        setText(post.content);
-    };
-
 
     return (
         <PageLayout title="GÜNLÜK YAZILAR">

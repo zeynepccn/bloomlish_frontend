@@ -104,6 +104,8 @@ function HomePage() {
                                 onClick={() => {
                                     if (item.title === "DERSLER!") {
                                         navigate("/lessons");
+                                    } else if (item.title === "YAZILAR!") {
+                                        navigate("/blog");
                                     } else {
                                         console.log(`${item.title} sayfası yakında eklenecek ✨`);
                                     }

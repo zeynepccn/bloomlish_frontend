@@ -13,7 +13,9 @@ function BlogPage() {
     const [totalPages, setTotalPages] = useState(0);
     const [page, setPage] = useState(0);
     const currentEmail = (localStorage.getItem("email") || "").toLowerCase();
-
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editPost, setEditPost] = useState(null);
+    const [editText, setEditText] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -56,6 +58,38 @@ function BlogPage() {
             setText("");
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleEdit = (post) => {
+        setEditPost(post);
+        setEditText(post.content);
+        setIsEditModalOpen(true);
+    };
+    const handleSaveEdit = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`${API_URL}/update/${editPost.id}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ content: editText }),
+            });
+
+            if (!res.ok) throw new Error("Post güncellenemedi");
+            const updatedPost = await res.json();
+
+            setPosts((prev) =>
+                prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+            );
+
+            setIsEditModalOpen(false);
+            message.success("Post başarıyla güncellendi ✅");
+        } catch (err) {
+            console.error(err);
+            message.error("Post güncellenemedi ❌");
         }
     };
 
@@ -139,26 +173,35 @@ function BlogPage() {
         }
     };
     const handleDeleteComment = async (postId, commentId) => {
-        const token = localStorage.getItem("token");
-        try {
-            const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` },
-            });
-            if (!res.ok) throw new Error("Yorum silinemedi");
+        Modal.confirm({
+            title: "Emin misiniz?",
+            content: "Bu yorumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+            okText: "Evet, sil",
+            okType: "danger",
+            cancelText: "Vazgeç",
+            onOk: async () => {
+                const token = localStorage.getItem("token");
+                try {
+                    const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${token}` },
+                    });
+                    if (!res.ok) throw new Error("Yorum silinemedi");
 
-            // UI'dan yorumu çıkar
-            setPosts((prev) =>
-                prev.map((post) =>
-                    post.id === postId
-                        ? { ...post, comments: post.comments.filter((c) => c.id !== commentId) }
-                        : post
-                )
-            );
-        } catch (err) {
-            console.error(err);
-            message.error("Yorum silinemedi");
-        }
+                    setPosts((prev) =>
+                        prev.map((post) =>
+                            post.id === postId
+                                ? { ...post, comments: post.comments.filter((c) => c.id !== commentId) }
+                                : post
+                        )
+                    );
+                    message.success("Yorum başarıyla silindi ✅");
+                } catch (err) {
+                    console.error(err);
+                    message.error("Yorum silinemedi ❌");
+                }
+            }
+        });
     };
 
     // Yorum güncelleme
@@ -227,19 +270,30 @@ function BlogPage() {
                         className="border border-pink-200 bg-pink-50 shadow-md rounded-2xl p-4 max-w-md mx-auto transition hover:shadow-xl hover:bg-pink-100"
                     >
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-semibold text-pink-600">@{post.username}</h3>
+                            <h3 className="font-semibold text-pink-600">{post.username}</h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-pink-300">
-                                    {new Date(post.createdAt).toLocaleString()}
+                                    {post.updatedAt
+                                        ? `Düzenlendi: ${new Date(post.updatedAt).toLocaleString()}`
+                                        : new Date(post.createdAt).toLocaleString()}
                                 </span>
                                 {post.username?.toLowerCase() === currentEmail && (
-                                    <button
-                                        onClick={() => handleDelete(post.id)}
-                                        className="text-red-500 hover:text-red-700 font-medium"
-                                    >
-                                        Sil
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => handleEdit(post)}
+                                            className="text-blue-500 hover:text-blue-700 font-medium"
+                                        >
+                                            Düzenle
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(post.id)}
+                                            className="text-red-500 hover:text-red-700 font-medium"
+                                        >
+                                            Sil
+                                        </button>
+                                    </>
                                 )}
+
                             </div>
                         </div>
                         <p className="text-pink-700 whitespace-pre-line mb-4">{post.content}</p>
@@ -289,6 +343,20 @@ function BlogPage() {
                     Sonraki
                 </button>
             </div>
+            <Modal
+                title="Postu Düzenle"
+                open={isEditModalOpen}
+                onOk={handleSaveEdit}
+                onCancel={() => setIsEditModalOpen(false)}
+                okText="Kaydet"
+                cancelText="Vazgeç"
+            >
+                <Input.TextArea
+                    rows={4}
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                />
+            </Modal>
         </PageLayout>
     );
 }
@@ -315,10 +383,11 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
 
     const saveEdit = (commentId) => {
         if (!editText.trim()) return;
-        onUpdateComment(commentId, editText); // parent fonksiyon çağrılır
+        onUpdateComment(postId, commentId, editText); // parent fonksiyon çağrılır
         setIsEditing(false);
         setEditText("");
     };
+
 
     return (
         <div className="flex flex-col gap-2 w-full mt-2">
@@ -347,9 +416,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                         return (
                             <List.Item
                                 key={c.id}
-                                onClick={() =>
-                                    setExpandedCommentId(isExpanded ? null : c.id)
-                                }
+                                onClick={() => setExpandedCommentId(isExpanded ? null : c.id)}
                                 className={`cursor-pointer transition-all duration-300 ${isExpanded ? "bg-pink-50 p-4" : "p-2"
                                     }`}
                             >
@@ -360,45 +427,61 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                                 💬 <strong>@{c.username}</strong>: {c.text}
                                             </div>
                                             <span className="ml-2 text-xs text-gray-500">
-                                                {new Date(c.createdAt).toLocaleString()}
+                                                {c.updatedAt
+                                                    ? `Düzenlendi: ${new Date(c.updatedAt).toLocaleString()}`
+                                                    : new Date(c.createdAt).toLocaleString()}
                                             </span>
+
                                         </>
                                     ) : (
                                         <div className="flex gap-2">
                                             <Input
                                                 value={editText}
+                                                onClick={(e) => e.stopPropagation()} // expand kapatmasın
                                                 onChange={(e) => setEditText(e.target.value)}
                                             />
                                             <Button
                                                 size="small"
                                                 type="primary"
-                                                onClick={() => saveEdit(c.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    saveEdit(c.id);
+                                                }}
                                             >
                                                 Kaydet
                                             </Button>
                                             <Button
                                                 size="small"
-                                                onClick={() => setIsEditing(false)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsEditing(false);
+                                                }}
                                             >
                                                 Vazgeç
                                             </Button>
                                         </div>
                                     )}
 
-                                    {/* Eğer yorum sahibi login kullanıcıysa ve expand edilmişse */}
+                                    {/* Yorum sahibi ise düzenle/sil */}
                                     {isOwner && isExpanded && !isEditing && (
                                         <div className="flex gap-2 mt-2">
                                             <Button
                                                 size="small"
                                                 type="primary"
-                                                onClick={() => startEdit(c)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    startEdit(c);
+                                                }}
                                             >
                                                 Düzenle
                                             </Button>
                                             <Button
                                                 size="small"
                                                 danger
-                                                onClick={() => onDeleteComment(c.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDeleteComment(postId, c.id);
+                                                }}
                                             >
                                                 Sil
                                             </Button>

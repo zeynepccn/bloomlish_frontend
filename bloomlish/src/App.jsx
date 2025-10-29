@@ -16,6 +16,7 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
+import GamesPage from "./pages/GamesPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,6 +43,7 @@ function App() {
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/billing" element={<BillingSketchPage />} />
           <Route path="/premium" element={<PremiumPlanPage />} />
+          <Route path="/games" element={<GamesPage />} />
           {/* kendi premium sayfanla doldur */}
         </Routes>
       </div>

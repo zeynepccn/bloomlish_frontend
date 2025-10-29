@@ -90,7 +90,7 @@ function AdminPage() {
                                     onClick={() => handleRemoveLesson(lesson.id)}
                                     className="bg-rose-400 text-white px-3 py-1 rounded-md hover:bg-rose-500 text-sm"
                                 >
-                                    ❌ Kaldır
+                                     Kaldır
                                 </button>
                             </li>
                         ))}

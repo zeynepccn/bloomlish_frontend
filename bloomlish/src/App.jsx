@@ -20,6 +20,7 @@ import InstructorPage from "./pages/instructorPage";
 import CreateLesson from "./pages/CreateLessonPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
 import AdminPage from "./pages/AdminPage.jsx";
+import EarningsPage from "./pages/EarningsPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -49,6 +50,7 @@ function App() {
           <Route path="/instructor" element={<InstructorPage />} />
           <Route path="/createlesson" element={<CreateLessonPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/earnings" element={<EarningsPage />} />
           
         </Routes>
       </div>

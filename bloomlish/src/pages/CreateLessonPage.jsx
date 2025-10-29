@@ -28,11 +28,11 @@ function CreateLessonPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!form.date) {
-            alert("⚠️ Lütfen önce tarih seçiniz!");
+            alert(" Lütfen önce tarih seçiniz!");
             return;
         }
         console.log("Yeni ders:", form);
-        alert(`🎉 Ders başarıyla oluşturuldu!\n📅 ${form.date} ⏰ ${form.startTime} - ${form.endTime}`);
+        alert(` Ders başarıyla oluşturuldu!\n ${form.date}  ${form.startTime} - ${form.endTime}`);
     };
 
     return (

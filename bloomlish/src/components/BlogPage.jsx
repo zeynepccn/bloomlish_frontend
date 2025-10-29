@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
 import { Button, Input, List, Modal, message } from "antd";
-import { TrashIcon } from "@heroicons/react/24/solid";
+import { HeartIcon } from "@heroicons/react/24/solid";
+
+
 const { TextArea } = Input;
-
-
 const API_URL = "http://localhost:8080/api/posts";
+
 function BlogPage() {
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
+    const [page, setPage] = useState(0);
+    const currentEmail = (localStorage.getItem("email") || "").toLowerCase();
+
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) return;
-        fetch(`${API_URL}/get-all?page=0&size=10`, {
+
+        fetch(`${API_URL}/get-all?page=${page}&size=10`, {
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
@@ -25,13 +31,13 @@ function BlogPage() {
             })
             .then((data) => {
                 setPosts(data.content);
+                setTotalPages(data.totalPages);
             })
             .catch((err) => console.error(err));
-    }, []);
+    }, [page]);
 
     const handlePublish = async () => {
         if (text.trim() === "") return;
-
         const token = localStorage.getItem("token");
 
         try {
@@ -52,6 +58,7 @@ function BlogPage() {
             console.error(err);
         }
     };
+
     const handleDelete = (id) => {
         Modal.confirm({
             title: "Emin misiniz?",
@@ -78,7 +85,6 @@ function BlogPage() {
         });
     };
 
-
     const handleLike = async (id) => {
         const token = localStorage.getItem("token");
         try {
@@ -88,18 +94,18 @@ function BlogPage() {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json",
                 }
-
             });
             if (!res.ok) {
                 const errorText = await res.text();
                 message.warning(errorText || "Beğeni hatası");
                 return;
             }
-            const newLikes = await res.json();
+
+            const updatedPost = await res.json();
 
             setPosts((prev) =>
                 prev.map((post) =>
-                    post.id === id ? { ...post, likes: newLikes } : post
+                    post.id === id ? updatedPost : post
                 )
             );
         } catch (err) {
@@ -132,15 +138,72 @@ function BlogPage() {
             console.error(err);
         }
     };
+    const handleDeleteComment = async (postId, commentId) => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Yorum silinemedi");
+
+            // UI'dan yorumu çıkar
+            setPosts((prev) =>
+                prev.map((post) =>
+                    post.id === postId
+                        ? { ...post, comments: post.comments.filter((c) => c.id !== commentId) }
+                        : post
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            message.error("Yorum silinemedi");
+        }
+    };
+
+    // Yorum güncelleme
+    const handleUpdateComment = async (postId, commentId, newText) => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`http://localhost:8080/api/comments/update/${commentId}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ text: newText }),
+            });
+            if (!res.ok) throw new Error("Yorum güncellenemedi");
+
+            const updatedComment = await res.json();
+
+            // UI'da yorumu güncelle
+            setPosts((prev) =>
+                prev.map((post) =>
+                    post.id === postId
+                        ? {
+                            ...post,
+                            comments: post.comments.map((c) =>
+                                c.id === commentId ? updatedComment : c
+                            ),
+                        }
+                        : post
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            message.error("Yorum güncellenemedi");
+        }
+    };
 
     return (
         <PageLayout title="BLOG YAZILARI">
+            {/* Yeni post alanı */}
             <div className="w-full max-w-md bg-pink-50 rounded-3xl shadow-lg p-6 border border-pink-200 mx-auto mb-6">
                 <p className="text-white drop-shadow-[0_0_3px_#ec4899] mb-4 text-center font-medium">
                     Kendi kısa yazılarını paylaş. Favori gönderilerini beğen ve yorum yap,
                     eğlenerek dil öğren 💗🌸
                 </p>
-
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -148,7 +211,6 @@ function BlogPage() {
                     className="w-full border border-pink-300 rounded-2xl p-3 outline-none focus:ring-2 focus:ring-pink-300 mb-4 resize-none bg-pink-50 text-pink-800 placeholder-pink-400"
                     rows="3"
                 />
-
                 <button
                     onClick={handlePublish}
                     className="w-full bg-pink-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-500 transition shadow-md"
@@ -157,6 +219,7 @@ function BlogPage() {
                 </button>
             </div>
 
+            {/* Post listesi */}
             <div className="space-y-4">
                 {posts.map((post) => (
                     <div
@@ -169,37 +232,74 @@ function BlogPage() {
                                 <span className="text-sm text-pink-300">
                                     {new Date(post.createdAt).toLocaleString()}
                                 </span>
-                                <button onClick={() => handleDelete(post.id)}>
-                                    <TrashIcon className="w-5 h-5 text-red-500 hover:text-red-700" />
-                                </button>
-
+                                {post.username?.toLowerCase() === currentEmail && (
+                                    <button
+                                        onClick={() => handleDelete(post.id)}
+                                        className="text-red-500 hover:text-red-700 font-medium"
+                                    >
+                                        Sil
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <p className="text-pink-700 whitespace-pre-line mb-4">{post.content}</p>
 
                         <div className="flex items-center gap-4">
                             <button
-                                className="text-pink-500 hover:text-pink-600 transition"
+                                type="button"
                                 onClick={() => handleLike(post.id)}
+                                className="flex items-center gap-1 transition"
                             >
-                                ❤️ {post.likes}
+                                <HeartIcon
+                                    className={`w-6 h-6 ${post.likedUsers?.some(e => e.toLowerCase() === currentEmail)
+                                        ? "text-red-500"
+                                        : "text-gray-400"
+                                        }`}
+                                />
+                                <span>{post.likes}</span>
                             </button>
-
-                            <CommentSection
-                                postId={post.id}
-                                comments={post.comments}
-                                onAddComment={handleAddComment}
-                            />
                         </div>
+
+                        <CommentSection
+                            postId={post.id}
+                            comments={post.comments}
+                            onAddComment={handleAddComment}
+                            onDeleteComment={handleDeleteComment}
+                            onUpdateComment={handleUpdateComment}
+                        />
                     </div>
                 ))}
+            </div>
+
+            {/* Sayfalama butonları → post listesinin dışında */}
+            <div className="flex justify-center gap-2 mt-6">
+                <button
+                    disabled={page === 0}
+                    onClick={() => setPage(page - 1)}
+                    className="px-3 py-1 bg-pink-200 rounded disabled:opacity-50"
+                >
+                    Önceki
+                </button>
+                <span>{page + 1} / {totalPages}</span>
+                <button
+                    disabled={page + 1 >= totalPages}
+                    onClick={() => setPage(page + 1)}
+                    className="px-3 py-1 bg-pink-200 rounded disabled:opacity-50"
+                >
+                    Sonraki
+                </button>
             </div>
         </PageLayout>
     );
 }
 
-function CommentSection({ postId, comments = [], onAddComment }) {
+function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, onUpdateComment }) {
     const [commentText, setCommentText] = useState("");
+    const [expandedCommentId, setExpandedCommentId] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState("");
+
+    const currentEmail = (localStorage.getItem("email") || "").toLowerCase();
 
     const handleSubmit = () => {
         if (!commentText.trim()) return;
@@ -207,8 +307,22 @@ function CommentSection({ postId, comments = [], onAddComment }) {
         setCommentText("");
     };
 
+    const startEdit = (comment) => {
+        setIsEditing(true);
+        setEditText(comment.text);
+        setExpandedCommentId(comment.id);
+    };
+
+    const saveEdit = (commentId) => {
+        if (!editText.trim()) return;
+        onUpdateComment(commentId, editText); // parent fonksiyon çağrılır
+        setIsEditing(false);
+        setEditText("");
+    };
+
     return (
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex flex-col gap-2 w-full mt-2">
+            {/* Yorum yazma alanı */}
             <div className="flex gap-2">
                 <Input
                     value={commentText}
@@ -220,23 +334,86 @@ function CommentSection({ postId, comments = [], onAddComment }) {
                 </Button>
             </div>
 
+            {/* Yorum listesi */}
             {comments.length > 0 && (
                 <List
                     size="small"
                     bordered
                     dataSource={comments}
-                    renderItem={(c) => (
-                        <List.Item key={c.id}>
-                            💬 <strong>@{c.username}</strong>: {c.text}
-                            <span style={{ marginLeft: "8px", fontSize: "0.8em", color: "#999" }}>
-                                {new Date(c.createdAt).toLocaleString()}
-                            </span>
-                        </List.Item>
-                    )}
+                    renderItem={(c) => {
+                        const isOwner = c.username?.toLowerCase() === currentEmail;
+                        const isExpanded = expandedCommentId === c.id;
+
+                        return (
+                            <List.Item
+                                key={c.id}
+                                onClick={() =>
+                                    setExpandedCommentId(isExpanded ? null : c.id)
+                                }
+                                className={`cursor-pointer transition-all duration-300 ${isExpanded ? "bg-pink-50 p-4" : "p-2"
+                                    }`}
+                            >
+                                <div className="flex flex-col w-full">
+                                    {!isEditing || expandedCommentId !== c.id ? (
+                                        <>
+                                            <div>
+                                                💬 <strong>@{c.username}</strong>: {c.text}
+                                            </div>
+                                            <span className="ml-2 text-xs text-gray-500">
+                                                {new Date(c.createdAt).toLocaleString()}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={editText}
+                                                onChange={(e) => setEditText(e.target.value)}
+                                            />
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                onClick={() => saveEdit(c.id)}
+                                            >
+                                                Kaydet
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                onClick={() => setIsEditing(false)}
+                                            >
+                                                Vazgeç
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {/* Eğer yorum sahibi login kullanıcıysa ve expand edilmişse */}
+                                    {isOwner && isExpanded && !isEditing && (
+                                        <div className="flex gap-2 mt-2">
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                onClick={() => startEdit(c)}
+                                            >
+                                                Düzenle
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                danger
+                                                onClick={() => onDeleteComment(c.id)}
+                                            >
+                                                Sil
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </List.Item>
+                        );
+                    }}
                 />
             )}
         </div>
     );
 }
+
+
 
 export default BlogPage;

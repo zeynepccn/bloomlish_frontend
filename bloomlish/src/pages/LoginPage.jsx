@@ -45,6 +45,8 @@ function LoginPage({ setIsLoggedIn }) {
             alert("Giriş başarılı!");
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
+            localStorage.setItem("email", data.email);
+            localStorage.setItem("email", data.email)
             setIsLoggedIn(true);
             navigate("/");
 

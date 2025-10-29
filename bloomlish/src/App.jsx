@@ -19,6 +19,7 @@ import PremiumPlanPage from "./pages/PremiumPlanPage";
 import InstructorPage from "./pages/instructorPage";
 import CreateLesson from "./pages/CreateLessonPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
+import AdminPage from "./pages/AdminPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -47,7 +48,8 @@ function App() {
           <Route path="/premium" element={<PremiumPlanPage />} />
           <Route path="/instructor" element={<InstructorPage />} />
           <Route path="/createlesson" element={<CreateLessonPage />} />
-          {/* kendi premium sayfanla doldur */}
+          <Route path="/admin" element={<AdminPage />} />
+          
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}

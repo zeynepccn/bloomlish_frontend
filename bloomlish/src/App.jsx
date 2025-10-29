@@ -10,6 +10,7 @@ import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 import RegisterPage from "./pages/RegisterPage";
 import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
+import QuizPage from "./pages/QuizPage";
 
 import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -42,6 +43,7 @@ function App() {
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/billing" element={<BillingSketchPage />} />
           <Route path="/premium" element={<PremiumPlanPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
           {/* kendi premium sayfanla doldur */}
         </Routes>
       </div>

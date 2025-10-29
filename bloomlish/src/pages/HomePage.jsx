@@ -106,7 +106,10 @@ function HomePage() {
                                         navigate("/lessons");
                                     } else if (item.title === "YAZILAR!") {
                                         navigate("/blog");
-                                    } else {
+                                    } else if (item.title === "YAPAY ZEKA DESTEKLİ TESTLER!") {
+                                        navigate("/quiz");
+                                    }
+                                    else {
                                         console.log(`${item.title} sayfası yakında eklenecek ✨`);
                                     }
                                 }}

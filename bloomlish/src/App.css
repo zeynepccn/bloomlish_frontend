@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+
+.lesson-day {
+    background-color: #df6cac !important;
+    color: white !important;
+    border-radius: 9999px !important;
+    font-weight: 600 !important;
+}
+
+.lesson-day:hover {
+    background-color: #ec4899 !important;
+}

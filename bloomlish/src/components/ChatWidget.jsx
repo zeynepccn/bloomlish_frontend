@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
+import { MessageCircle } from "lucide-react";
 
 function ChatWidget({ currentUserId }) {
     const [chatOpen, setChatOpen] = useState(false);
@@ -58,7 +59,7 @@ function ChatWidget({ currentUserId }) {
         };
     }, [currentUserId]);
 
-    // 🧩 Kullanıcı listesini backend'den çek
+    // Kullanıcı listesini backend'den çek
     useEffect(() => {
         if (!currentUserId) return;
 
@@ -79,7 +80,7 @@ function ChatWidget({ currentUserId }) {
             .catch((err) => console.error(" Kullanıcı listesi yüklenemedi:", err));
     }, [currentUserId]);
 
-    // 💬 Mesaj geçmişini backend'den çek
+    //  Mesaj geçmişini backend'den çek
     useEffect(() => {
         if (!selectedUser || !currentUserId) return;
 
@@ -104,7 +105,7 @@ function ChatWidget({ currentUserId }) {
     }, [selectedUser, currentUserId]);
 
 
-    // 🚀 Mesaj gönderme
+    //  Mesaj gönderme
 
     const sendMessage = () => {
         if (!input.trim() || !selectedUser || !currentUserId) return;
@@ -115,7 +116,7 @@ function ChatWidget({ currentUserId }) {
             content: input,
         };
 
-        // 💬 WebSocket üzerinden anlık mesaj gönder
+        //  WebSocket üzerinden anlık mesaj gönder
         if (stompClient && isConnected) {
             stompClient.publish({
                 destination: "/app/send",
@@ -123,7 +124,7 @@ function ChatWidget({ currentUserId }) {
             });
         }
 
-        // 📨 Mesajı veritabanına kaydetmek için backend'e gönder
+        // Mesajı veritabanına kaydetmek için backend'e gönder
         fetch("http://localhost:8080/api/messages/send", {
             method: "POST",
             headers: {
@@ -138,7 +139,7 @@ function ChatWidget({ currentUserId }) {
             })
             .catch((err) => console.error(" Mesaj gönderilemedi:", err));
 
-        // 💎 Ekranda anında göster
+        //  Ekranda anında göster
         setMessages((prev) => ({
             ...prev,
             [selectedUser.id]: [
@@ -147,7 +148,7 @@ function ChatWidget({ currentUserId }) {
             ],
         }));
 
-        // ✨ Input'u temizle
+        //  Input'u temizle
         setInput("");
     };
 
@@ -157,10 +158,11 @@ function ChatWidget({ currentUserId }) {
             {/* Chat Bubble */}
             <button
                 onClick={() => setChatOpen(!chatOpen)}
-                className="bg-pink-500 text-white p-4 rounded-full shadow-lg hover:bg-pink-600 transition"
+                className="bg-pink-400 text-white p-4 rounded-full shadow-lg hover:bg-pink-500 transition"
             >
-                💬
+                <MessageCircle className="w-6 h-6" />
             </button>
+
 
             {/* Chat Panel */}
             {chatOpen && (

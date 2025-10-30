@@ -62,7 +62,12 @@ function ChatWidget({ currentUserId }) {
     useEffect(() => {
         if (!currentUserId) return;
 
-        fetch("http://localhost:8080/api/users/all")
+        fetch("http://localhost:8080/api/users/all", {
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json",
+            },
+        })
             .then((res) => {
                 if (!res.ok) throw new Error("Kullanıcı listesi alınamadı");
                 return res.json();
@@ -78,7 +83,12 @@ function ChatWidget({ currentUserId }) {
     useEffect(() => {
         if (!selectedUser || !currentUserId) return;
 
-        fetch(`http://localhost:8080/api/messages/get/${currentUserId}/${selectedUser.id}`)
+        fetch(`http://localhost:8080/api/messages/get/${currentUserId}/${selectedUser.id}`, {
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json",
+            },
+        })
             .then((res) => {
                 if (!res.ok) throw new Error("Sunucudan yanıt alınamadı");
                 return res.json();
@@ -93,7 +103,9 @@ function ChatWidget({ currentUserId }) {
             .catch((err) => console.error(" Mesaj geçmişi alınamadı:", err));
     }, [selectedUser, currentUserId]);
 
+
     // 🚀 Mesaj gönderme
+
     const sendMessage = () => {
         if (!input.trim() || !selectedUser || !currentUserId) return;
 
@@ -103,6 +115,7 @@ function ChatWidget({ currentUserId }) {
             content: input,
         };
 
+        // 💬 WebSocket üzerinden anlık mesaj gönder
         if (stompClient && isConnected) {
             stompClient.publish({
                 destination: "/app/send",
@@ -110,13 +123,22 @@ function ChatWidget({ currentUserId }) {
             });
         }
 
+        // 📨 Mesajı veritabanına kaydetmek için backend'e gönder
         fetch("http://localhost:8080/api/messages/send", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(messageDto),
-        }).catch((err) => console.error(" Mesaj gönderilemedi:", err));
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Mesaj kaydedilemedi");
+                return res.json();
+            })
+            .catch((err) => console.error(" Mesaj gönderilemedi:", err));
 
-        // Ekrana hemen göster
+        // 💎 Ekranda anında göster
         setMessages((prev) => ({
             ...prev,
             [selectedUser.id]: [
@@ -124,6 +146,8 @@ function ChatWidget({ currentUserId }) {
                 { from: "Sen", text: input },
             ],
         }));
+
+        // ✨ Input'u temizle
         setInput("");
     };
 

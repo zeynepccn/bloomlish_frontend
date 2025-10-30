@@ -10,13 +10,13 @@ import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 import RegisterPage from "./pages/RegisterPage";
 import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
+import QuizPage from "./pages/QuizPage";
 
 import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
-import GamesPage from "./pages/GamesPage";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,7 +43,7 @@ function App() {
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/billing" element={<BillingSketchPage />} />
           <Route path="/premium" element={<PremiumPlanPage />} />
-          <Route path="/games" element={<GamesPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
           {/* kendi premium sayfanla doldur */}
         </Routes>
       </div>

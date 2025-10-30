@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-    function LoginPage({ setIsLoggedIn }) {
+function LoginPage({ setIsLoggedIn }) {
 
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        
+
         if (!formData.email || !formData.password) {
             alert("Lütfen tüm alanları doldurunuz!");
             return;
@@ -31,18 +31,25 @@ import { useNavigate } from "react-router-dom";
                 },
                 body: JSON.stringify(formData),
             });
+            const text = await response.text();
+            let data = null;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (err) {
+                console.error("JSON parse hatası:", err);
+            }
             if (!response.ok) {
-                const errorData = await response.json();
-                alert("Giriş başarısız: " + errorData.message);
+                alert("Giriş başarısız: " + (data?.message || response.status));
                 return;
             }
-            const data = await response.json();
             alert("Giriş başarılı!");
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
+            localStorage.setItem("email", data.email);
+            localStorage.setItem("email", data.email)
             setIsLoggedIn(true);
-            navigate("/"); 
-            
+            navigate("/");
+
         }
 
         catch (error) {

@@ -10,13 +10,19 @@ import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 import RegisterPage from "./pages/RegisterPage";
 import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
-import QuizPage from "./pages/QuizPage";
 
 import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
+import InstructorPage from "./pages/instructorPage";
+import CreateLesson from "./pages/CreateLessonPage";
+import CreateLessonPage from "./pages/CreateLessonPage";
+import AdminPage from "./pages/AdminPage.jsx";
+import EarningsPage from "./pages/EarningsPage.jsx";
+import GamesPage from "./pages/GamesPage.jsx";
+import QuizPage from "./pages/QuizPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,8 +49,13 @@ function App() {
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/billing" element={<BillingSketchPage />} />
           <Route path="/premium" element={<PremiumPlanPage />} />
+          <Route path="/instructor" element={<InstructorPage />} />
+          <Route path="/createlesson" element={<CreateLessonPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/earnings" element={<EarningsPage />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/quiz" element={<QuizPage />} />
-          {/* kendi premium sayfanla doldur */}
+          
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}

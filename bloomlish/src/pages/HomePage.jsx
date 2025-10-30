@@ -92,52 +92,37 @@ function HomePage() {
                 {features.map((item, i) => (
                     <div
                         key={i}
-                        className={`border border-pink-200 rounded-lg text-center shadow-sm bg-white transition-shadow
-                        flex flex-col p-6 min-h-[220px]
-                        ${isLoggedIn ? "hover:shadow-lg cursor-pointer" : "opacity-80"}`}
+                        className={`border border-pink-200 p-6 rounded-lg text-center shadow-sm bg-white transition-shadow ${isLoggedIn ? "hover:shadow-lg cursor-pointer" : "opacity-80"
+                            }`}
                     >
-                        {/* ikon */}
                         {item.icon}
+                        <h3 className="font-semibold text-sm mb-2 text-gray-700">{item.title}</h3>
+                        <p className="text-xs text-gray-500 mb-3">{item.desc}</p>
 
-                        {/* başlık + açıklama (esneyen kısım) */}
-                        <div className="flex-1 flex flex-col">
-                            <h3 className="font-semibold text-sm mb-2 text-gray-700">
-                                {item.title}
-                            </h3>
-                            <p className="text-xs text-gray-500 mb-3">
-                                {item.desc}
-                            </p>
-                        </div>
-
-                        {/* buton (tabanda sabit) */}
                         {isLoggedIn && (
                             <button
                                 onClick={() => {
                                     if (item.title === "DERSLER!") {
                                         navigate("/lessons");
-                                    }
-                                    else if (item.title === "OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!") {
+                                    } else if (item.title === "YAZILAR!") {
+                                        navigate("/blog");
+                                    } else if (item.title === "YAPAY ZEKA DESTEKLİ TESTLER!") {
+                                        navigate("/quiz");
+                                    } else if(item.title==="OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!"){
                                         navigate("/games");
                                     }
                                     else {
                                         console.log(`${item.title} sayfası yakında eklenecek ✨`);
                                     }
                                 }}
-                                className="w-full text-sm border border-gray-300 rounded-md py-1 hover:bg-pink-50 transition mt-auto"
+                                className="w-full text-sm border border-gray-300 rounded-md py-1 hover:bg-pink-50 transition"
                             >
                                 Keşfet ✨
                             </button>
                         )}
-
-
-                        {/* kullanıcı login değilse boş bir spacer koy ki yükseklik yine aynı kalsın */}
-                        {!isLoggedIn && (
-                            <div className="h-[32px] mt-auto" />
-                        )}
                     </div>
                 ))}
             </section>
-
 
 
             {/* Kaydırmalı Resim Alanı */}

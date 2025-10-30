@@ -108,6 +108,8 @@ function HomePage() {
                                         navigate("/blog");
                                     } else if (item.title === "YAPAY ZEKA DESTEKLİ TESTLER!") {
                                         navigate("/quiz");
+                                    } else if(item.title==="OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!"){
+                                        navigate("/games");
                                     }
                                     else {
                                         console.log(`${item.title} sayfası yakında eklenecek ✨`);

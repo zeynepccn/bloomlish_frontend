@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import axios from "axios";
 import {
     Layout,
     Typography,
@@ -11,8 +12,10 @@ import {
     Select,
     message,
     Tag,
+    Modal,
 } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -45,21 +48,75 @@ export default function BillingSketchPage() {
         ok ? <CheckOutlined className="text-2xl" /> : <CloseOutlined className="text-2xl" />;
 
     const [loading, setLoading] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState(null);
-
-    // ödeme formu görünür mü
-    const [showPayment, setShowPayment] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState(null); // "monthly" | "yearly"
+    const [showPayment, setShowPayment] = useState(false);  // ödeme formu görünür mü?
+    const [successModalVisible, setSuccessModalVisible] = useState(false); //  modal state
 
     const plansTopRef = useRef(null);
-    const paymentRef = useRef(null); // scroll hedefi
+    const paymentRef = useRef(null);
 
-    const onFinish = async () => {
-        setLoading(true);
-        await new Promise((r) => setTimeout(r, 800));
-        message.success("Ödeme başarıyla tamamlandı ✨");
-        setLoading(false);
+    const navigate = useNavigate(); // 
+
+    //  ÖDEMEYİ BACKEND'E GÖNDEREN FONKSİYON
+    const onFinish = async (values) => {
+        if (!selectedPlan) {
+            message.error("Lütfen önce bir plan seç.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // 1) JWT token
+            const token = localStorage.getItem("token");
+            if (!token) {
+                message.error("Önce giriş yapmanız gerekiyor.");
+                setLoading(false);
+                return;
+            }
+
+            // 2) Backend'in CheckoutRequest DTO'suna uygun body
+            const body = {
+                planType: selectedPlan,          // "monthly" / "yearly"
+                cardHolderName: values.holder,
+                carNumber: values.number,        // DTO'da "carNumber"
+                expiry: values.expiry,           // "AA/YY"
+                cvc: values.cvc,
+                billingAddress: values.address,
+            };
+
+            console.log("Checkout body:", body);
+
+            const res = await axios.post(
+                "http://localhost:8080/api/billing/checkout",
+                body,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            console.log("Checkout response:", res.data);
+
+            // 3) Premium sayfasında göstermek için seçilen planı localStorage'a kaydet
+            const planObj = plansMap[selectedPlan];
+            localStorage.setItem("selectedPlan", JSON.stringify(planObj));
+
+            // küçük toast yine kalsın
+            message.success("Ödeme başarıyla tamamlandı ✨");
+
+            //  4) Başarı modalını aç
+            setSuccessModalVisible(true);
+
+        } catch (err) {
+            console.error(err);
+            message.error("Ödeme sırasında bir hata oluştu.");
+        } finally {
+            setLoading(false);
+        }
     };
-
 
     const smoothScrollToRef = (refEl) => {
         refEl?.scrollIntoView({
@@ -69,22 +126,17 @@ export default function BillingSketchPage() {
     };
 
     const handleSelect = (planKey) => {
-        // sadece planı seçiyoruz, ödeme formunu açmıyorum
-        setSelectedPlan(planKey);
-
+        setSelectedPlan(planKey); // "monthly" / "yearly"
     };
 
     const handleChangePlan = () => {
         setSelectedPlan(null);
-        setShowPayment(false); // plan değiştirince ödeme formunu da tekrar gizle
+        setShowPayment(false);
         smoothScrollToRef(plansTopRef.current);
     };
 
     const handleGoToPayment = () => {
-        // şimdi ödeme formunu açıyorum
         setShowPayment(true);
-
-        // ödeme formu DOM’a girdikten hemen sonra oraya kaydır
         setTimeout(() => {
             smoothScrollToRef(paymentRef.current);
         }, 50);
@@ -109,9 +161,7 @@ export default function BillingSketchPage() {
                         isSelected
                             ? "bg-gradient-to-br from-pink-50 via-fuchsia-50 to-violet-50 border-pink-400 ring-2 ring-pink-400"
                             : "bg-white border-black/10",
-                        isOtherLocked
-                            ? "opacity-50 pointer-events-none"
-                            : "opacity-100",
+                        isOtherLocked ? "opacity-50 pointer-events-none" : "opacity-100",
                     ].join(" ")}
                 >
                     {/* indirim rozeti */}
@@ -153,10 +203,7 @@ export default function BillingSketchPage() {
                     {isSelected && plan.miniFeatures?.length > 0 && (
                         <ul className="mt-6 w-full text-left text-[14px] leading-5 text-gray-800">
                             {plan.miniFeatures.map((m, i) => (
-                                <li
-                                    key={i}
-                                    className="flex items-start gap-2 text-[14px]"
-                                >
+                                <li key={i} className="flex items-start gap-2 text-[14px]">
                                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-pink-500 inline-block" />
                                     <span>{m}</span>
                                 </li>
@@ -196,10 +243,7 @@ export default function BillingSketchPage() {
 
                 {/* başlık */}
                 <div className="text-center mb-8">
-                    <Title
-                        level={2}
-                        className="!m-0 tracking-wide !text-gray-900 text-[28px]"
-                    >
+                    <Title level={2} className="!m-0 tracking-wide !text-gray-900 text-[28px]">
                         ABONELİK VE ÖDEME
                     </Title>
                 </div>
@@ -255,7 +299,7 @@ export default function BillingSketchPage() {
                                     </Button>
                                     <Button
                                         type="primary"
-                                        onClick={handleGoToPayment} // 🔥 artık buraya bağlı
+                                        onClick={handleGoToPayment}
                                         className="!rounded-xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500 font-medium"
                                     >
                                         Ödemeye Geç
@@ -266,18 +310,15 @@ export default function BillingSketchPage() {
                     </div>
                 )}
 
-                {/* ÖDEME BAŞLIĞI + FORMU sadece showPayment true iken */}
+
                 {showPayment && (
                     <>
                         <div
                             className="mb-6 max-w-5xl mx-auto"
                             id="payment-section"
-                            ref={paymentRef} // 🔥 scroll hedefi
+                            ref={paymentRef}
                         >
-                            <Title
-                                level={3}
-                                className="!m-0 !text-gray-900 text-[22px]"
-                            >
+                            <Title level={3} className="!m-0 !text-gray-900 text-[22px]">
                                 ÖDEME BİLGİLERİ
                             </Title>
                         </div>
@@ -300,9 +341,7 @@ export default function BillingSketchPage() {
                                         <Form.Item
                                             label="Kart üzerindeki isim"
                                             name="holder"
-                                            rules={[
-                                                { required: true, message: "Zorunlu alan" },
-                                            ]}
+                                            rules={[{ required: true, message: "Zorunlu alan" }]}
                                         >
                                             <Input
                                                 size="large"
@@ -377,9 +416,7 @@ export default function BillingSketchPage() {
                                         <Form.Item
                                             label="Fatura Adresi Seç"
                                             name="address"
-                                            rules={[
-                                                { required: true, message: "Zorunlu alan" },
-                                            ]}
+                                            rules={[{ required: true, message: "Zorunlu alan" }]}
                                         >
                                             <Select
                                                 size="large"
@@ -412,6 +449,22 @@ export default function BillingSketchPage() {
                         </Card>
                     </>
                 )}
+
+                {/* ÖDEME TAMAMLANDI MODALI */}
+                <Modal
+                    open={successModalVisible}
+                    centered
+                    title="Ödeme Tamamlandı"
+                    okText="Ana sayfaya dön"
+                    cancelButtonProps={{ style: { display: "none" } }}
+                    onOk={() => {
+                        setSuccessModalVisible(false);
+                        navigate("/"); // anasayfa
+                    }}
+                    onCancel={() => setSuccessModalVisible(false)}
+                >
+                    <p>Aboneliğiniz başarıyla aktif edildi. 🎉</p>
+                </Modal>
             </Content>
         </Layout>
     );

@@ -67,7 +67,6 @@ export default function BillingSketchPage() {
         try {
             setLoading(true);
 
-            // 1) JWT token
             const token = localStorage.getItem("token");
             if (!token) {
                 message.error("Önce giriş yapmanız gerekiyor.");
@@ -75,12 +74,16 @@ export default function BillingSketchPage() {
                 return;
             }
 
-            // 2) Backend'in CheckoutRequest DTO'suna uygun body
+            // "MM/YY" --> ["MM","YY"]
+            const [expMonth, expYearShort] = values.expiry.split("/");
+
+            // Backend DTO'suna uygun hale getirme
             const body = {
-                planType: selectedPlan,          // "monthly" / "yearly"
+                planType: selectedPlan,
                 cardHolderName: values.holder,
-                carNumber: values.number,        // DTO'da "carNumber"
-                expiry: values.expiry,           // "AA/YY"
+                cardNumber: values.number,
+                expiryMonth: parseInt(expMonth),
+                expiryYear: parseInt("20" + expYearShort), // 24 → 2024
                 cvc: values.cvc,
                 billingAddress: values.address,
             };
@@ -100,14 +103,10 @@ export default function BillingSketchPage() {
 
             console.log("Checkout response:", res.data);
 
-            // 3) Premium sayfasında göstermek için seçilen planı localStorage'a kaydet
             const planObj = plansMap[selectedPlan];
             localStorage.setItem("selectedPlan", JSON.stringify(planObj));
 
-            // küçük toast yine kalsın
             message.success("Ödeme başarıyla tamamlandı ✨");
-
-            //  4) Başarı modalını aç
             setSuccessModalVisible(true);
 
         } catch (err) {
@@ -117,6 +116,7 @@ export default function BillingSketchPage() {
             setLoading(false);
         }
     };
+
 
     const smoothScrollToRef = (refEl) => {
         refEl?.scrollIntoView({

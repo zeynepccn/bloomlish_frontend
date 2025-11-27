@@ -23,11 +23,11 @@ function RegisterPage() {
         e.preventDefault();
 
         if (formData.password !== formData.confirmPassword) {
-            setError("❌ Şifreler eşleşmiyor!");
+            setError(" Şifreler eşleşmiyor!");
             return;
         }
         if (formData.password.length < 6 || formData.password.length > 12) {
-            setError("❌ Şifre 6 ile 12 karakter arasında olmalıdır!");
+            setError(" Şifre 6 ile 12 karakter arasında olmalıdır!");
             return;
         }
 
@@ -40,7 +40,9 @@ function RegisterPage() {
                     username: formData.fullName,
                     email: formData.email,
                     password: formData.password,
-                    role: formData.userType === "ogrenci" ? "STUDENT" : "TEACHER",
+                    role: formData.userType === "ogrenci"
+                        ? "ROLE_STUDENT"
+                        : "ROLE_INSTRUCTOR",
                 }
             );
 

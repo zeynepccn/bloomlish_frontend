@@ -22,6 +22,8 @@ import EarningsPage from "./pages/EarningsPage.jsx";
 import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
 import QuizQuestionsPage from "./pages/QuizQuestionsPage.jsx";
+import MyLessonsPage from "./pages/MyLessonsPage.jsx";
+import EditLessonPage from "./pages/EditLessonPage.jsx";  
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -55,6 +57,8 @@ function App() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/quiz-questions" element={<QuizQuestionsPage />} />
+          <Route path="/mylessons" element={<MyLessonsPage />} />
+          <Route path="/editlesson/:id" element={<EditLessonPage />} />
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}

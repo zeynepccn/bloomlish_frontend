@@ -86,10 +86,8 @@ function CreateLessonPage() {
                 },
             });
 
-            
-
             alert("Ders başarıyla oluşturuldu!");
-            navigate("/lessons"); 
+            navigate("/mylessons"); 
 
         } catch (error) {
             console.error("Hata:", error);

@@ -8,10 +8,12 @@ function QuizQuestionsPage() {
 
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState([]);
+    const [results, setResults] = useState(null);
+    const [showResultsModal, setShowResultsModal] = useState(false);
+
 
     useEffect(() => {
         if (!state || !state.questions) {
-            // Direkt bu sayfaya gelinmişse geri gönder
             navigate("/quiz");
             return;
         }
@@ -24,8 +26,8 @@ function QuizQuestionsPage() {
         setAnswers(initialAnswers);
     }, [state, navigate]);
 
-    // ⬇⬇⬇ BUNLARIN HEPSİ FONKSİYONUN İÇİNDE OLMALI ⬇⬇⬇
     const handleAnswerSelect = (questionId, optionText) => {
+        if (results) return;
         setAnswers((prev) => {
             const existing = prev.find((a) => a.questionId === questionId);
             if (existing) {
@@ -46,7 +48,7 @@ function QuizQuestionsPage() {
             const res = await axios.post(
                 "http://localhost:8080/api/quiz/submit",
                 {
-                    answers, // [{ questionId, selectedOption }]
+                    answers,
                 },
                 {
                     headers: {
@@ -55,12 +57,16 @@ function QuizQuestionsPage() {
                 }
             );
 
-            const results = res.data; // QuizResultsDto
-            navigate("/quiz-results", { state: { results } });
+            const resultData = res.data;
+            setResults(resultData);
+            setShowResultsModal(true);
         } catch (err) {
             console.error(err);
             alert("Quiz gönderilemedi. Sunucu hatası veya ağ problemi olabilir.");
         }
+    };
+    const getSelectedOption = (questionId) => {
+        return answers.find((a) => a.questionId === questionId)?.selectedOption;
     };
 
     return (
@@ -76,47 +82,118 @@ function QuizQuestionsPage() {
                     </button>
                 </div>
 
-                {questions.map((q, index) => (
-                    <div key={q.id} className="mb-6">
-                        {/* 1., 2., 3. diye numaralandırma */}
-                        <p className="mb-2 font-medium">
-                            {index + 1}. {q.question}
-                        </p>
-                        <div className="flex flex-col gap-2">
-                            {q.options?.map((optText, i) => (
-                                <label
-                                    key={i}
-                                    className="flex items-center gap-2 border p-2 rounded hover:bg-gray-100"
-                                >
-                                    <input
-                                        type="radio"
-                                        name={`question-${q.id}`}
-                                        value={optText}
-                                        checked={
-                                            answers.find(
-                                                (a) => a.questionId === q.id
-                                            )?.selectedOption === optText
+                {questions.map((q, index) => {
+                    const selectedOption = getSelectedOption(q.id);
+
+                    return (
+                        <div key={q.id} className="mb-6">
+                            <p className="mb-2 font-medium">
+                                {index + 1}. {q.question}
+                            </p>
+
+                            <div className="flex flex-col gap-2">
+                                {q.options?.map((optText, i) => {
+                                    const isCorrectOption =
+                                        results && q.answer === optText;
+                                    const isUserSelected =
+                                        selectedOption === optText;
+                                    let extraClasses = "";
+                                    if (results) {
+                                        if (isCorrectOption) {
+                                            extraClasses =
+                                                "bg-green-200 border-green-600";
+                                        } else if (
+                                            isUserSelected &&
+                                            !isCorrectOption
+                                        ) {
+                                            extraClasses =
+                                                "bg-red-200 border-red-600";
                                         }
-                                        onChange={() =>
-                                            handleAnswerSelect(q.id, optText)
-                                        }
-                                    />
-                                    {optText}
-                                </label>
-                            ))}
+                                    }
+
+                                    return (
+                                        <label
+                                            key={i}
+                                            className={`flex items-center gap-2 border p-2 rounded ${extraClasses}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name={`question-${q.id}`}
+                                                value={optText}
+                                                disabled={!!results}
+                                                checked={isUserSelected}
+                                                onChange={() =>
+                                                    handleAnswerSelect(
+                                                        q.id,
+                                                        optText
+                                                    )
+                                                }
+                                            />
+                                            {optText}
+                                        </label>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
 
                 <button
                     onClick={handleSubmit}
                     className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition shadow"
+                    disabled={!!results}
                 >
                     Cevapları Gönder
                 </button>
             </div>
+
+            {showResultsModal && results && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
+                        <h2 className="text-xl font-bold mb-2">Sonuçların 🎉</h2>
+
+                        <p className="text-4xl font-extrabold text-pink-500 mb-2">
+                            {results.score}{" "}
+                            <span className="text-lg font-medium">Puan</span>
+                        </p>
+                        <p className="mb-2">
+                            Seviyen:{" "}
+                            <span className="font-semibold">
+                                {results.level}
+                            </span>
+                        </p>
+
+                        <div className="flex justify-around mb-3">
+                            <div>
+                                <p className="text-green-600 font-semibold">
+                                    Doğru
+                                </p>
+                                <p className="text-lg">
+                                    {results.correctCount}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-red-600 font-semibold">
+                                    Yanlış
+                                </p>
+                                <p className="text-lg">
+                                    {results.wrongCount}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowResultsModal(false)}
+                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                        >
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
 
 export default QuizQuestionsPage;

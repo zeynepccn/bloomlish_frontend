@@ -1,4 +1,3 @@
-// QuizPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -40,10 +39,8 @@ function QuizPage() {
                 },
             });
 
-            const questionsData = res.data; // List<QuestionDto>
+            const questionsData = res.data;
             console.log("GELEN VERİ:", questionsData);
-
-            // Soruları ve ayarları yeni sayfaya gönder
             navigate("/quiz-questions", {
                 state: {
                     questions: questionsData,

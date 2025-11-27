@@ -10,14 +10,12 @@ import BloomlishStartScreen from "./pages/BloomlishStartScreen";
 import RegisterPage from "./pages/RegisterPage";
 import BlogPage from "./components/BlogPage";
 import Foooter from "./components/Footer";
-
 import LessonsPage from "./components/LessonsPage";
 import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
 import InstructorPage from "./pages/instructorPage";
-import CreateLesson from "./pages/CreateLessonPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
 import AdminPage from "./pages/AdminPage.jsx";
 import EarningsPage from "./pages/EarningsPage.jsx";
@@ -57,8 +55,6 @@ function App() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/quiz-questions" element={<QuizQuestionsPage />} />
-          {/* Diğer rotalar buraya eklenecek */}
-
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}

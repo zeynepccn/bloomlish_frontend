@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function QuizPage() {
     const navigate = useNavigate();
 
-    // Dummy state
     const [lastResult] = useState({
         score: 85,
         level: "Orta",
@@ -15,31 +15,72 @@ function QuizPage() {
 
     const [testType, setTestType] = useState("");
     const [difficulty, setDifficulty] = useState("");
-    const [duration, setDuration] = useState("");
+    const [questionCount, setQuestionCount] = useState("");
     const [aiSuggestion, setAiSuggestion] = useState(null);
 
-    const handleStart = () => {
-        if (!testType || !difficulty || !duration) {
+    const handleStart = async () => {
+        if (!testType || !difficulty || !questionCount) {
             alert("Lütfen tüm seçenekleri doldur!");
             return;
         }
-        navigate("/quiz", {
-            state: { testType, difficulty, duration },
-        });
+
+        try {
+            const token = localStorage.getItem("token");
+            console.log("Token:", token);
+
+            const res = await axios.get("http://localhost:8080/api/quiz/start", {
+                params: {
+                    testType,
+                    difficulty,
+                    limit: questionCount,
+                },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const questionsData = res.data;
+            console.log("GELEN VERİ:", questionsData);
+            navigate("/quiz-questions", {
+                state: {
+                    questions: questionsData,
+                    testType,
+                    difficulty,
+                },
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Quiz başlatılamadı. Sunucu hatası veya ağ problemi olabilir.");
+        }
     };
 
     const handleAiSuggestion = () => {
         const suggestions = [
-            { testType: "Kelime Bilgisi", difficulty: "Orta", duration: "5dk" },
-            { testType: "Dilbilgisi", difficulty: "Başlangıç", duration: "10dk" },
-            { testType: "Okuma Anlama", difficulty: "İleri", duration: "15dk" },
+            { testType: "Kelime Bilgisi", difficulty: "Medium", duration: "5dk" },
+            { testType: "Dilbilgisi", difficulty: "Easy", duration: "10dk" },
+            { testType: "Okuma Anlama", difficulty: "Hard", duration: "15dk" },
         ];
         const random = suggestions[Math.floor(Math.random() * suggestions.length)];
         setAiSuggestion(random);
 
-        setTestType(random.testType.toLowerCase());
+        const lowerType =
+            random.testType === "Kelime Bilgisi"
+                ? "kelime"
+                : random.testType === "Dilbilgisi"
+                    ? "dilbilgisi"
+                    : random.testType === "Okuma Anlama"
+                        ? "okuma"
+                        : "kelime";
+
+        setTestType(lowerType);
         setDifficulty(random.difficulty);
-        setDuration(random.duration);
+        setQuestionCount(
+            random.duration === "5dk"
+                ? 5
+                : random.duration === "10dk"
+                    ? 10
+                    : 15
+        );
     };
 
     return (
@@ -51,7 +92,7 @@ function QuizPage() {
                     Yapay zeka destekli sistemimizle seviyeni belirle, sana özel içeriklere ulaş 💜
                 </p>
                 <button
-                    onClick={() => navigate("/quiz")}
+                    onClick={handleStart}
                     className="bg-blue-200 px-6 py-2 rounded-lg text-lg font-medium shadow hover:bg-blue-300 transition"
                 >
                     Testi Başlat
@@ -63,7 +104,9 @@ function QuizPage() {
                 <div className="p-6 bg-white rounded-2xl shadow-lg border text-center">
                     <h2 className="font-semibold mb-3 text-lg">Sonuçlarım</h2>
                     <p className="text-4xl font-extrabold text-pink-500">{lastResult.score}</p>
-                    <p className="mt-1">Seviyen: <span className="font-medium">{lastResult.level}</span></p>
+                    <p className="mt-1">
+                        Seviyen: <span className="font-medium">{lastResult.level}</span>
+                    </p>
                     <p className="text-sm text-gray-500">Tarih: {lastResult.date}</p>
                 </div>
 
@@ -102,11 +145,13 @@ function QuizPage() {
 
                     <label className="block mb-2 font-medium">Zorluk Seviyesi</label>
                     <div className="flex gap-2 mb-4">
-                        {["Başlangıç", "Orta", "İleri"].map((level) => (
+                        {["Easy", "Medium", "Hard"].map((level) => (
                             <button
                                 key={level}
                                 onClick={() => setDifficulty(level)}
-                                className={`px-3 py-1 rounded-lg border transition ${difficulty === level ? "bg-pink-200 border-pink-400" : "hover:bg-gray-100"
+                                className={`px-3 py-1 rounded-lg border transition ${difficulty === level
+                                    ? "bg-pink-200 border-pink-400"
+                                    : "hover:bg-gray-100"
                                     }`}
                             >
                                 {level}
@@ -114,16 +159,18 @@ function QuizPage() {
                         ))}
                     </div>
 
-                    <label className="block mb-2 font-medium">Süre</label>
+                    <label className="block mb-2 font-medium">Soru Sayısı</label>
                     <div className="flex gap-2 mb-4">
-                        {["5dk", "10dk", "15dk"].map((time) => (
+                        {[5, 10, 15].map((count) => (
                             <button
-                                key={time}
-                                onClick={() => setDuration(time)}
-                                className={`px-3 py-1 rounded-lg border transition ${duration === time ? "bg-pink-200 border-pink-400" : "hover:bg-gray-100"
+                                key={count}
+                                onClick={() => setQuestionCount(count)}
+                                className={`px-3 py-1 rounded-lg border transition ${questionCount === count
+                                    ? "bg-pink-200 border-pink-400"
+                                    : "hover:bg-gray-100"
                                     }`}
                             >
-                                {time}
+                                {count} Soru
                             </button>
                         ))}
                     </div>
@@ -151,9 +198,12 @@ function QuizPage() {
 
                     {aiSuggestion && (
                         <div className="mt-4 text-sm bg-gray-50 p-3 rounded border">
-                            <p><strong>Test Türü:</strong> {aiSuggestion.testType}</p>
-                            <p><strong>Zorluk:</strong> {aiSuggestion.difficulty}</p>
-                            <p><strong>Süre:</strong> {aiSuggestion.duration}</p>
+                            <p>
+                                <strong>Test Türü:</strong> {aiSuggestion.testType}</p>
+                            <p>
+                                <strong>Zorluk:</strong> {aiSuggestion.difficulty}</p>
+                            <p>
+                                <strong>Süre:</strong> {aiSuggestion.duration}</p>
                         </div>
                     )}
                 </div>
@@ -162,6 +212,4 @@ function QuizPage() {
     );
 }
 
-
 export default QuizPage;
-

@@ -10,24 +10,65 @@ function QuizQuestionsPage() {
     const [answers, setAnswers] = useState([]);
     const [results, setResults] = useState(null);
     const [showResultsModal, setShowResultsModal] = useState(false);
+    const [listeningData, setListeningData] = useState(null);
 
+    const isListening = state?.testType === "dinleme";
 
     useEffect(() => {
-        if (!state || !state.questions) {
+        if (!state) {
             navigate("/quiz");
             return;
         }
-        setQuestions(state.questions);
 
-        const initialAnswers = state.questions.map((q) => ({
-            questionId: q.id,
-            selectedOption: null,
-        }));
-        setAnswers(initialAnswers);
-    }, [state, navigate]);
+        if (isListening && state.listeningData) {
+            // backend'den gelen: { difficulty, audioGroups: [ { audioUrl, questions: [...] } ] }
+            setListeningData(state.listeningData);
+
+            const flatQuestions = state.listeningData.audioGroups.flatMap(
+                (group) => group.questions
+            );
+
+            setQuestions(flatQuestions);
+
+            const initialAnswers = flatQuestions.map((q) => ({
+                questionId: q.id,
+                selectedOption: null,
+            }));
+            setAnswers(initialAnswers);
+        } else if (state.questions) {
+            // normal quizler (kelime, dilbilgisi, okuma, yazım vs.)
+            // Aynı mp3'e ait sorular peş peşe gelsin diye audioUrl + id'ye göre sıralıyoruz
+            const sorted = [...state.questions].sort((a, b) => {
+                const auA = a.audioUrl || "";
+                const auB = b.audioUrl || "";
+                if (auA === auB) {
+                    return (a.id || 0) - (b.id || 0);
+                }
+                return auA.localeCompare(auB);
+            });
+
+            setQuestions(sorted);
+
+            const initialAnswers = sorted.map((q) => ({
+                questionId: q.id,
+                selectedOption: null,
+            }));
+            setAnswers(initialAnswers);
+        } else {
+            navigate("/quiz");
+        }
+    }, [state, navigate, isListening]);
+
+    const getListeningTopicFromAudioUrl = (audioUrl) => {
+        if (!audioUrl) return "Listening";
+
+        const fileName = audioUrl.split("/").pop(); // lesson35_conversation.mp3
+
+    };
 
     const handleAnswerSelect = (questionId, optionText) => {
         if (results) return;
+
         setAnswers((prev) => {
             const existing = prev.find((a) => a.questionId === questionId);
             if (existing) {
@@ -47,9 +88,7 @@ function QuizQuestionsPage() {
 
             const res = await axios.post(
                 "http://localhost:8080/api/quiz/submit",
-                {
-                    answers,
-                },
+                { answers },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -65,6 +104,7 @@ function QuizQuestionsPage() {
             alert("Quiz gönderilemedi. Sunucu hatası veya ağ problemi olabilir.");
         }
     };
+
     const getSelectedOption = (questionId) => {
         return answers.find((a) => a.questionId === questionId)?.selectedOption;
     };
@@ -82,61 +122,170 @@ function QuizQuestionsPage() {
                     </button>
                 </div>
 
-                {questions.map((q, index) => {
-                    const selectedOption = getSelectedOption(q.id);
+                {/* 🔊 DINLEME QUIZİ İSE GRUPLU GÖSTER */}
+                {isListening && listeningData ? (
+                    // audioGroups zaten backend'de audioUrl'e göre gruplanmış durumda
+                    listeningData.audioGroups.map((group, groupIndex) => (
 
-                    return (
-                        <div key={q.id} className="mb-6">
-                            <p className="mb-2 font-medium">
-                                {index + 1}. {q.question}
-                            </p>
+                        <div
+                            key={group.audioId ?? groupIndex}
+                            className="mb-8 border-b pb-4"
+                        >
+                            <div className="mb-3">
+                                <p className="text-lg font-bold text-purple-700 mb-1">
+                                    🎧{group.topic || "Listening Activity"}
+                                </p>
+                                <p className="text-sm text-gray-600 -mt-1 mb-2">
+                                    Listening {groupIndex + 1}
+                                </p>
 
-                            <div className="flex flex-col gap-2">
-                                {q.options?.map((optText, i) => {
-                                    const isCorrectOption =
-                                        results && q.answer === optText;
-                                    const isUserSelected =
-                                        selectedOption === optText;
-                                    let extraClasses = "";
-                                    if (results) {
-                                        if (isCorrectOption) {
-                                            extraClasses =
-                                                "bg-green-200 border-green-600";
-                                        } else if (
-                                            isUserSelected &&
-                                            !isCorrectOption
-                                        ) {
-                                            extraClasses =
-                                                "bg-red-200 border-red-600";
-                                        }
-                                    }
-
-                                    return (
-                                        <label
-                                            key={i}
-                                            className={`flex items-center gap-2 border p-2 rounded ${extraClasses}`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name={`question-${q.id}`}
-                                                value={optText}
-                                                disabled={!!results}
-                                                checked={isUserSelected}
-                                                onChange={() =>
-                                                    handleAnswerSelect(
-                                                        q.id,
-                                                        optText
-                                                    )
-                                                }
-                                            />
-                                            {optText}
-                                        </label>
-                                    );
-                                })}
+                                <audio
+                                    controls
+                                    src={`http://localhost:8080${group.audioUrl}`}
+                                    className="w-full my-3"
+                                />
                             </div>
+
+                            {group.questions.map((q, index) => {
+                                const selectedOption = getSelectedOption(q.id);
+
+                                return (
+                                    <div key={q.id} className="mb-4">
+                                        <p className="mb-2 font-medium">
+                                            {index + 1}. {q.question}
+                                        </p>
+
+                                        <div className="flex flex-col gap-2">
+                                            {q.options?.map((optText, i) => {
+                                                const isCorrectOption =
+                                                    results && q.answer === optText;
+                                                const isUserSelected =
+                                                    selectedOption === optText;
+
+                                                let extraClasses = "";
+                                                if (results) {
+                                                    if (isCorrectOption) {
+                                                        extraClasses =
+                                                            "bg-green-200 border-green-600";
+                                                    } else if (
+                                                        isUserSelected &&
+                                                        !isCorrectOption
+                                                    ) {
+                                                        extraClasses =
+                                                            "bg-red-200 border-red-600";
+                                                    }
+                                                }
+
+                                                return (
+                                                    <label
+                                                        key={i}
+                                                        className={`flex items-center gap-2 border p-2 rounded ${extraClasses}`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name={`question-${q.id}`}
+                                                            value={optText}
+                                                            disabled={!!results}
+                                                            checked={isUserSelected}
+                                                            onChange={() =>
+                                                                handleAnswerSelect(
+                                                                    q.id,
+                                                                    optText
+                                                                )
+                                                            }
+                                                        />
+                                                        {optText}
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    );
-                })}
+                    ))
+                ) : (
+                    // 🔤 NORMAL QUIZLER (kelime, dil, okuma, yazım vs.)
+                    questions.map((q, index) => {
+                        const selectedOption = getSelectedOption(q.id);
+
+                        const audioUrl = q.audioUrl
+                            ? `http://localhost:8080${q.audioUrl}`
+                            : null;
+
+                        // Normal tipte bir soruda da audio varsa (ileride kullanırsan)
+                        // aynı mantıkla render edilecek
+                        const prevAudioUrl =
+                            index > 0 ? questions[index - 1].audioUrl : null;
+                        const isFirstOfGroup =
+                            q.audioUrl && q.audioUrl !== prevAudioUrl;
+
+                        return (
+                            <div key={q.id} className="mb-6 border-b pb-4">
+                                {isFirstOfGroup && audioUrl && (
+                                    <div className="mb-3">
+                                        <p className="text-sm font-semibold text-blue-700 mb-1">
+                                            {getListeningTopicFromAudioUrl(q.audioUrl)}
+                                        </p>
+                                        <audio
+                                            controls
+                                            src={audioUrl}
+                                            className="w-full my-3"
+                                        />
+                                    </div>
+                                )}
+
+                                <p className="mb-2 font-medium">
+                                    {index + 1}. {q.question}
+                                </p>
+
+                                <div className="flex flex-col gap-2">
+                                    {q.options?.map((optText, i) => {
+                                        const isCorrectOption =
+                                            results && q.answer === optText;
+                                        const isUserSelected =
+                                            selectedOption === optText;
+
+                                        let extraClasses = "";
+                                        if (results) {
+                                            if (isCorrectOption) {
+                                                extraClasses =
+                                                    "bg-green-200 border-green-600";
+                                            } else if (
+                                                isUserSelected && !isCorrectOption
+                                            ) {
+                                                extraClasses =
+                                                    "bg-red-200 border-red-600";
+                                            }
+                                        }
+
+                                        return (
+                                            <label
+                                                key={i}
+                                                className={`flex items-center gap-2 border p-2 rounded ${extraClasses}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name={`question-${q.id}`}
+                                                    value={optText}
+                                                    disabled={!!results}
+                                                    checked={isUserSelected}
+                                                    onChange={() =>
+                                                        handleAnswerSelect(
+                                                            q.id,
+                                                            optText
+                                                        )
+                                                    }
+                                                />
+                                                {optText}
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
 
                 <button
                     onClick={handleSubmit}
@@ -158,27 +307,17 @@ function QuizQuestionsPage() {
                         </p>
                         <p className="mb-2">
                             Seviyen:{" "}
-                            <span className="font-semibold">
-                                {results.level}
-                            </span>
+                            <span className="font-semibold">{results.level}</span>
                         </p>
 
                         <div className="flex justify-around mb-3">
                             <div>
-                                <p className="text-green-600 font-semibold">
-                                    Doğru
-                                </p>
-                                <p className="text-lg">
-                                    {results.correctCount}
-                                </p>
+                                <p className="text-green-600 font-semibold">Doğru</p>
+                                <p className="text-lg">{results.correctCount}</p>
                             </div>
                             <div>
-                                <p className="text-red-600 font-semibold">
-                                    Yanlış
-                                </p>
-                                <p className="text-lg">
-                                    {results.wrongCount}
-                                </p>
+                                <p className="text-red-600 font-semibold">Yanlış</p>
+                                <p className="text-lg">{results.wrongCount}</p>
                             </div>
                         </div>
 
@@ -194,6 +333,5 @@ function QuizQuestionsPage() {
         </div>
     );
 }
-
 
 export default QuizQuestionsPage;

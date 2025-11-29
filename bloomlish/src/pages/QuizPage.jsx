@@ -28,31 +28,62 @@ function QuizPage() {
             const token = localStorage.getItem("token");
             console.log("Token:", token);
 
-            const res = await axios.get("http://localhost:8080/api/quiz/start", {
-                params: {
-                    testType,
+            let url = "http://localhost:8080/api/quiz/start";
+            let params = {
+                testType,
+                difficulty,
+                limit: questionCount,
+            };
+
+            // 🔊 Eğer dinleme ise farklı endpoint ve farklı response bekliyoruz
+            const isListening = testType === "dinleme";
+            if (isListening) {
+                url = "http://localhost:8080/api/quiz/start/listening";
+                params = {
                     difficulty,
                     limit: questionCount,
-                },
+                };
+            }
+            console.log("Gittiği URL:", url);
+            console.log("Params:", params);
+
+
+            const res = await axios.get(url, {
+                params,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            const questionsData = res.data;
-            console.log("GELEN VERİ:", questionsData);
-            navigate("/quiz-questions", {
-                state: {
-                    questions: questionsData,
-                    testType,
-                    difficulty,
-                },
-            });
+            const data = res.data;
+            console.log("GELEN VERİ:", data);
+
+            if (isListening) {
+                // listening için gruplanmış data
+                navigate("/quiz-questions", {
+                    state: {
+                        listeningData: data,
+                        testType,
+                        difficulty,
+                    },
+                });
+            } else {
+                // normal quizler
+                navigate("/quiz-questions", {
+                    state: {
+                        questions: data,
+                        testType,
+                        difficulty,
+                    },
+                });
+            }
         } catch (err) {
             console.error(err);
             alert("Quiz başlatılamadı. Sunucu hatası veya ağ problemi olabilir.");
         }
+
     };
+
 
     const handleAiSuggestion = () => {
         const suggestions = [

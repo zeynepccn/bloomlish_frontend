@@ -59,13 +59,6 @@ function QuizQuestionsPage() {
         }
     }, [state, navigate, isListening]);
 
-    const getListeningTopicFromAudioUrl = (audioUrl) => {
-        if (!audioUrl) return "Listening";
-
-        const fileName = audioUrl.split("/").pop(); // lesson35_conversation.mp3
-
-    };
-
     const handleAnswerSelect = (questionId, optionText) => {
         if (results) return;
 
@@ -108,6 +101,21 @@ function QuizQuestionsPage() {
     const getSelectedOption = (questionId) => {
         return answers.find((a) => a.questionId === questionId)?.selectedOption;
     };
+    const getListeningTopicFromAudioUrl = (audioUrl) => {
+        if (!audioUrl) return "Listening Activity";
+        // İstersen dosya adına göre özel şeyler yazarsın
+        return "Listening Activity";
+    };
+    const getGlobalListeningIndex = (audioGroups, groupIndex, questionIndex) => {
+        let offset = 0;
+
+        for (let i = 0; i < groupIndex; i++) {
+            offset += audioGroups[i].questions.length;
+        }
+
+        // önceki gruplardaki toplam soru + bu gruptaki sıra
+        return offset + questionIndex + 1;
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6">
@@ -148,11 +156,15 @@ function QuizQuestionsPage() {
 
                             {group.questions.map((q, index) => {
                                 const selectedOption = getSelectedOption(q.id);
-
+                                const displayIndex = getGlobalListeningIndex(
+                                    listeningData.audioGroups,
+                                    groupIndex,
+                                    index
+                                );
                                 return (
                                     <div key={q.id} className="mb-4">
                                         <p className="mb-2 font-medium">
-                                            {index + 1}. {q.question}
+                                            {displayIndex}. {q.question}
                                         </p>
 
                                         <div className="flex flex-col gap-2">

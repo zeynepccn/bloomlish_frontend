@@ -24,6 +24,7 @@ import QuizPage from "./pages/QuizPage.jsx";
 import QuizQuestionsPage from "./pages/QuizQuestionsPage.jsx";
 import MyLessonsPage from "./pages/MyLessonsPage.jsx";
 import EditLessonPage from "./pages/EditLessonPage.jsx";  
+import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -59,6 +60,7 @@ function App() {
           <Route path="/quiz-questions" element={<QuizQuestionsPage />} />
           <Route path="/mylessons" element={<MyLessonsPage />} />
           <Route path="/editlesson/:id" element={<EditLessonPage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </div>
       {userId && userId > 0 && <ChatWidget currentUserId={userId} />}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Layout,
     Card,
@@ -25,27 +25,45 @@ import {
     BookOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const { Content } = Layout;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const MOCK_USER = {
     name: "Zeynep Cocen",
     level: "B1",
     email: "yarencocen88@gmail.com",
     badges: ["Kelime Ustası", "Quiz Şampiyonu"],
-    weeklyGoal: { completed: 3, target: 5 }, // 3/5
+    weeklyGoal: { completed: 3, target: 5 },
     totals: { lessons: 20, tests: 12, points: 8450 },
     aiTip:
         "Zeynep, kelime testlerinde çok iyisin! Dinleme pratiğine biraz daha zaman ayırmalısın.",
-    classes: [
-        { id: 1, title: "DENİZ METİN English B1 MW dersi", done: true },
-        { id: 2, title: "Grammar B1 Atölyesi", done: false },
-    ],
 };
 
 export default function ProfilePage() {
     const n = useNavigate();
+
+
+    const [myLessons, setMyLessons] = useState([]);
+
+   
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        axios
+            .get("http://localhost:8080/api/payments/my-lessons", {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((res) => {
+                console.log("Dersler → ", res.data);
+                setMyLessons(res.data);
+            })
+            .catch((err) => {
+                console.error("Dersler çekilemedi:", err);
+            });
+    }, []);
+
     const progressPct =
         Math.round(
             (MOCK_USER.weeklyGoal.completed / MOCK_USER.weeklyGoal.target) * 100
@@ -106,13 +124,12 @@ export default function ProfilePage() {
                     <div className="inline-flex items-center gap-2">
                         <span className="text-2xl">🫶</span>
                         <Text className="text-pink-600 font-semibold text-lg">
-                            “Merhaba Zeynep! Bugün harika bir gün, İngilizce pratiğine devam
-                            edelim”
+                            “Merhaba Zeynep! Bugün harika bir gün, İngilizce pratiğine devam edelim”
                         </Text>
                     </div>
                 </div>
 
-                {/* GRID TOP: Rozetler & Hedef Kutusu */}
+                {/* GRID TOP */}
                 <Row gutter={[16, 16]} className="mb-2">
                     {/* Rozetler */}
                     <Col xs={24} md={12}>
@@ -159,26 +176,18 @@ export default function ProfilePage() {
                                         to: "#a21caf",
                                     }}
                                     status="active"
-                                    className="[&_.ant-progress-inner]:!rounded-lg"
                                 />
                             </div>
                             <Text className="block text-gray-700 mb-3">
                                 % {progressPct} tamamlandı
                             </Text>
-                            <div className="px-3 py-2 rounded-xl bg-rose-100/80 border border-rose-200 inline-block">
-                                <Text className="text-rose-700">
-                                    “Haftalık hedef: {MOCK_USER.weeklyGoal.target} ders tamamla (
-                                    {MOCK_USER.weeklyGoal.completed}/
-                                    {MOCK_USER.weeklyGoal.target})”
-                                </Text>
-                            </div>
                         </Card>
                     </Col>
                 </Row>
 
-                {/* GRID BOTTOM: İlerleme & Aktivite  |  Derslerim & Testlerim */}
+                {/* GRID BOTTOM */}
                 <Row gutter={[16, 16]}>
-                    {/* İlerleme ve Aktivite */}
+                    {/* İlerleme & Aktivite */}
                     <Col xs={24} md={12}>
                         <Card
                             title={
@@ -189,36 +198,6 @@ export default function ProfilePage() {
                             }
                             className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
                         >
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                                <Card
-                                    size="small"
-                                    className="!rounded-xl text-center border-pink-100"
-                                >
-                                    <Text className="text-gray-500 block">Toplam Ders Sayısı</Text>
-                                    <Title level={3} className="!m-0 text-pink-600">
-                                        {MOCK_USER.totals.lessons}
-                                    </Title>
-                                </Card>
-                                <Card
-                                    size="small"
-                                    className="!rounded-xl text-center border-pink-100"
-                                >
-                                    <Text className="text-gray-500 block">Çözülmüş Testler</Text>
-                                    <Title level={3} className="!m-0 text-pink-600">
-                                        {MOCK_USER.totals.tests}
-                                    </Title>
-                                </Card>
-                                <Card
-                                    size="small"
-                                    className="!rounded-xl text-center border-pink-100"
-                                >
-                                    <Text className="text-gray-500 block">Toplam Puan</Text>
-                                    <Title level={3} className="!m-0 text-pink-600">
-                                        {MOCK_USER.totals.points.toLocaleString("tr-TR")}
-                                    </Title>
-                                </Card>
-                            </div>
-
                             <div className="p-3 border border-rose-100 rounded-xl bg-rose-50">
                                 <div className="flex items-center gap-2 mb-1">
                                     <BulbOutlined className="text-pink-500" />
@@ -229,64 +208,48 @@ export default function ProfilePage() {
                         </Card>
                     </Col>
 
-                    {/* Derslerim & Testlerim (en alt sağ) */}
+                    {/* Derslerim & Testlerim */}
                     <Col xs={24} md={12}>
                         <Card
                             title={
                                 <div className="flex items-center gap-2">
                                     <BookOutlined className="text-pink-500" />
-                                    <span>Derslerim & Testlerim</span>
+                                    <span>Derslerim</span>
                                 </div>
-                            }
-                            extra={
-                                <Tooltip title="Dersler sayfasına git">
-                                    <Button
-                                        size="small"
-                                        className="!rounded-lg"
-                                        onClick={() => n("/lessons")}
-                                    >
-                                        Tümünü Gör
-                                    </Button>
-                                </Tooltip>
                             }
                             className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
                         >
                             <List
                                 itemLayout="horizontal"
-                                dataSource={MOCK_USER.classes}
-                                renderItem={(item) => (
+                                dataSource={myLessons}
+                                renderItem={(lesson) => (
                                     <List.Item className="!px-2">
                                         <List.Item.Meta
                                             avatar={
-                                                <Badge
-                                                    dot
-                                                    status={item.done ? "success" : "processing"}
-                                                    offset={[0, 6]}
-                                                >
-                                                    <Avatar
-                                                        size={40}
-                                                        className="bg-pink-100 text-pink-600"
-                                                        icon={<BookOutlined />}
-                                                    />
-                                                </Badge>
+                                                <Avatar
+                                                    size={40}
+                                                    className="bg-pink-100 text-pink-600"
+                                                    icon={<BookOutlined />}
+                                                />
                                             }
                                             title={
-                                                <div className="flex items-center gap-2">
-                                                    <Text className="text-gray-800">{item.title}</Text>
-                                                    {item.done && (
-                                                        <CheckCircleTwoTone twoToneColor="#22c55e" />
-                                                    )}
-                                                </div>
+                                                <Text className="text-gray-800">
+                                                    {lesson.name}
+                                                </Text>
                                             }
                                             description={
                                                 <span className="text-gray-500">
-                                                    {item.done ? "Tamamlandı" : "Devam ediyor"}
+                                                    {lesson.description}
                                                 </span>
                                             }
                                         />
                                     </List.Item>
                                 )}
                             />
+
+                            {myLessons.length === 0 && (
+                                <Text className="text-gray-500">Henüz dersiniz yok.</Text>
+                            )}
                         </Card>
                     </Col>
                 </Row>

@@ -125,6 +125,29 @@ export default function LessonsPage() {
         }
     };
 
+    const handleEnroll = async (lessonId) => {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            alert("Derse kaydolmak için önce giriş yapmalısınız!");
+            return;
+        }
+
+        try {
+            const res = await axios.post(
+                `http://localhost:8080/api/payments/lesson/${lessonId}`,
+                {},
+                { headers: { Authorization: "Bearer " + token } }
+            );
+
+            window.location.href = res.data.paymentUrl;
+        } catch (err) {
+            console.error(err);
+            alert("Ödeme başlatılamadı.");
+        }
+    };
+
+
 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -286,9 +309,15 @@ export default function LessonsPage() {
                                                 {lesson.price} TL
                                             </div>
 
-                                            <Button type="primary" shape="round" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-5">
+                                            <Button
+                                                type="primary"
+                                                shape="round"
+                                                className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-5"
+                                                onClick={() => handleEnroll(lesson.id)}
+                                            >
                                                 Kaydol
                                             </Button>
+
                                         </div>
                                     </div>
                                 </Card>

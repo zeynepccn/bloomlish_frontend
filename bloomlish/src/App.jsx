@@ -33,8 +33,30 @@ function App() {
   console.log("✅ userId:", localStorage.getItem("userId"));
   console.log("✅ userId (Number):", Number(localStorage.getItem("userId")));
 
+  const token = localStorage.getItem("token");
+
+  let currentUserId = null;
+  let currentUserRole = null;
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+
+      currentUserId = payload.id || payload.userId || payload.sub || null;
+
+      if (payload.roles && payload.roles.length > 0) {
+        currentUserRole = payload.roles[0];
+      }
+    } catch (e) {
+      console.error("JWT parse hatası:", e);
+    }
+  }
+
+
 
   return (
+
+
     <Router>
       <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <div className="pt-20">
@@ -63,8 +85,16 @@ function App() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </div>
-      {userId && userId > 0 && <ChatWidget currentUserId={userId} />}
+      {currentUserId && currentUserRole === "ROLE_STUDENT" && (
+        <ChatWidget
+          currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
+        />
+      )}
+
     </Router>
+
+    
 
   );
 }

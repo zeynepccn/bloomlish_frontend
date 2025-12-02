@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function MyLessonsPage() {
     const [lessons, setLessons] = useState([]);
-    const [page, setPage] = useState(1);          
-    const lessonsPerPage = 4;                      
+    const [page, setPage] = useState(1);
+    const lessonsPerPage = 4;
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -22,7 +23,6 @@ function MyLessonsPage() {
             .catch((err) => console.error(err));
     }, []);
 
- 
     const startIndex = (page - 1) * lessonsPerPage;
     const paginatedLessons = lessons.slice(startIndex, startIndex + lessonsPerPage);
 
@@ -41,25 +41,59 @@ function MyLessonsPage() {
             });
 
             setLessons((prev) => prev.filter((l) => l.id !== lessonId));
-
         } catch (err) {
             console.error(err);
             alert("Ders silinirken bir hata oluştu!");
         }
     };
 
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 to-rose-100 p-10 flex flex-col items-center">
-            <h1 className="text-4xl font-bold text-pink-700 mb-10 drop-shadow">
+
+            {/* ÜST KONTROL BARI */}
+            <div className="w-full max-w-4xl flex justify-between items-center mb-8">
+                <button
+                    onClick={() => navigate("/instructor")}
+                    className="px-5 py-2 rounded-full border border-pink-300 bg-white shadow hover:bg-pink-50 transition"
+                >
+                    ← Eğitmen Paneli
+                </button>
+
+                <button
+                    onClick={() => navigate("/createlesson")}
+                    className="px-5 py-2 rounded-full bg-pink-500 text-white shadow hover:bg-pink-600 transition"
+                >
+                    + Yeni Ders Oluştur
+                </button>
+            </div>
+
+            {/* BAŞLIK */}
+            <h1 className="text-4xl font-bold text-pink-700 mb-6 drop-shadow">
                 Derslerim
             </h1>
 
-            {lessons.length === 0 && (
-                <p className="text-xl text-gray-600">Henüz ders oluşturmadınız.</p>
+            {/* DERSTEN GELEN BAŞARI BİLGİSİ */}
+            {location.state?.from === "create" && (
+                <div className="mb-6 w-full max-w-4xl p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm shadow">
+                    🎉 Ders başarıyla oluşturuldu!
+                </div>
             )}
 
-            <div className="w-full max-w-4xl space-y-6">
+            {/* BOŞ DURUM */}
+            {lessons.length === 0 && (
+                <div className="bg-white p-6 rounded-3xl shadow-xl border border-pink-200 text-center max-w-lg mt-10">
+                    <p className="text-xl text-gray-600 mb-4">Henüz ders oluşturmadınız.</p>
+                    <button
+                        onClick={() => navigate("/createlesson")}
+                        className="px-6 py-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition"
+                    >
+                        İlk dersini oluştur ✨
+                    </button>
+                </div>
+            )}
+
+            {/* DERS LİSTESİ */}
+            <div className="w-full max-w-4xl space-y-6 mt-4">
                 {paginatedLessons.map((lesson) => (
                     <div
                         key={lesson.id}
@@ -75,7 +109,7 @@ function MyLessonsPage() {
                             </span>
                         </div>
 
-                        <div className="flex gap-3 mb-4">
+                        <div className="flex gap-3 mb-3">
                             <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm">
                                 {lesson.category}
                             </span>
@@ -105,17 +139,14 @@ function MyLessonsPage() {
                             >
                                 Sil
                             </button>
-
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* ➕ Pagination Buttons */}
+            {/* SAYFALAMA */}
             {lessons.length > lessonsPerPage && (
                 <div className="flex items-center gap-4 mt-10">
-
-                    {/* Önceki */}
                     <button
                         disabled={page === 1}
                         onClick={() => setPage(page - 1)}
@@ -127,12 +158,10 @@ function MyLessonsPage() {
                         Önceki
                     </button>
 
-                    {/* Sayfa Numarası */}
                     <span className="text-pink-700 font-semibold text-lg px-4 py-2 rounded-xl bg-white shadow border border-pink-200">
                         {page} / {totalPages}
                     </span>
 
-                    {/* Sonraki */}
                     <button
                         disabled={page === totalPages}
                         onClick={() => setPage(page + 1)}

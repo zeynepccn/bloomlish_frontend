@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Modal } from "antd";
+
 import {
     Layout,
     Card,
@@ -23,12 +25,15 @@ import {
     BulbOutlined,
     CheckCircleTwoTone,
     BookOutlined,
+    
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
+
+
 
 const MOCK_USER = {
     name: "Zeynep Cocen",
@@ -46,6 +51,9 @@ export default function ProfilePage() {
 
 
     const [myLessons, setMyLessons] = useState([]);
+    const [openLessonModal, setOpenLessonModal] = useState(false);
+    const [selectedLesson, setSelectedLesson] = useState(null);
+    const [timeLeft, setTimeLeft] = useState("");
 
    
     useEffect(() => {
@@ -68,6 +76,84 @@ export default function ProfilePage() {
         Math.round(
             (MOCK_USER.weeklyGoal.completed / MOCK_USER.weeklyGoal.target) * 100
         ) || 0;
+    
+    const getLessonStatus = (lesson) => {
+    const now = new Date();
+    const start = new Date(lesson.date + " " + lesson.startTime);
+    const end = new Date(lesson.date + " " + lesson.endTime);
+
+    if (now > end) return { status: "Tamamlandı", color: "default", disabled: true };
+    if (now > start && now < end) return { status: "Ders Devam Ediyor", color: "green", disabled: false };
+    return { status: "Yaklaşan Ders", color: "magenta", disabled: false };
+};
+
+// --- Sıralama fonksiyonu (Tamamlananlar en altta) ---
+const sortLessons = (lessons) => {
+    return [...lessons].sort((a, b) => {
+        const now = new Date();
+        const startA = new Date(a.date + " " + a.startTime);
+        const endA = new Date(a.date + " " + a.endTime);
+        const startB = new Date(b.date + " " + b.startTime);
+        const endB = new Date(b.date + " " + b.endTime);
+
+        const doneA = now > endA;
+        const doneB = now > endB;
+
+        if (doneA && !doneB) return 1;
+        if (!doneA && doneB) return -1;
+
+        return startA - startB;
+    });
+};
+
+
+
+    const calculateTimeLeft = (lesson) => {
+        const now = new Date();
+        const start = new Date(lesson.date + " " + lesson.startTime);
+
+        let diff = start - now;
+        if (diff <= 0) return "Ders başlamak üzere!";
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+
+        const minutes = Math.floor(diff / (1000 * 60));
+        diff -= minutes * (1000 * 60);
+
+        const seconds = Math.floor(diff / 1000);
+
+        return `${days} gün ${hours} saat ${minutes} dk ${seconds} sn`;
+    };
+
+    // --- Kart tıklama fonksiyonu ---
+    const handleLessonClick = (lesson) => {
+        const { status, disabled } = getLessonStatus(lesson);
+
+        if (disabled) return;
+
+        if (status === "Ders Devam Ediyor") {
+            n(`/lesson/${lesson.id}`);
+        }
+
+        if (status === "Yaklaşan Ders") {
+            setSelectedLesson(lesson);
+            setOpenLessonModal(true);
+
+            // canlı geri sayım
+            const interval = setInterval(() => {
+                setTimeLeft(calculateTimeLeft(lesson));
+            }, 1000);
+
+            // modal kapanınca temizlemek için kaydediyoruz
+            window.currentCountdown = interval;
+        }
+
+    };
+
 
     return (
         <Layout className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-white">
@@ -221,35 +307,93 @@ export default function ProfilePage() {
                         >
                             <List
                                 itemLayout="horizontal"
-                                dataSource={myLessons}
-                                renderItem={(lesson) => (
-                                    <List.Item className="!px-2">
-                                        <List.Item.Meta
-                                            avatar={
-                                                <Avatar
-                                                    size={40}
-                                                    className="bg-pink-100 text-pink-600"
-                                                    icon={<BookOutlined />}
-                                                />
-                                            }
-                                            title={
-                                                <Text className="text-gray-800">
-                                                    {lesson.name}
-                                                </Text>
-                                            }
-                                            description={
-                                                <span className="text-gray-500">
-                                                    {lesson.description}
-                                                </span>
-                                            }
-                                        />
-                                    </List.Item>
-                                )}
-                            />
+                                pagination={{
+                                    pageSize: 4,
+                                    align: "center",
+                                }}
+                                dataSource={sortLessons(myLessons)}
+                                renderItem={(lesson) => {
+                                    const { status, color, disabled } = getLessonStatus(lesson);
 
-                            {myLessons.length === 0 && (
-                                <Text className="text-gray-500">Henüz dersiniz yok.</Text>
+                                    return (
+                                        <List.Item
+                                            className={`border border-gray-200 p-3 rounded-xl flex items-center justify-between hover:bg-rose-50 transition ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                                                }`}
+                                            onClick={() => handleLessonClick(lesson)}
+                                        >
+                                            <List.Item.Meta
+                                                avatar={
+                                                    <Avatar
+                                                        size={42}
+                                                        className="bg-pink-100 text-pink-600"
+                                                        icon={<BookOutlined />}
+                                                    />
+                                                }
+                                                title={
+                                                    <div className="font-medium text-gray-800">{lesson.name}</div>
+                                                }
+                                                description={
+                                                    <div className="text-gray-500 text-xs">
+                                                        {lesson.description}
+                                                        <br />
+                                                        <span className="text-gray-400">
+                                                            {lesson.date} • {lesson.startTime} – {lesson.endTime}
+                                                        </span>
+                                                    </div>
+                                                }
+                                            />
+
+                                            <Tag color={color} className="!rounded-full px-3 py-1 text-xs">
+                                                {status}
+                                            </Tag>
+                                        </List.Item>
+                                    );
+                                }}
+                            />
+                            {selectedLesson && (
+                                <Modal
+                                    open={openLessonModal}
+                                    onCancel={() => {
+                                        setOpenLessonModal(false);
+                                        clearInterval(window.currentCountdown);
+                                    }}
+                                    footer={null}
+                                    centered
+                                    className="rounded-2xl"
+                                >
+                                    <div className="text-center p-4">
+
+                                        <h2 className="text-lg font-semibold text-pink-600 mb-2">
+                                            Derse Daha Var 🕒
+                                        </h2>
+
+                                        <p className="text-gray-700">
+                                            <strong>{selectedLesson.name}</strong> dersi henüz başlamadı.
+                                        </p>
+
+                                        <p className="text-gray-500 mt-2">
+                                            <strong>Tarih:</strong> {selectedLesson.date}
+                                            <br />
+                                            <strong>Saat:</strong> {selectedLesson.startTime} – {selectedLesson.endTime}
+                                        </p>
+                                        <p className="text-pink-600 font-semibold text-lg mt-3">
+                                            ⏳ {timeLeft}
+                                        </p>
+
+                                        <div className="mt-4 flex justify-center">
+                                            <Button
+                                                type="primary"
+                                                className="!bg-pink-500 !border-pink-500 !rounded-xl"
+                                                onClick={() => setOpenLessonModal(false)}
+                                            >
+                                                Tamam
+                                            </Button>
+                                        </div>
+
+                                    </div>
+                                </Modal>
                             )}
+
                         </Card>
                     </Col>
                 </Row>

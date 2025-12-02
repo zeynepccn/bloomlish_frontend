@@ -11,3 +11,21 @@
 .lesson-day:hover {
     background-color: #ec4899 !important;
 }
+.react-calendar__tile.lesson-day {
+    background-color: #df6cac !important;
+    border-radius: 9999px !important;
+}
+
+.react-calendar__tile.lesson-day abbr {
+    color: white !important;
+    font-weight: 600;
+}
+.react-calendar__tile.past-lesson-day {
+    background-color: #fbcfe8 !important;
+    border-radius: 9999px !important;
+}
+
+.react-calendar__tile.past-lesson-day abbr {
+    color: black !important;
+    font-weight: 600;
+}

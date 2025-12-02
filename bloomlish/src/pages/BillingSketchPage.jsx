@@ -4,22 +4,14 @@ import {
     Layout,
     Typography,
     Button,
-    Row,
-    Col,
     Card,
-    Form,
-    Input,
-    Select,
-    message,
     Tag,
-    Modal,
+    message,
 } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 export default function BillingSketchPage() {
     const rows = ["FİYAT", "ÖZELLİK 1", "ÖZELLİK 2", "ÖZELLİK 3"];
@@ -47,18 +39,30 @@ export default function BillingSketchPage() {
     const Icon = ({ ok }) =>
         ok ? <CheckOutlined className="text-2xl" /> : <CloseOutlined className="text-2xl" />;
 
-    const [loading, setLoading] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(null); // "monthly" | "yearly"
-    const [showPayment, setShowPayment] = useState(false);  // ödeme formu görünür mü?
-    const [successModalVisible, setSuccessModalVisible] = useState(false); //  modal state
+    const [loading, setLoading] = useState(false);
 
     const plansTopRef = useRef(null);
-    const paymentRef = useRef(null);
 
-    const navigate = useNavigate(); // 
+    const smoothScrollToRef = (refEl) => {
+        refEl?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    };
 
-    //  ÖDEMEYİ BACKEND'E GÖNDEREN FONKSİYON
-    const onFinish = async (values) => {
+    const handleSelect = (planKey) => {
+        setSelectedPlan(planKey); // "monthly" / "yearly"
+    };
+
+    const handleChangePlan = () => {
+        setSelectedPlan(null);
+        smoothScrollToRef(plansTopRef.current);
+    };
+
+    // 🔴 ARTIK BURADA KART BİLGİSİ YOK
+    // Sadece planType'ı backend'e gönderiyoruz, gelen paymentUrl'e redirect ediyoruz.
+    const handleGoToPayment = async () => {
         if (!selectedPlan) {
             message.error("Lütfen önce bir plan seç.");
             return;
@@ -74,24 +78,12 @@ export default function BillingSketchPage() {
                 return;
             }
 
-            // "MM/YY" --> ["MM","YY"]
-            const [expMonth, expYearShort] = values.expiry.split("/");
-
-            // Backend DTO'suna uygun hale getirme
             const body = {
-                planType: selectedPlan,
-                cardHolderName: values.holder,
-                cardNumber: values.number,
-                expiryMonth: parseInt(expMonth),
-                expiryYear: parseInt("20" + expYearShort), // 24 → 2024
-                cvc: values.cvc,
-                billingAddress: values.address,
+                planType: selectedPlan, // "monthly" veya "yearly"
             };
 
-            console.log("Checkout body:", body);
-
             const res = await axios.post(
-                "http://localhost:8080/api/billing/checkout",
+                "http://localhost:8080/api/billing/start-checkout",
                 body,
                 {
                     headers: {
@@ -101,45 +93,23 @@ export default function BillingSketchPage() {
                 }
             );
 
-            console.log("Checkout response:", res.data);
+            console.log("Billing start-checkout response:", res.data);
 
-            const planObj = plansMap[selectedPlan];
-            localStorage.setItem("selectedPlan", JSON.stringify(planObj));
+            const paymentUrl = res.data.paymentUrl;
+            if (!paymentUrl) {
+                message.error("Ödeme linki alınamadı.");
+                return;
+            }
 
-            message.success("Ödeme başarıyla tamamlandı ✨");
-            setSuccessModalVisible(true);
+            // Iyzipay ödeme sayfasına yönlendir
+            window.location.href = paymentUrl;
 
         } catch (err) {
             console.error(err);
-            message.error("Ödeme sırasında bir hata oluştu.");
+            message.error("Ödeme başlatılırken bir hata oluştu.");
         } finally {
             setLoading(false);
         }
-    };
-
-
-    const smoothScrollToRef = (refEl) => {
-        refEl?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
-    };
-
-    const handleSelect = (planKey) => {
-        setSelectedPlan(planKey); // "monthly" / "yearly"
-    };
-
-    const handleChangePlan = () => {
-        setSelectedPlan(null);
-        setShowPayment(false);
-        smoothScrollToRef(plansTopRef.current);
-    };
-
-    const handleGoToPayment = () => {
-        setShowPayment(true);
-        setTimeout(() => {
-            smoothScrollToRef(paymentRef.current);
-        }, 50);
     };
 
     const PlanCard = ({ plan }) => {
@@ -299,6 +269,7 @@ export default function BillingSketchPage() {
                                     </Button>
                                     <Button
                                         type="primary"
+                                        loading={loading}
                                         onClick={handleGoToPayment}
                                         className="!rounded-xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500 font-medium"
                                     >
@@ -309,162 +280,6 @@ export default function BillingSketchPage() {
                         </Card>
                     </div>
                 )}
-
-
-                {showPayment && (
-                    <>
-                        <div
-                            className="mb-6 max-w-5xl mx-auto"
-                            id="payment-section"
-                            ref={paymentRef}
-                        >
-                            <Title level={3} className="!m-0 !text-gray-900 text-[22px]">
-                                ÖDEME BİLGİLERİ
-                            </Title>
-                        </div>
-
-                        <Card className="!rounded-2xl bg-white shadow-lg border border-black/10 max-w-5xl mx-auto p-8">
-                            <Form
-                                layout="vertical"
-                                onFinish={onFinish}
-                                requiredMark={false}
-                                initialValues={{
-                                    holder: "",
-                                    number: "",
-                                    expiry: "",
-                                    cvc: "",
-                                    address: "",
-                                }}
-                            >
-                                <Row gutter={[16, 16]}>
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            label="Kart üzerindeki isim"
-                                            name="holder"
-                                            rules={[{ required: true, message: "Zorunlu alan" }]}
-                                        >
-                                            <Input
-                                                size="large"
-                                                className="!rounded-xl border border-black/30"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            label="Kart Numarası"
-                                            name="number"
-                                            rules={[
-                                                { required: true, message: "Zorunlu alan" },
-                                                {
-                                                    pattern: /^\d{16}$/,
-                                                    message: "16 haneli kart numarası",
-                                                },
-                                            ]}
-                                        >
-                                            <Input
-                                                size="large"
-                                                inputMode="numeric"
-                                                maxLength={16}
-                                                className="!rounded-xl border border-black/30"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            label="Son Kullanma Tarihi"
-                                            name="expiry"
-                                            rules={[
-                                                { required: true, message: "Zorunlu alan" },
-                                                {
-                                                    pattern: /^(0[1-9]|1[0-2])\/\d{2}$/,
-                                                    message: "AA/YY formatında",
-                                                },
-                                            ]}
-                                        >
-                                            <Input
-                                                placeholder="AA/YY"
-                                                size="large"
-                                                className="!rounded-xl border border-black/30"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            label="CVC"
-                                            name="cvc"
-                                            rules={[
-                                                { required: true, message: "Zorunlu alan" },
-                                                {
-                                                    pattern: /^\d{3,4}$/,
-                                                    message: "3–4 haneli CVC",
-                                                },
-                                            ]}
-                                        >
-                                            <Input
-                                                size="large"
-                                                inputMode="numeric"
-                                                maxLength={4}
-                                                className="!rounded-xl border border-black/30"
-                                            />
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col xs={24} md={12}>
-                                        <Form.Item
-                                            label="Fatura Adresi Seç"
-                                            name="address"
-                                            rules={[{ required: true, message: "Zorunlu alan" }]}
-                                        >
-                                            <Select
-                                                size="large"
-                                                className="!rounded-xl [&_.ant-select-selector]:!rounded-xl border border-black/30"
-                                                placeholder="Bir adres seçin"
-                                            >
-                                                <Option value="home">Ev Adresi</Option>
-                                                <Option value="work">İş Adresi</Option>
-                                                <Option value="new">Yeni Adres Ekle…</Option>
-                                            </Select>
-                                        </Form.Item>
-                                    </Col>
-
-                                    <Col
-                                        xs={24}
-                                        md={12}
-                                        className="flex md:items-end items-start mt-7"
-                                    >
-                                        <Button
-                                            htmlType="submit"
-                                            size="large"
-                                            loading={loading}
-                                            className="w-full !rounded-2xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500 mt-3 font-medium"
-                                        >
-                                            ÖDEMEYİ TAMAMLA
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </Form>
-                        </Card>
-                    </>
-                )}
-
-                {/* ÖDEME TAMAMLANDI MODALI */}
-                <Modal
-                    open={successModalVisible}
-                    centered
-                    title="Ödeme Tamamlandı"
-                    okText="Ana sayfaya dön"
-                    cancelButtonProps={{ style: { display: "none" } }}
-                    onOk={() => {
-                        setSuccessModalVisible(false);
-                        navigate("/"); // anasayfa
-                    }}
-                    onCancel={() => setSuccessModalVisible(false)}
-                >
-                    <p>Aboneliğiniz başarıyla aktif edildi. 🎉</p>
-                </Modal>
             </Content>
         </Layout>
     );

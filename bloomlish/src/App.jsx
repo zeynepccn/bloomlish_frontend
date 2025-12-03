@@ -30,8 +30,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const storedId = localStorage.getItem("userId");
   const userId = storedId ? Number(storedId) : null;
-  console.log("✅ userId:", localStorage.getItem("userId"));
-  console.log("✅ userId (Number):", Number(localStorage.getItem("userId")));
+  console.log("userId:", localStorage.getItem("userId"));
+  console.log(" userId (Number):", Number(localStorage.getItem("userId")));
 
   const token = localStorage.getItem("token");
 

@@ -118,11 +118,8 @@ function CreateLessonPage() {
             </div>
         );
     }
-
-
     return (
         
- 
         <div className="min-h-screen bg-pink-50 flex items-center justify-center relative">
 
             {/* ← Eğitmen Paneline Dön */}

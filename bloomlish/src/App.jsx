@@ -23,8 +23,9 @@ import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
 import QuizQuestionsPage from "./pages/QuizQuestionsPage.jsx";
 import MyLessonsPage from "./pages/MyLessonsPage.jsx";
-import EditLessonPage from "./pages/EditLessonPage.jsx";  
+import EditLessonPage from "./pages/EditLessonPage.jsx";
 import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
+import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -83,6 +84,7 @@ function App() {
           <Route path="/mylessons" element={<MyLessonsPage />} />
           <Route path="/editlesson/:id" element={<EditLessonPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/results" element={<ResultsOverviewPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (
@@ -94,7 +96,7 @@ function App() {
 
     </Router>
 
-    
+
 
   );
 }

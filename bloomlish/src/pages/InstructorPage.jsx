@@ -4,8 +4,10 @@ import "react-calendar/dist/Calendar.css";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
 
-// 👇 ikonlar
+
 import { User, BookOpen, Clock, MessageSquare, Star } from "lucide-react";
 
 function InstructorPage() {
@@ -15,45 +17,18 @@ function InstructorPage() {
     const [selectedFeedback, setSelectedFeedback] = useState(null);
     const navigate = useNavigate();
 
-    // 📅 Takvim verileri
-    const lessons = {
-        "2025-10-29": [
-            { student: "Zeynep", start: "14:00", end: "15:00", earning: 200 },
-            { student: "Ali", start: "16:00", end: "17:30", earning: 150 },
-        ],
-        "2025-10-30": [{ student: "Mehmet", start: "10:00", end: "11:00", earning: 180 }],
-        "2025-11-12": [{ student: "Deniz", start: "13:00", end: "14:30", earning: 250 }],
-    };
+    const [lessons, setLessons] = useState({});
+    
 
-    // 💬 Geri Bildirimler (tüm detaylarla)
+
+
     const feedbacks = [
-        {
-            student: "Zeynep A.",
-            lesson: "Present Perfect Tense",
-            text: "Hocam konuyu çok güzel anlattınız.",
-            rating: 5,
-            date: "2025-10-28",
-            time: "14:35",
-        },
-        {
-            student: "Ali K.",
-            lesson: "Speaking Practice #2",
-            text: "Konuşma pratiği çok eğlenceliydi, teşekkür ederim.",
-            rating: 4,
-            date: "2025-10-25",
-            time: "16:10",
-        },
-        {
-            student: "Deniz M.",
-            lesson: "Grammar Basics",
-            text: "Ders çok verimliydi, örnekler anlaşılırdı.",
-            rating: 5,
-            date: "2025-10-22",
-            time: "11:45",
-        },
+        { student: "Zeynep A.", lesson: "Present Perfect Tense", text: "Hocam konuyu çok güzel anlattınız.", rating: 5, date: "2025-10-28", time: "14:35" },
+        { student: "Ali K.", lesson: "Speaking Practice #2", text: "Konuşma pratiği çok eğlenceliydi.", rating: 4, date: "2025-10-25", time: "16:10" },
+        { student: "Deniz M.", lesson: "Grammar Basics", text: "Ders çok verimliydi, örnekler anlaşılırdı.", rating: 5, date: "2025-10-22", time: "11:45" },
     ];
 
-    // 📊 Grafik verisi
+
     const data = [
         { name: "Öğrenci Sayısı", value: 45 },
         { name: "Ders Gelirleri", value: 70 },
@@ -66,14 +41,73 @@ function InstructorPage() {
     };
 
     const tileClassName = ({ date }) => {
-        const formatted = date.toLocaleDateString("en-CA");
-        return lessons[formatted] ? "lesson-day" : "";
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+
+        const formatted = `${y}-${m}-${d}`;
+        if (!lessons[formatted]) return "";
+
+        const today = new Date().toISOString().split("T")[0];
+        if (formatted < today) return "past-lesson-day";
+
+        return "lesson-day";
     };
+
+
+
 
     const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
+
+    useEffect(() => {
+        axios
+            .get("http://localhost:8080/api/lessons/my-lessons", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            })
+            .then((res) => {
+                console.log("my-lessons response:", res.data); // bir kere bakmak için
+
+                const grouped = {};
+
+                res.data.forEach((lesson) => {
+                    const rawDate = lesson.date;
+                    if (!rawDate) return;
+
+                    const dateKey = rawDate.split("T")[0]; // "YYYY-MM-DD"
+
+                    if (!grouped[dateKey]) grouped[dateKey] = [];
+
+                    grouped[dateKey].push({
+                        student: lesson.instructor?.username || "Öğrenci",
+                        start: lesson.startTime,
+                        end: lesson.endTime,
+                        earning: lesson.price,
+                    });
+                });
+
+                setLessons(grouped);
+            })
+            .catch((err) => console.error(err));
+    }, []);
+
+
+
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100 flex flex-col items-center p-10 space-y-10">
+
+            {/* ← Ana Sayfa */}
+            <button
+                onClick={() => navigate("/")}
+                className="self-start mb-4 px-5 py-2 rounded-full border border-pink-300 text-pink-600 
+                           bg-white shadow-sm hover:bg-pink-50 transition flex items-center gap-2"
+            >
+                ← Ana Sayfa
+            </button>
+
             <h1 className="text-4xl font-bold text-pink-700 drop-shadow-sm tracking-wide">
                 Eğitmen Paneli
             </h1>
@@ -98,7 +132,6 @@ function InstructorPage() {
                 >
                     Derslerim
                 </button>
-
             </div>
 
             {/* İçerik Grid */}
@@ -129,6 +162,7 @@ function InstructorPage() {
                 {/* 📅 Takvim */}
                 <div className="bg-white rounded-3xl shadow-xl border border-pink-200 flex flex-col justify-center items-center p-6 hover:shadow-2xl transition">
                     <h2 className="text-2xl font-semibold text-pink-600 mb-3">Ders Takvimi</h2>
+
                     <Calendar
                         onClickDay={handleDateClick}
                         value={date}
@@ -147,6 +181,7 @@ function InstructorPage() {
                     <h2 className="text-2xl font-semibold text-pink-600 mb-5 text-center">
                         İstatistikler
                     </h2>
+
                     <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={data}>
                             <XAxis dataKey="name" stroke="#fb7185" />
@@ -173,8 +208,10 @@ function InstructorPage() {
                                         key={i}
                                         className="border border-pink-200 rounded-2xl p-4 bg-pink-50 text-gray-700 hover:bg-pink-100 transition"
                                     >
-                                        <User className="inline w-4 h-4 text-pink-500 mr-1" /> <b>{lesson.student}</b> <br />
-                                        <Clock className="inline w-4 h-4 text-pink-500 mr-1" /> Saat: {lesson.start} - {lesson.end} <br />
+                                        <User className="inline w-4 h-4 text-pink-500 mr-1" /> <b>{lesson.student}</b>
+                                        <br />
+                                        <Clock className="inline w-4 h-4 text-pink-500 mr-1" /> Saat: {lesson.start} - {lesson.end}
+                                        <br />
                                         💰 Kazanç: {lesson.earning} ₺
                                     </li>
                                 ))}

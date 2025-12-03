@@ -6,6 +6,18 @@ import axios from "axios";
 function CreateLessonPage() {
     const navigate = useNavigate();
 
+    const getUserRole = () => {
+        const token = localStorage.getItem("token");
+        if (!token) return null;
+
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.roles || [];
+        } catch {
+            return null;
+        }
+    };
+
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -97,12 +109,33 @@ function CreateLessonPage() {
     
     const todayString = new Date().toISOString().split("T")[0];
 
+    const roles = getUserRole();
+
+    if (!roles.includes("ROLE_INSTRUCTOR")) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-xl text-red-500">
+                Bu sayfaya erişim izniniz yok.
+            </div>
+        );
+    }
     return (
-        <div className="min-h-screen bg-pink-50 flex items-center justify-center">
+        
+        <div className="min-h-screen bg-pink-50 flex items-center justify-center relative">
+
+            {/* ← Eğitmen Paneline Dön */}
+            <button
+                onClick={() => navigate("/instructor")}
+                className="absolute top-6 left-6 px-5 py-2 rounded-full border border-pink-300 text-pink-600 
+                       bg-white shadow-sm hover:bg-pink-50 transition flex items-center gap-2"
+            >
+                ← Eğitmen Paneli
+            </button>
+
             <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-lg">
                 <h1 className="text-3xl font-bold text-pink-700 mb-8 text-center">
                     Yeni Ders Oluştur
                 </h1>
+
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Ders adı */}

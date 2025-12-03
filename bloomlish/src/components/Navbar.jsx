@@ -24,6 +24,21 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
         navigate("/premium");
     };
 
+    const getUserRoles = () => {
+        const token = localStorage.getItem("token");
+        if (!token) return [];
+
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.roles || [];
+        } catch (err) {
+            return [];
+        }
+    };
+
+    const roles = getUserRoles();
+
+
     return (
         <nav className="w-full flex justify-between items-center px-10 py-4 shadow-sm bg-white fixed top-0 left-0 z-50">
             <h1
@@ -43,6 +58,16 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
                         >
                             Ana Sayfa
                         </button>
+
+                        {roles.includes("ROLE_INSTRUCTOR") && (
+                            <button
+                                onClick={() => navigate("/instructor")}
+                                className="border border-pink-300 rounded-full px-4 py-1 text-sm text-pink-600 hover:bg-pink-50 transition"
+                            >
+                                Eğitmen Paneli
+                            </button>
+                        )}
+
 
                         {/* Profil ikonu + açılır menü */}
                         <div className="relative">

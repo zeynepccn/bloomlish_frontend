@@ -22,22 +22,46 @@ import EarningsPage from "./pages/EarningsPage.jsx";
 import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
 import QuizQuestionsPage from "./pages/QuizQuestionsPage.jsx";
-import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
+import MyLessonsPage from "./pages/MyLessonsPage.jsx";
+import EditLessonPage from "./pages/EditLessonPage.jsx";  
+import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const storedId = localStorage.getItem("userId");
   const userId = storedId ? Number(storedId) : null;
-  console.log("✅ userId:", localStorage.getItem("userId"));
-  console.log("✅ userId (Number):", Number(localStorage.getItem("userId")));
+  console.log("userId:", localStorage.getItem("userId"));
+  console.log(" userId (Number):", Number(localStorage.getItem("userId")));
+
+  const token = localStorage.getItem("token");
+
+  let currentUserId = null;
+  let currentUserRole = null;
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+
+      currentUserId = payload.id || payload.userId || payload.sub || null;
+
+      if (payload.roles && payload.roles.length > 0) {
+        currentUserRole = payload.roles[0];
+      }
+    } catch (e) {
+      console.error("JWT parse hatası:", e);
+    }
+  }
+
 
 
   return (
+
+
     <Router>
       <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       <div className="pt-20">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} />} />
           <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/blog" element={<BlogPage />} />
@@ -56,11 +80,21 @@ function App() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/quiz-questions" element={<QuizQuestionsPage />} />
-          <Route path="/results" element={<ResultsOverviewPage />} />
+          <Route path="/mylessons" element={<MyLessonsPage />} />
+          <Route path="/editlesson/:id" element={<EditLessonPage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </div>
-      {userId && userId > 0 && <ChatWidget currentUserId={userId} />}
+      {currentUserId && currentUserRole === "ROLE_STUDENT" && (
+        <ChatWidget
+          currentUserId={currentUserId}
+          currentUserRole={currentUserRole}
+        />
+      )}
+
     </Router>
+
+    
 
   );
 }

@@ -3,7 +3,13 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { MessageCircle } from "lucide-react";
 
-function ChatWidget({ currentUserId }) {
+function ChatWidget({ currentUserId, currentUserRole }) {
+
+ 
+    if (!currentUserId || currentUserRole !== "ROLE_STUDENT") {
+        return null;
+    }
+
     const [chatOpen, setChatOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [users, setUsers] = useState([]);
@@ -13,7 +19,7 @@ function ChatWidget({ currentUserId }) {
     const [isConnected, setIsConnected] = useState(false);
     const chatContainerRef = useRef(null);
 
-    // Logout olduğunda chat panelini kapat ve kullanıcıyı resetle
+    // Logout olduğunda chat panelini kapat
     useEffect(() => {
         if (!currentUserId) {
             setChatOpen(false);
@@ -23,18 +29,21 @@ function ChatWidget({ currentUserId }) {
 
     // WebSocket bağlantısı
     useEffect(() => {
-        if (!currentUserId) return;
-
         const socket = new SockJS("http://localhost:8080/socket");
+
         const client = new Client({
             webSocketFactory: () => socket,
             reconnectDelay: 5000,
             debug: (str) => console.log("[STOMP]", str),
             onConnect: () => {
                 setIsConnected(true);
+
                 client.subscribe(`/user/${currentUserId}/queue/messages`, (frame) => {
                     const message = JSON.parse(frame.body);
-                    const senderUsername = users.find(u => u.id === message.senderId)?.username || "Bilinmeyen";
+
+                    const senderUsername =
+                        users.find(u => u.id === message.senderId)?.username || "Bilinmeyen";
+
                     setMessages(prev => ({
                         ...prev,
                         [message.senderId]: [
@@ -53,14 +62,11 @@ function ChatWidget({ currentUserId }) {
         return () => client.deactivate();
     }, [currentUserId, users]);
 
-    // Kullanıcı listesi
+    // Öğrenci listesini çeker
     useEffect(() => {
-        if (!currentUserId) return;
-
-        fetch("http://localhost:8080/api/users/all", {
+        fetch("http://localhost:8080/api/users/students", {
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
         })
             .then(res => res.ok ? res.json() : Promise.reject("Kullanıcı listesi alınamadı"))
@@ -71,26 +77,25 @@ function ChatWidget({ currentUserId }) {
             .catch(err => console.error(err));
     }, [currentUserId]);
 
-    // Mesaj geçmişi
+    // Mesaj geçmişini çeker
     useEffect(() => {
-        if (!selectedUser || !currentUserId) return;
+        if (!selectedUser) return;
 
         fetch(`http://localhost:8080/api/messages/get/${currentUserId}/${selectedUser.id}`, {
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
         })
             .then(res => res.ok ? res.json() : Promise.reject("Mesaj alınamadı"))
             .then(data => {
-                const formatted = data.map(m => {
-                    const sender = m.senderId === currentUserId ? "Sen" : users.find(u => u.id === m.senderId)?.username || "Bilinmeyen";
-                    return { from: sender, text: m.content };
-                });
+                const formatted = data.map(m => ({
+                    from: m.senderId === currentUserId ? "Sen" : "O",
+                    text: m.content,
+                }));
                 setMessages(prev => ({ ...prev, [selectedUser.id]: formatted }));
             })
             .catch(err => console.error(err));
-    }, [selectedUser, currentUserId, users]);
+    }, [selectedUser]);
 
     // Scroll en alta
     useEffect(() => {
@@ -100,94 +105,96 @@ function ChatWidget({ currentUserId }) {
     }, [messages, selectedUser]);
 
     const sendMessage = () => {
-        if (!input.trim() || !selectedUser || !currentUserId) return;
+        if (!input.trim() || !selectedUser) return;
 
-        const messageDto = { senderId: currentUserId, receiverId: selectedUser.id, content: input };
+        const messageDto = {
+            senderId: currentUserId,
+            receiverId: selectedUser.id,
+            content: input,
+        };
 
+        // WS
         if (stompClient && isConnected) {
-            stompClient.publish({ destination: "/app/send", body: JSON.stringify(messageDto) });
+            stompClient.publish({
+                destination: "/app/send",
+                body: JSON.stringify(messageDto),
+            });
         }
 
+        // DB'ye kaydet
         fetch("http://localhost:8080/api/messages/send", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(messageDto),
-        }).catch(err => console.error(err));
+        });
 
         setMessages(prev => ({
             ...prev,
             [selectedUser.id]: [...(prev[selectedUser.id] || []), { from: "Sen", text: input }],
         }));
+
         setInput("");
     };
 
-    // **Logout durumunda tamamen görünmez**
-    if (!currentUserId) return null;
-
     return (
         <div className="fixed bottom-6 right-6 z-50 font-sans">
-            {/* Chat Bubble */}
             <button
-                onClick={() => { setChatOpen(!chatOpen); setSelectedUser(null); }}
+                onClick={() => {
+                    setChatOpen(!chatOpen);
+                    setSelectedUser(null);
+                }}
                 className="bg-pink-500 text-white p-4 rounded-full shadow-lg hover:bg-pink-600 transition"
             >
                 <MessageCircle className="w-6 h-6" />
             </button>
 
-            {/* Chat Panel */}
             {chatOpen && (
                 <div className="w-80 h-96 bg-white shadow-xl rounded-lg flex flex-col mt-2">
-                    <div className="p-4 border-b flex justify-between items-center bg-gray-100 rounded-t-lg">
+                    <div className="p-4 border-b bg-gray-100 flex justify-between">
                         <span className="font-semibold">Sohbet</span>
                         <button onClick={() => setChatOpen(false)}>✖</button>
                     </div>
 
-                    {/* Kullanıcı Listesi */}
+                    {/* Öğrenci listesi */}
                     {!selectedUser && (
                         <div className="flex-1 overflow-y-auto p-2 bg-gray-50">
-                            {users.length === 0 ? (
-                                <p className="text-sm text-gray-500 text-center mt-4">Kayıtlı kullanıcı bulunamadı.</p>
-                            ) : (
-                                users.map(user => (
-                                    <div
-                                        key={user.id}
-                                        onClick={() => setSelectedUser(user)}
-                                        className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-200 cursor-pointer"
-                                    >
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-pink-300 text-white font-bold">
-                                            {user.username.charAt(0).toUpperCase()}
-                                        </div>
-                                        <span className="font-medium">{user.username}</span>
-                                        <span className={`w-3 h-3 rounded-full ml-auto ${user.online ? "bg-green-500" : "bg-gray-400"}`}></span>
+                            {users.map(user => (
+                                <div
+                                    key={user.id}
+                                    onClick={() => setSelectedUser(user)}
+                                    className="flex items-center gap-2 p-2 hover:bg-gray-200 cursor-pointer rounded-md"
+                                >
+                                    <div className="w-8 h-8 bg-pink-300 rounded-full flex items-center justify-center text-white font-bold">
+                                        {user.username.charAt(0).toUpperCase()}
                                     </div>
-                                ))
-                            )}
+                                    <span>{user.username}</span>
+                                    <span className="w-3 h-3 bg-green-500 rounded-full ml-auto"></span>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-                    {/* Sohbet Paneli */}
+                    {/* Mesajlaşma ekranı */}
                     {selectedUser && (
                         <>
-                            <div className="p-2 border-b flex justify-between items-center bg-gray-100">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-pink-300 text-white font-bold">
-                                        {selectedUser.username.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="font-semibold">{selectedUser.username}</span>
-                                </div>
+                            <div className="p-2 bg-gray-100 border-b flex items-center gap-2">
                                 <button onClick={() => setSelectedUser(null)}>←</button>
+                                <span className="font-semibold">{selectedUser.username}</span>
                             </div>
 
-                            <div ref={chatContainerRef} className="flex-1 p-2 overflow-y-auto space-y-2 bg-gray-50">
-                                {(messages[selectedUser.id] || []).map((msg, idx) => (
+                            <div
+                                ref={chatContainerRef}
+                                className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50"
+                            >
+                                {(messages[selectedUser.id] || []).map((msg, i) => (
                                     <div
-                                        key={idx}
-                                        className={`max-w-[70%] text-sm px-3 py-2 rounded-lg break-words ${msg.from === "Sen"
-                                            ? "bg-pink-100 text-pink-700 self-end"
-                                            : "bg-gray-200 text-gray-800 self-start"
+                                        key={i}
+                                        className={`px-3 py-2 rounded-lg max-w-[70%] ${msg.from === "Sen"
+                                                ? "bg-pink-100 self-end text-pink-700"
+                                                : "bg-gray-200 self-start text-gray-800"
                                             }`}
                                     >
                                         <strong>{msg.from}: </strong>
@@ -196,22 +203,19 @@ function ChatWidget({ currentUserId }) {
                                 ))}
                             </div>
 
-                            <div className="p-2 border-t flex gap-2 bg-gray-100">
+                            <div className="p-2 border-t bg-gray-100 flex gap-2">
                                 <input
                                     type="text"
-                                    placeholder="Mesaj yaz..."
                                     value={input}
                                     onChange={e => setInput(e.target.value)}
-                                    className="flex-1 border rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                    placeholder="Mesaj yaz..."
                                     onKeyDown={e => e.key === "Enter" && sendMessage()}
+                                    className="flex-1 border rounded-full px-3 py-2 text-sm"
                                 />
                                 <button
                                     onClick={sendMessage}
                                     disabled={!isConnected}
-                                    className={`px-4 py-2 rounded-full text-white ${isConnected
-                                        ? "bg-pink-500 hover:bg-pink-600"
-                                        : "bg-gray-400 cursor-not-allowed"
-                                        }`}
+                                    className="bg-pink-500 text-white px-4 py-2 rounded-full"
                                 >
                                     Gönder
                                 </button>

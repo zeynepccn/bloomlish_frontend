@@ -5,14 +5,6 @@ import axios from "axios";
 function QuizPage() {
     const navigate = useNavigate();
 
-    const [lastResult] = useState({
-        score: 85,
-        level: "Orta",
-        date: "10 Nisan 2025",
-        correct: 24,
-        wrong: 8,
-    });
-
     const [testType, setTestType] = useState("");
     const [difficulty, setDifficulty] = useState("");
     const [questionCount, setQuestionCount] = useState("");
@@ -28,31 +20,62 @@ function QuizPage() {
             const token = localStorage.getItem("token");
             console.log("Token:", token);
 
-            const res = await axios.get("http://localhost:8080/api/quiz/start", {
-                params: {
-                    testType,
+            let url = "http://localhost:8080/api/quiz/start";
+            let params = {
+                testType,
+                difficulty,
+                limit: questionCount,
+            };
+
+            // 🔊 Eğer dinleme ise farklı endpoint ve farklı response bekliyoruz
+            const isListening = testType === "dinleme";
+            if (isListening) {
+                url = "http://localhost:8080/api/quiz/start/listening";
+                params = {
                     difficulty,
                     limit: questionCount,
-                },
+                };
+            }
+            console.log("Gittiği URL:", url);
+            console.log("Params:", params);
+
+
+            const res = await axios.get(url, {
+                params,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            const questionsData = res.data;
-            console.log("GELEN VERİ:", questionsData);
-            navigate("/quiz-questions", {
-                state: {
-                    questions: questionsData,
-                    testType,
-                    difficulty,
-                },
-            });
+            const data = res.data;
+            console.log("GELEN VERİ:", data);
+
+            if (isListening) {
+                // listening için gruplanmış data
+                navigate("/quiz-questions", {
+                    state: {
+                        listeningData: data,
+                        testType,
+                        difficulty,
+                    },
+                });
+            } else {
+                // normal quizler
+                navigate("/quiz-questions", {
+                    state: {
+                        questions: data,
+                        testType,
+                        difficulty,
+                    },
+                });
+            }
         } catch (err) {
             console.error(err);
             alert("Quiz başlatılamadı. Sunucu hatası veya ağ problemi olabilir.");
         }
+
     };
+
 
     const handleAiSuggestion = () => {
         const suggestions = [
@@ -89,39 +112,26 @@ function QuizPage() {
             <div className="text-center">
                 <h1 className="text-3xl font-bold mb-2">Seviye Belirleme Testi</h1>
                 <p className="text-gray-600 mb-4">
-                    Yapay zeka destekli sistemimizle seviyeni belirle, sana özel içeriklere ulaş 💜
+                    Yapay zeka destekli sistemimizle seviyeni belirle, sana özel
+                    içeriklere ulaş 💜
                 </p>
-                <button
-                    onClick={handleStart}
-                    className="bg-blue-200 px-6 py-2 rounded-lg text-lg font-medium shadow hover:bg-blue-300 transition"
-                >
-                    Testi Başlat
-                </button>
-            </div>
 
-            {/* Sonuçlarım + Test İstatistikleri */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-                <div className="p-6 bg-white rounded-2xl shadow-lg border text-center">
-                    <h2 className="font-semibold mb-3 text-lg">Sonuçlarım</h2>
-                    <p className="text-4xl font-extrabold text-pink-500">{lastResult.score}</p>
-                    <p className="mt-1">
-                        Seviyen: <span className="font-medium">{lastResult.level}</span>
-                    </p>
-                    <p className="text-sm text-gray-500">Tarih: {lastResult.date}</p>
-                </div>
+                <div className="flex flex-col md:flex-row gap-3 justify-center">
+                    <button
+                        onClick={handleStart}
+                        className="bg-blue-200 px-6 py-2 rounded-lg text-lg font-medium shadow hover:bg-blue-300 transition"
+                    >
+                        Testi Başlat
+                    </button>
 
-                <div className="p-6 bg-white rounded-2xl shadow-lg border">
-                    <h2 className="font-semibold mb-3 text-lg text-center">Test İstatistikleri</h2>
-                    <div className="flex justify-between px-4">
-                        <span>✅ Doğru: {lastResult.correct}</span>
-                        <span>❌ Yanlış: {lastResult.wrong}</span>
-                    </div>
-                    <div className="mt-4 h-24 flex items-center justify-center border rounded bg-gray-100 text-gray-400">
-                        [ Grafik Alanı ]
-                    </div>
+                    <button
+                        onClick={() => navigate("/results")}
+                        className="bg-white border px-6 py-2 rounded-lg text-sm font-medium shadow hover:bg-gray-100 transition"
+                    >
+                        Sonuçlarımı Gör
+                    </button>
                 </div>
             </div>
-
             {/* Yeni Quiz Başlat + AI Destekli Öneri */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
                 {/* Yeni Quiz Başlat */}

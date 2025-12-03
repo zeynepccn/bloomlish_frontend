@@ -1,81 +1,118 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
-import {
-    Layout,
-    Typography,
-    Card,
-    Table,
-    Button,
-    Tag,
-} from "antd";
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import { Layout, Typography, Card, Table, Button, Tag, Spin } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
-
-const formatTR = (d) =>
-    `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-
-const calcExpiry = (planKey) => {
-    const now = new Date();
-    const d = new Date(now);
-    if (planKey === "yearly") d.setFullYear(d.getFullYear() + 1);
-    else d.setMonth(d.getMonth() + 1);
-    return formatTR(d);
+// "2025-11-26" -> "26/11/2025"
+const formatDateTR = (iso) => {
+    if (!iso) return "-";
+    try {
+        const [y, m, d] = iso.split("-");
+        return `${d}/${m}/${y}`;
+    } catch {
+        return iso;
+    }
 };
 
-/**
- * Seçilen planı localStorage’dan çekiyoruz.
- * (BillingSketchPage’de seçerken kaydet: localStorage.setItem("selectedPlan", JSON.stringify(planObj)))
- * planObj örneği:
- * { key:"monthly", label:"Aylık", price:"200 TL", features:[true,false,false] }
- */
-const useSelectedPlan = () => {
-    const [plan, setPlan] = useState(null);
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem("selectedPlan");
-            if (raw) setPlan(JSON.parse(raw));
-        } catch { }
-    }, []);
-    return plan;
+const planLabelMap = {
+    MONTHLY: "Aylık",
+    YEARLY: "Yıllık",
 };
 
 export default function PremiumPlanPage() {
-    const selectedPlan = useSelectedPlan();
+    const [subscription, setSubscription] = useState(null); // SubscriptionDto
+    const [payments, setPayments] = useState([]);          // PaymentHistoryItemDto[]
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Yedek (seçilmemişse kabaca aylık göster)
-    const plan = useMemo(
-        () =>
-            selectedPlan || {
-                key: "monthly",
-                label: "Aylık",
-                price: "200 TL",
-                features: [true, true, true],
-            },
-        [selectedPlan]
-    );
+    const printableRef = useRef(null);
 
-    const expiry = useMemo(() => calcExpiry(plan?.key), [plan?.key]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    setError("Bu sayfayı görmek için önce giriş yapmalısınız.");
+                    setLoading(false);
+                    return;
+                }
 
-    // Fatura geçmişi (örnek)
-    const dataSource = [
-        { key: "1", date: "10/03/2025", plan: "Aylık", amount: "200 TL", status: "Ödendi" },
-        { key: "2", date: "10/02/2025", plan: "Aylık", amount: "200 TL", status: "Ödendi" },
-        { key: "3", date: "10/01/2025", plan: "Aylık", amount: "200 TL", status: "Ödendi" },
-    ];
+                setLoading(true);
+                setError(null);
+
+                const headers = {
+                    Authorization: `Bearer ${token}`,
+                };
+
+                // 1) Aktif abonelik bilgisi
+                const subRes = await axios.get(
+                    "http://localhost:8080/api/billing/subscription",
+                    { headers }
+                );
+
+                // 2) Ödeme geçmişi
+                const payRes = await axios.get(
+                    "http://localhost:8080/api/billing/payments",
+                    { headers }
+                );
+
+                setSubscription(subRes.data);
+                setPayments(payRes.data || []);
+            } catch (err) {
+                console.error(err);
+                setError("Premium bilgileri yüklenirken bir hata oluştu.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const handleDownloadPDF = () => {
+        // Basit çözüm: yazdır ekranı -> PDF olarak kaydet
+        window.print();
+    };
+
+
+    const hasActive =
+        subscription && subscription.hasActiveSubscription === true;
+
+    const currentPlanType = hasActive ? subscription.planType : null;
+    const planLabel = hasActive ? planLabelMap[currentPlanType] || currentPlanType : "Aktif plan yok";
+    const expiresAt = hasActive ? formatDateTR(subscription.expiresAt) : "-";
+    const features = hasActive ? subscription.features || [] : [];
+
+    // Ödeme tablosu için dataSource
+    const dataSource = payments.map((p, index) => ({
+        key: index.toString(),
+        date: formatDateTR(p.date),                       // LocalDate -> TR format
+        plan: planLabelMap[p.plan] || p.plan,
+        amount: `${p.amount} ${p.currency || "TL"}`,
+        rawStatus: p.status,
+    }));
+
     const columns = [
         { title: "TARİH", dataIndex: "date", key: "date" },
         { title: "PLAN", dataIndex: "plan", key: "plan" },
         { title: "TUTAR", dataIndex: "amount", key: "amount" },
-        { title: "DURUM", dataIndex: "status", key: "status" },
+        {
+            title: "DURUM",
+            dataIndex: "rawStatus",
+            key: "status",
+            render: (value) => {
+                const isPaid = value === "PAID" || value === "SUCCESS";
+                return (
+                    <Tag color={isPaid ? "green" : "red"}>
+                        {isPaid ? "Ödendi" : value}
+                    </Tag>
+                );
+            },
+        },
     ];
-
-    const printableRef = useRef(null);
-    const handleDownloadPDF = () => {
-        // Hızlı çözüm: yazdır/PDF’e kaydet
-        window.print();
-    };
 
     return (
         <Layout className="min-h-screen bg-white">
@@ -87,71 +124,92 @@ export default function PremiumPlanPage() {
                     </Title>
                 </div>
 
-                {/* PLAN ÖZETİ */}
-                <Card className="!rounded-2xl bg-white/90 border border-black/20">
-                    <div
-                        className="
-              rounded-xl border border-black/20 bg-neutral-200/80
-              p-6 md:p-8 relative
-            "
-                    >
-                        <div className="flex items-center justify-between mb-6">
-                            <Title level={4} className="!m-0">
-                                {plan?.label?.toUpperCase()} PLAN
+                {loading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <Spin size="large" />
+                    </div>
+                ) : error ? (
+                    <Card className="!rounded-2xl border border-red-300 bg-red-50">
+                        <Text type="danger">{error}</Text>
+                    </Card>
+                ) : (
+                    <>
+                        {/* PLAN ÖZETİ */}
+                        <Card className="!rounded-2xl bg-white/90 border border-black/20">
+                            <div className="rounded-xl border border-black/20 bg-neutral-200/80 p-6 md:p-8 relative">
+                                <div className="flex items-center justify-between mb-6">
+                                    <Title level={4} className="!m-0">
+                                        {hasActive ? `${planLabel.toUpperCase()} PLAN` : "Aktif Plan Yok"}
+                                    </Title>
+
+                                    {hasActive && (
+                                        <Tag
+                                            color="green"
+                                            className="!rounded-xl !px-3 !py-1 !text-xs"
+                                        >
+                                            Aktif
+                                        </Tag>
+                                    )}
+                                </div>
+
+                                {/* Özellikler */}
+                                {hasActive ? (
+                                    <div className="grid gap-3">
+                                        {features.length > 0 ? (
+                                            features.map((f, i) => (
+                                                <div
+                                                    key={`${f}-${i}`}
+                                                    className="flex items-center gap-3 text-lg"
+                                                >
+                                                    <CheckOutlined />
+                                                    <span className="tracking-wide">{f}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <Text>Bu plan için özellik listesi bulunamadı.</Text>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <Text>Henüz aktif bir premium aboneliğiniz bulunmuyor.</Text>
+                                )}
+
+                                {/* Sağ altta geçerlilik tarihi */}
+                                {hasActive && (
+                                    <div className="mt-10 text-right text-gray-500">
+                                        <span>Son geçerlilik tarihi {expiresAt}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Fatura Geçmişi */}
+                        <div className="mt-12">
+                            <Title level={3} className="!m-0 mb-4">
+                                FATURA GEÇMİŞİ
                             </Title>
 
-                            {/* (opsiyonel) indirim etiketi örneği */}
-                            {plan?.discount ? (
-                                <Tag color="pink" className="!rounded-xl !px-3 !py-1 !text-xs">
-                                    %{plan.discount} indirim
-                                </Tag>
-                            ) : null}
+                            <div ref={printableRef}>
+                                <Card className="!rounded-2xl bg-white/90 border border-black/20">
+                                    <Table
+                                        dataSource={dataSource}
+                                        columns={columns}
+                                        pagination={false}
+                                        className="[&_.ant-table]:!bg-transparent"
+                                    />
+                                </Card>
+                            </div>
+
+                            <div className="mt-4">
+                                <Button
+                                    onClick={handleDownloadPDF}
+                                    className="!rounded-xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
+                                >
+                                    PDF olarak indir
+                                </Button>
+                            </div>
                         </div>
-
-                        {/* Özellikler (sol blok) */}
-                        <div className="grid gap-4">
-                            {["ÖZELLİK 1", "ÖZELLİK 2", "ÖZELLİK 3"].map((f, i) => (
-                                <div key={f} className="flex items-center gap-3 text-lg">
-                                    <CheckOutlined />
-                                    <span className="tracking-wide">{f}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Sağ altta geçerlilik tarihi */}
-                        <div className="mt-10 text-right text-gray-500">
-                            <span>Son geçerlilik tarihi {expiry}</span>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Fatura Geçmişi */}
-                <div className="mt-12">
-                    <Title level={3} className="!m-0 mb-4">
-                        FATURA GEÇMİŞİ
-                    </Title>
-
-                    {/* Yazdırılabilir alan */}
-                    <div ref={printableRef}>
-                        <Card className="!rounded-2xl bg-white/90 border border-black/20">
-                            <Table
-                                dataSource={dataSource}
-                                columns={columns}
-                                pagination={false}
-                                className="[&_.ant-table]:!bg-transparent"
-                            />
-                        </Card>
-                    </div>
-
-                    <div className="mt-4">
-                        <Button
-                            onClick={handleDownloadPDF}
-                            className="!rounded-xl !bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500"
-                        >
-                            PDF olarak indir
-                        </Button>
-                    </div>
-                </div>
+                    </>
+                )}
             </Content>
         </Layout>
     );

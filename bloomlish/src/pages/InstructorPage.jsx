@@ -92,6 +92,13 @@ function InstructorPage() {
                 >
                     Kazançlarım
                 </button>
+                <button
+                    onClick={() => navigate("/mylessons")}
+                    className="bg-pink-300 hover:bg-pink-400 text-white px-8 py-3 rounded-2xl shadow-md transition-transform hover:scale-105"
+                >
+                    Derslerim
+                </button>
+
             </div>
 
             {/* İçerik Grid */}

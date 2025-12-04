@@ -23,7 +23,7 @@ import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
 import QuizQuestionsPage from "./pages/QuizQuestionsPage.jsx";
 import MyLessonsPage from "./pages/MyLessonsPage.jsx";
-import EditLessonPage from "./pages/EditLessonPage.jsx";  
+import EditLessonPage from "./pages/EditLessonPage.jsx";
 import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 
@@ -93,7 +93,7 @@ function App() {
 
     </Router>
 
-    
+
 
   );
 }

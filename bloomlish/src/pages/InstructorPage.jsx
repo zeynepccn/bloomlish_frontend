@@ -28,6 +28,10 @@ function InstructorPage() {
         { student: "Deniz M.", lesson: "Grammar Basics", text: "Ders çok verimliydi, örnekler anlaşılırdı.", rating: 5, date: "2025-10-22", time: "11:45" },
     ];
 
+    const studentData = [{ name: "Öğrenci", value: 45 }];
+    const incomeData = [{ name: "Gelir", value: 70 }];
+
+
 
     const data = [
         { name: "Öğrenci Sayısı", value: 45 },
@@ -53,8 +57,6 @@ function InstructorPage() {
 
         return "lesson-day";
     };
-
-
 
 
     const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
@@ -135,7 +137,10 @@ function InstructorPage() {
             </div>
 
             {/* İçerik Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 w-full max-w-6xl">
+            
+
+                {/* 📈 İstatistik Grafiği */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 w-full max-w-8xl">
                 {/* 💬 Geri Bildirim Kartı */}
                 <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-6 hover:shadow-2xl transition">
                     <h2 className="text-2xl font-semibold text-pink-600 mb-5 text-center">
@@ -160,39 +165,65 @@ function InstructorPage() {
                 </div>
 
                 {/* 📅 Takvim */}
-                <div className="bg-white rounded-3xl shadow-xl border border-pink-200 flex flex-col justify-center items-center p-6 hover:shadow-2xl transition">
-                    <h2 className="text-2xl font-semibold text-pink-600 mb-3">Ders Takvimi</h2>
-
-                    <Calendar
-                        onClickDay={handleDateClick}
-                        value={date}
-                        onChange={setDate}
-                        tileClassName={tileClassName}
-                        showNeighboringMonth={true}
-                        formatShortWeekday={(locale, date) =>
-                            ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"][date.getDay()]
-                        }
-                        className="rounded-xl shadow-inner p-2"
-                    />
-                </div>
-
-                {/* 📈 İstatistik Grafiği */}
-                <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-6 hover:shadow-2xl transition">
-                    <h2 className="text-2xl font-semibold text-pink-600 mb-5 text-center">
-                        İstatistikler
+                <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition h-[430px] flex flex-col items-center">
+                    <h2 className="text-2xl font-semibold text-pink-600 mb-4 text-center">
+                        Ders Takvimi
                     </h2>
 
-                    <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={data}>
-                            <XAxis dataKey="name" stroke="#fb7185" />
-                            <YAxis stroke="#fb7185" />
-                            <Tooltip />
-                            <Bar dataKey="value" fill="#f472b6" radius={[15, 15, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div className="flex justify-center w-full">
+                        <Calendar
+                            onClickDay={handleDateClick}
+                            value={date}
+                            onChange={setDate}
+                            tileClassName={tileClassName}
+                            showNeighboringMonth={true}
+                            formatShortWeekday={(locale, date) =>
+                                ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"][date.getDay()]
+                            }
+                            className="rounded-xl shadow-inner p-2"
+                        />
+                    </div>
                 </div>
-            </div>
 
+                    {/* 3️⃣ Öğrenci Sayısı */}
+                    <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition h-[430px] flex flex-col">
+                        <h2 className="text-2xl font-semibold text-pink-600 mb-4 text-center">
+                            Öğrenci Sayısı
+                        </h2>
+
+                        <div className="flex-1 pt-3">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={studentData}>
+                                    <XAxis dataKey="name" stroke="#fb7185" />
+                                    <YAxis stroke="#fb7185" />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="#f472b6" radius={[14, 14, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* 4️⃣ Ders Gelirleri */}
+                    <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition h-[430px] flex flex-col">
+                        <h2 className="text-2xl font-semibold text-pink-600 mb-4 text-center">
+                            Ders Gelirleri
+                        </h2>
+
+                        <div className="flex-1 pt-3">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={incomeData}>
+                                    <XAxis dataKey="name" stroke="#fb7185" />
+                                    <YAxis stroke="#fb7185" />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="#fb7185" radius={[14, 14, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                </div>
+
+            
             {/* Ders Modalı */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">

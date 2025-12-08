@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ChatWidget from "./components/ChatWidget";
@@ -28,7 +28,15 @@ import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Başlangıçta localStorage'da token varsa true başlasın
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return !!localStorage.getItem("token");
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
   const storedId = localStorage.getItem("userId");
   const userId = storedId ? Number(storedId) : null;
   console.log("userId:", localStorage.getItem("userId"));

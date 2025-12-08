@@ -9,10 +9,12 @@ function Navbar({ isLoggedIn, setIsLoggedIn }) {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
+        localStorage.removeItem("email");
         setIsLoggedIn(false);
         setIsMenuOpen(false);
         navigate("/");
     };
+
 
     const goProfile = () => {
         setIsMenuOpen(false);

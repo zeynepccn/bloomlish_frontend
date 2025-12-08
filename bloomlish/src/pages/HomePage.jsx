@@ -5,12 +5,49 @@ import ing1 from "../assets/images/ing1.jpg";
 import ing2 from "../assets/images/ing2.jpg";
 import ing3 from "../assets/images/ing3.jpg";
 import ing4 from "../assets/images/ing4.jpg";
+import { message } from "antd";
 
-// 🔹 isLoggedIn artık props'tan geliyor
+
+// isLoggedIn artık props'tan geliyor
 function HomePage({ isLoggedIn }) {
     const images = [ing1, ing2, ing3, ing4];
     const [current, setCurrent] = useState(0);
     const navigate = useNavigate();
+
+    const handleFreeTrialFromHome = async () => {
+        const token = localStorage.getItem("token");
+
+        // Hiç login olmamışsa:
+        if (!token) {
+            // Login sayfasına, URL'e küçük bir işaret bırakarak git
+            navigate("/login?from=trial");
+            return;
+        }
+
+        // Zaten login’liyse: direkt trial endpoint’ini çağır
+        try {
+            await axios.post(
+                "http://localhost:8080/api/billing/start-trial",
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            message.success("3 günlük ücretsiz denemen başladı! 🎉");
+            navigate("/premium");
+        } catch (err) {
+            if (err.response?.status === 409) {
+                message.error("Ücretsiz denemeyi daha önce kullanmışsın.");
+                navigate("/premium");
+            } else {
+                message.error("Deneme başlatılırken bir hata oluştu.");
+            }
+        }
+    };
+
 
     const prevSlide = () => {
         setCurrent((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -72,7 +109,7 @@ function HomePage({ isLoggedIn }) {
                         >
                             Hemen Başla
                         </button>
-                        <button className="border border-gray-400 px-6 py-2 rounded-md hover:bg-pink-50 transition">
+                        <button className="border border-gray-400 px-6 py-2 rounded-md hover:bg-pink-50 transition" onClick={handleFreeTrialFromHome}>
                             Ücretsiz Deneme
                         </button>
                     </div>

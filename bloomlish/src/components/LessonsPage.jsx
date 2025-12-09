@@ -34,6 +34,7 @@ export default function LessonsPage() {
     const [level, setLevel] = useState(undefined);
     const [dateRange, setDateRange] = useState([]);
     const [selectedPriceRange, setSelectedPriceRange] = useState(DEFAULT_PRICE_RANGE);
+    const [enrolledLessonIds, setEnrolledLessonIds] = useState([]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 4;
@@ -102,6 +103,7 @@ export default function LessonsPage() {
             .catch((err) => console.error(err));
     };
 
+
     // TÜM FİLTRELERİ SIFIRLA
     const resetFilters = () => {
         setQuery("");
@@ -147,6 +149,18 @@ export default function LessonsPage() {
         }
     };
 
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        axios.get("http://localhost:8080/api/payments/my-lessons", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => {
+                setEnrolledLessonIds(res.data.map(l => l.id));
+            });
+    }, []);
+
+
 
 
     const startIndex = (currentPage - 1) * pageSize;
@@ -160,7 +174,7 @@ export default function LessonsPage() {
                 {/* HEADER */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Title level={2} className="text-pink-600 tracking-wide">
+                        <Title level={2} style={{ color:"#e75480"}} >
                             DERSLER
                         </Title>
                        
@@ -172,7 +186,8 @@ export default function LessonsPage() {
                 </div>
 
                 {/* FİLTRE KARTI */}
-                <Card className="rounded-2xl mt-4 mb-6 shadow-sm border border-gray-100">
+                
+                <Card className="rounded-2xl mt-4 shadow-sm border border-gray-100 w-auto ">
 
                     <Row gutter={[16, 12]}>
                         {/* Arama */}
@@ -227,16 +242,17 @@ export default function LessonsPage() {
                         </Col>
 
                         {/* Filtre Butonu */}
-                        <Col xs={24} md={2}>
+                        <Col xs={24} md={2} style={{ display: "flex", alignItems: "center" }}>
                             <Button
                                 type="primary"
-                                className="w-full h-11 bg-pink-500"
+                                style={{ width: "120%", height: "40px" }}
                                 icon={<FilterOutlined />}
                                 onClick={applyFiltersToBackend}
                             >
                                 Filtrele
                             </Button>
                         </Col>
+
                     </Row>
 
                     {/* Fiyat Slider */}
@@ -282,17 +298,17 @@ export default function LessonsPage() {
 
                                                 <div className="flex flex-col text-gray-600 mt-2 text-sm">
                                                     <div className="flex items-center gap-1">
-                                                        <span>📅</span>
+                                    
                                                         {dayjs(lesson.date).format("DD.MM.YYYY")}
                                                     </div>
 
                                                     <div className="flex items-center gap-1">
-                                                        <span>⏰ Başlangıç:</span>
+                                                        <span> Başlangıç:</span>
                                                         {lesson.startTime}
                                                     </div>
 
                                                     <div className="flex items-center gap-1">
-                                                        <span>⏰ Bitiş:</span>
+                                                        <span> Bitiş:</span>
                                                         {lesson.endTime}
                                                     </div>
                                                 </div>
@@ -309,14 +325,26 @@ export default function LessonsPage() {
                                                 {lesson.price} TL
                                             </div>
 
-                                            <Button
-                                                type="primary"
-                                                shape="round"
-                                                className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-5"
-                                                onClick={() => handleEnroll(lesson.id)}
-                                            >
-                                                Kaydol
-                                            </Button>
+                                            {enrolledLessonIds.includes(lesson.id) ? (
+                                                <Button
+                                                    shape="round"
+                                                    disabled 
+                                                    style={{ marginTop: "10px", backgroundColor: "#f0f0f0", color: "#888" }}
+                                                >
+                                                     Kayıtlı
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    type="primary"
+                                                    shape="round"
+                                                        onClick={() => handleEnroll(lesson.id)}
+                                                        style={{marginTop:"10px"}}
+                                                >
+                                                    Kaydol
+                                                </Button>
+                                            )}
+
+
 
                                         </div>
                                     </div>

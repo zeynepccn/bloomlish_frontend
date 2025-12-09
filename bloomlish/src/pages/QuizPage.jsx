@@ -57,15 +57,17 @@ function QuizPage() {
                         listeningData: data,
                         testType,
                         difficulty,
+                        quizId: data.quizId,
                     },
                 });
             } else {
                 // normal quizler
                 navigate("/quiz-questions", {
                     state: {
-                        questions: data,
+                        questions: data.questions,
                         testType,
                         difficulty,
+                        quizId: data.quizId,
                     },
                 });
             }
@@ -118,10 +120,10 @@ function QuizPage() {
 
                 <div className="flex flex-col md:flex-row gap-3 justify-center">
                     <button
-                        onClick={handleStart}
+                        onClick={() => navigate("/placement")}
                         className="bg-blue-200 px-6 py-2 rounded-lg text-lg font-medium shadow hover:bg-blue-300 transition"
                     >
-                        Testi Başlat
+                        Seviye Belirleme Testini Başlat
                     </button>
 
                     <button
@@ -155,7 +157,7 @@ function QuizPage() {
 
                     <label className="block mb-2 font-medium">Zorluk Seviyesi</label>
                     <div className="flex gap-2 mb-4">
-                        {["Easy", "Medium", "Hard"].map((level) => (
+                        {["A1-A2", "B1-B2", "C1-C2"].map((level) => (
                             <button
                                 key={level}
                                 onClick={() => setDifficulty(level)}
@@ -180,7 +182,7 @@ function QuizPage() {
                                     : "hover:bg-gray-100"
                                     }`}
                             >
-                                {count} Soru
+                                {count}
                             </button>
                         ))}
                     </div>

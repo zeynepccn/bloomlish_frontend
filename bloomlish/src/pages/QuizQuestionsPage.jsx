@@ -81,7 +81,10 @@ function QuizQuestionsPage() {
 
             const res = await axios.post(
                 "http://localhost:8080/api/quiz/submit",
-                { answers },
+                {
+                    quizId: state.quizId,
+                    answers
+                },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -126,7 +129,7 @@ function QuizQuestionsPage() {
                         onClick={() => navigate("/quiz")}
                         className="text-sm text-blue-600 hover:underline"
                     >
-                        Ayarlara Geri Dön
+                        Quiz Sayfasına Geri Dön
                     </button>
                 </div>
 

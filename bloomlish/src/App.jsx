@@ -26,6 +26,7 @@ import MyLessonsPage from "./pages/MyLessonsPage.jsx";
 import EditLessonPage from "./pages/EditLessonPage.jsx";
 import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
+import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -82,6 +83,7 @@ function App() {
           <Route path="/editlesson/:id" element={<EditLessonPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/results" element={<ResultsOverviewPage />} />
+          <Route path="/video-lesson" element={<VideoLessonPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

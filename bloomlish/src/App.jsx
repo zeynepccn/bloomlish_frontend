@@ -60,9 +60,6 @@ function App() {
       console.error("JWT parse hatası:", e);
     }
   }
-
-
-
   return (
 
 

@@ -15,7 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
-import InstructorPage from "./pages/instructorPage";
+import InstructorPage from "./pages/InstructorPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
 import AdminPage from "./pages/AdminPage.jsx";
 import EarningsPage from "./pages/EarningsPage.jsx";
@@ -91,7 +91,7 @@ function App() {
           <Route path="/editlesson/:id" element={<EditLessonPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/results" element={<ResultsOverviewPage />} />
-          <Route path="/video-lesson" element={<VideoLessonPage />} />
+          <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

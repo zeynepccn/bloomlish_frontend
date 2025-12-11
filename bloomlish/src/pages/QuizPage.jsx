@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api"; 
 
 function QuizPage() {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ function QuizPage() {
             const token = localStorage.getItem("token");
             console.log("Token:", token);
 
-            let url = "http://localhost:8080/api/quiz/start";
+            let url = "/api/quiz/start";
             let params = {
                 testType,
                 difficulty,
@@ -30,7 +30,7 @@ function QuizPage() {
             // 🔊 Eğer dinleme ise farklı endpoint ve farklı response bekliyoruz
             const isListening = testType === "dinleme";
             if (isListening) {
-                url = "http://localhost:8080/api/quiz/start/listening";
+                url = "/api/quiz/start/listening";
                 params = {
                     difficulty,
                     limit: questionCount,
@@ -40,7 +40,7 @@ function QuizPage() {
             console.log("Params:", params);
 
 
-            const res = await axios.get(url, {
+            const res = await api.get(url, {
                 params,
                 headers: {
                     Authorization: `Bearer ${token}`,

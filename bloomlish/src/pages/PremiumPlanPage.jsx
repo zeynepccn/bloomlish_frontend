@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import api from "../api";
 import { Layout, Typography, Card, Table, Button, Tag, Spin } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 
@@ -48,14 +48,14 @@ export default function PremiumPlanPage() {
                 };
 
                 // 1) Aktif abonelik bilgisi
-                const subRes = await axios.get(
-                    "http://localhost:8080/api/billing/subscription",
+                const subRes = await api.get(
+                    "/api/billing/subscription",
                     { headers }
                 );
 
                 // 2) Ödeme geçmişi
-                const payRes = await axios.get(
-                    "http://localhost:8080/api/billing/payments",
+                const payRes = await api.get(
+                    "api/billing/payments",
                     { headers }
                 );
 

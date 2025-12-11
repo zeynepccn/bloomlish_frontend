@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
+
 
 function CreateLessonPage() {
     const navigate = useNavigate();
@@ -92,7 +93,7 @@ function CreateLessonPage() {
                 });
             }
 
-            await axios.post("http://localhost:8080/api/lessons/create", formData, {
+            await api.post("/api/lessons/create", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

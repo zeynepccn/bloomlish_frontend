@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";  
 
 function QuizQuestionsPage() {
     const navigate = useNavigate();
@@ -79,8 +79,8 @@ function QuizQuestionsPage() {
         try {
             const token = localStorage.getItem("token");
 
-            const res = await axios.post(
-                "http://localhost:8080/api/quiz/submit",
+            const res = await api.post(
+                "/api/quiz/submit",
                 {
                     quizId: state.quizId,
                     answers

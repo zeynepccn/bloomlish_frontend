@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 import "../App.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import axios from "axios";
+import api from "../api";
 
 
 import { User, BookOpen, Clock, MessageSquare, Star } from "lucide-react";
@@ -63,8 +63,8 @@ function InstructorPage() {
 
 
     useEffect(() => {
-        axios
-            .get("http://localhost:8080/api/lessons/my-lessons", {
+        api
+            .get("/api/lessons/my-lessons", {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },

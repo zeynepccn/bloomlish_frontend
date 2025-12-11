@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api"; 
 
 function PlacementTestPage() {
     const navigate = useNavigate();
@@ -27,8 +27,8 @@ function PlacementTestPage() {
                     navigate("/login");
                     return;
                 }
-                const res = await axios.get(
-                    "http://localhost:8080/api/placement/start",
+                const res = await api.get(
+                    "/api/placement/start",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -83,8 +83,8 @@ function PlacementTestPage() {
 
         try {
             setSubmitting(true);
-            const res = await axios.post(
-                "http://localhost:8080/api/placement/submit",
+            const res = await api.post(
+                "/api/placement/submit",
                 payload,
                 {
                     headers: {

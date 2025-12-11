@@ -146,7 +146,9 @@ function HomePage({ isLoggedIn }) {
                                     } else if (item.title === "YAPAY ZEKA DESTEKLİ TESTLER!") {
                                         navigate("/quiz");
                                     } else if (item.title === "OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!") {
-                                        navigate("/games");
+                                        navigate("/games");                               
+                                    } else if (item.title === "GÖRÜNTÜLÜ DERS VE GRUP SOHBETİ!") {
+                                        navigate("/video-lesson");
                                     } else {
                                         console.log(`${item.title} yakında eklenecek ✨`);
                                     }

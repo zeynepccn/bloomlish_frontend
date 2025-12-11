@@ -140,9 +140,9 @@ function InstructorPage() {
             
 
                 {/* 📈 İstatistik Grafiği */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 w-full max-w-8xl">
+            <div className="w-full flex justify-center gap-x-8 ">
                 {/* 💬 Geri Bildirim Kartı */}
-                <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-6 hover:shadow-2xl transition">
+                <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition w-[410px]">
                     <h2 className="text-2xl font-semibold text-pink-600 mb-5 text-center">
                         Öğrenci Geri Bildirimleri
                     </h2>
@@ -185,41 +185,7 @@ function InstructorPage() {
                     </div>
                 </div>
 
-                    {/* 3️⃣ Öğrenci Sayısı */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition h-[430px] flex flex-col">
-                        <h2 className="text-2xl font-semibold text-pink-600 mb-4 text-center">
-                            Öğrenci Sayısı
-                        </h2>
-
-                        <div className="flex-1 pt-3">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={studentData}>
-                                    <XAxis dataKey="name" stroke="#fb7185" />
-                                    <YAxis stroke="#fb7185" />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#f472b6" radius={[14, 14, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* 4️⃣ Ders Gelirleri */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-pink-200 p-7 hover:shadow-2xl transition h-[430px] flex flex-col">
-                        <h2 className="text-2xl font-semibold text-pink-600 mb-4 text-center">
-                            Ders Gelirleri
-                        </h2>
-
-                        <div className="flex-1 pt-3">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={incomeData}>
-                                    <XAxis dataKey="name" stroke="#fb7185" />
-                                    <YAxis stroke="#fb7185" />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#fb7185" radius={[14, 14, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                  
 
                 </div>
 

@@ -15,7 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
-import InstructorPage from "./pages/instructorPage";
+import InstructorPage from "./pages/InstructorPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
 import AdminPage from "./pages/AdminPage.jsx";
 import EarningsPage from "./pages/EarningsPage.jsx";
@@ -26,7 +26,7 @@ import MyLessonsPage from "./pages/MyLessonsPage.jsx";
 import EditLessonPage from "./pages/EditLessonPage.jsx";
 import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
-import PlacementTestPage from "./pages/PlacementTestPage.jsx";
+import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 
 function App() {
   // Başlangıçta localStorage'da token varsa true başlasın
@@ -91,7 +91,7 @@ function App() {
           <Route path="/editlesson/:id" element={<EditLessonPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/results" element={<ResultsOverviewPage />} />
-          <Route path="/placement" element={<PlacementTestPage />} />
+          <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

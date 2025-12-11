@@ -130,29 +130,63 @@ const sortLessons = (lessons) => {
     };
 
     // --- Kart tıklama fonksiyonu ---
-    const handleLessonClick = (lesson) => {
-        const { status, disabled } = getLessonStatus(lesson);
+    const handleLessonClick = async (lesson) => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-        if (disabled) return;
+        try {
+            const res = await axios.get(
+                `http://localhost:8080/api/lessons/join-check/${lesson.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-        if (status === "Ders Devam Ediyor") {
-            n(`/lesson/${lesson.id}`);
+            const result = res.data;
+
+            if (result === "OK") {
+                // Ders başladı → direkt video sayfasına git
+                n(`/lesson/${lesson.id}`);
+                return;
+            }
+
+            if (result === "NOT_ENROLLED") {
+                Modal.info({
+                    title: "Derse Kayıtlı Değilsiniz",
+                    content: "Bu derse katılmak için önce satın almanız gerekiyor.",
+                });
+                return;
+            }
+
+            if (result === "FINISHED") {
+                Modal.warning({
+                    title: "Ders Sona Erdi",
+                    content: "Bu dersin süresi dolmuş.",
+                });
+                return;
+            }
+
+            // Yaklaşan ders → mevcut modal’ını açıyoruz
+            if (result === "NOT_STARTED" || result === "WRONG_DAY") {
+                setSelectedLesson(lesson);
+                setOpenLessonModal(true);
+
+                // geri sayım başlat
+                const interval = setInterval(() => {
+                    setTimeLeft(calculateTimeLeft(lesson));
+                }, 1000);
+
+                window.currentCountdown = interval;
+                return;
+            }
+
+        } catch (err) {
+            console.error("join-check error:", err);
+            Modal.error({
+                title: "Bir Hata Oluştu",
+                content: "Derse giriş kontrolü yapılamadı.",
+            });
         }
-
-        if (status === "Yaklaşan Ders") {
-            setSelectedLesson(lesson);
-            setOpenLessonModal(true);
-
-            // canlı geri sayım
-            const interval = setInterval(() => {
-                setTimeLeft(calculateTimeLeft(lesson));
-            }, 1000);
-
-            // modal kapanınca temizlemek için kaydediyoruz
-            window.currentCountdown = interval;
-        }
-
     };
+
 
 
     return (

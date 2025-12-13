@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import {
     ResponsiveContainer,
     LineChart,
@@ -19,14 +19,8 @@ function ResultsOverviewSection() {
     useEffect(() => {
         const fetchSummary = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const res = await axios.get(
-                    "http://localhost:8080/api/results/summary/me",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                const res = await api.get(
+                    "/api/results/summary/me",
                 );
                 setSummary(res.data);
             } catch (err) {
@@ -134,11 +128,11 @@ function ResultsOverviewSection() {
                     <div className="max-h-40 overflow-y-auto text-sm mb-4 border rounded">
                         {!hasAnyStats ? (
                             <p className="text-gray-400 text-center py-2">
-                                Henüz istatistik yok. Test çözmeye başla! 💪
+                                Henüz istatistik yok. Test çözmeye başla!
                             </p>
                         ) : !hasLast7Stats ? (
                             <p className="text-gray-400 text-center py-2">
-                                Son 7 günde test çözmemişsin. Yeni bir quiz dene! 🚀
+                                Son 7 günde test çözmemişsin. Yeni bir quiz dene!
                             </p>
                         ) : (
                             last7DaysStats.map((day) => (
@@ -150,7 +144,7 @@ function ResultsOverviewSection() {
                                         {day.date}
                                     </span>
                                     <span>
-                                        ✅ {day.correct} &nbsp;/&nbsp; ❌ {day.wrong}
+                                        {day.correct} &nbsp;/&nbsp;  {day.wrong}
                                     </span>
                                 </div>
                             ))
@@ -188,7 +182,7 @@ function ResultsOverviewSection() {
                         </div>
                     ) : (
                         <div className="mt-2 h-24 flex items-center justify-center border rounded bg-gray-100 text-gray-400 text-xs">
-                            Son 7 gün için grafikte gösterilecek veri yok 📊
+                            Son 7 gün için grafikte gösterilecek veri yok
                         </div>
                     )}
                 </div>

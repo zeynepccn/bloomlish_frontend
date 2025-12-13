@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api"; 
+import api from "../api";
+
 
 function PlacementTestPage() {
     const navigate = useNavigate();
@@ -19,21 +20,8 @@ function PlacementTestPage() {
     useEffect(() => {
         const fetchPlacementTest = async () => {
             try {
-                const token = localStorage.getItem("token");
-                console.log("PLACEMENT TOKEN:", token);
-
-                if (!token) {
-                    console.warn("Token yok, login sayfasına yönlendiriyorum");
-                    navigate("/login");
-                    return;
-                }
                 const res = await api.get(
                     "/api/placement/start",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
                 );
 
                 console.log("PLACEMENT START RESPONSE:", res.data);
@@ -86,11 +74,6 @@ function PlacementTestPage() {
             const res = await api.post(
                 "/api/placement/submit",
                 payload,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
             );
 
             console.log("PLACEMENT RESULT:", res.data);

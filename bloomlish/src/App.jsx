@@ -27,6 +27,7 @@ import EditLessonPage from "./pages/EditLessonPage.jsx";
 import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 import VideoLessonPage from "./pages/VideoLessonPage.jsx";
+import PlacementTestPage from "./pages/PlacementTestPage.jsx";
 
 function App() {
   // Başlangıçta localStorage'da token varsa true başlasın
@@ -92,6 +93,7 @@ function App() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/results" element={<ResultsOverviewPage />} />
           <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
+          <Route path="/placement" element={<PlacementTestPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

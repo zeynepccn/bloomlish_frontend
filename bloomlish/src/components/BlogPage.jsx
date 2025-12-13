@@ -5,7 +5,9 @@ import { HeartIcon } from "@heroicons/react/24/solid";
 
 const { TextArea } = Input;
 
-const API_URL = "http://localhost:8080/api/posts";
+const API_BASE = import.meta.env.VITE_API_BASE;
+const API_URL = `${API_BASE}/api/posts`;
+
 
 function BlogPage() {
     const [text, setText] = useState("");
@@ -88,10 +90,10 @@ function BlogPage() {
             );
 
             setIsEditModalOpen(false);
-            message.success("Post başarıyla güncellendi ✅");
+            message.success("Post başarıyla güncellendi ");
         } catch (err) {
             console.error(err);
-            message.error("Post güncellenemedi ❌");
+            message.error("Post güncellenemedi ");
         }
     };
 
@@ -186,7 +188,8 @@ function BlogPage() {
             onOk: async () => {
                 const token = localStorage.getItem("token");
                 try {
-                    const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
+                    const res = await fetch(`${API_BASE}/api/comments/delete/${commentId}`, {
+
                         method: "DELETE",
                         headers: { "Authorization": `Bearer ${token}` },
                     });
@@ -199,10 +202,10 @@ function BlogPage() {
                                 : post
                         )
                     );
-                    message.success("Yorum başarıyla silindi ✅");
+                    message.success("Yorum başarıyla silindi ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Yorum silinemedi ❌");
+                    message.error("Yorum silinemedi ");
                 }
             }
         });
@@ -212,7 +215,8 @@ function BlogPage() {
     const handleUpdateComment = async (postId, commentId, newText) => {
         const token = localStorage.getItem("token");
         try {
-            const res = await fetch(`http://localhost:8080/api/comments/update/${commentId}`, {
+            const res = await fetch(`${API_BASE}/api/comments/update/${commentId}`, 
+ {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,

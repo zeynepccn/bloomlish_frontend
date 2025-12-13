@@ -4,6 +4,9 @@ import { UserIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { Modal, message } from "antd";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
+
 function GunlukPage() {
     const [text, setText] = useState("");
     const [posts, setPosts] = useState([]);
@@ -11,7 +14,7 @@ function GunlukPage() {
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
-        fetch("http://localhost:8080/api/notes/get-all", {
+        fetch(`${API_BASE}/api/notes/get-all`, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -28,7 +31,7 @@ function GunlukPage() {
 
         try {
             if (editingId) {
-                const res = await fetch(`http://localhost:8080/api/notes/update/${editingId}`, {
+                const res = await fetch(`${API_BASE}/api/notes/update/${editingId}`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -41,7 +44,7 @@ function GunlukPage() {
                 setEditingId(null);
                 setText("");
             } else {
-                const res = await fetch("http://localhost:8080/api/notes/create", {
+                const res = await fetch(`${API_BASE}/api/notes/create`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -71,7 +74,8 @@ function GunlukPage() {
             cancelText: "Vazgeç",
             onOk: async () => {
                 try {
-                    const res = await fetch(`http://localhost:8080/api/notes/delete/${id}`, {
+                    const res = await fetch(`${API_BASE}/api/notes/delete/${id}`, 
+{
                         method: "DELETE",
                         headers: {
                             "Authorization": `Bearer ${token}`

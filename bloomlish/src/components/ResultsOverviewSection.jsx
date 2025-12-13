@@ -11,6 +11,9 @@ import {
     Legend,
 } from "recharts";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
+
 function ResultsOverviewSection() {
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,7 +24,7 @@ function ResultsOverviewSection() {
             try {
                 const token = localStorage.getItem("token");
                 const res = await axios.get(
-                    "http://localhost:8080/api/results/summary/me",
+                    `${API_BASE}/api/results/summary/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

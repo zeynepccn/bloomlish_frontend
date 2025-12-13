@@ -3,6 +3,8 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { MessageCircle } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 function ChatWidget({ currentUserId, currentUserRole }) {
 
@@ -30,8 +32,9 @@ function ChatWidget({ currentUserId, currentUserRole }) {
 
     // WebSocket bağlantısı
     useEffect(() => {
-        const socket = new SockJS("http://localhost:8080/socket");
+        if (!currentUserId) return;
 
+        const socket = new SockJS(WS_URL);
         const client = new Client({
             webSocketFactory: () => socket,
             reconnectDelay: 5000,
@@ -39,20 +42,20 @@ function ChatWidget({ currentUserId, currentUserRole }) {
             onConnect: () => {
                 setIsConnected(true);
 
-                client.subscribe(`/user/${currentUserId}/queue/messages`, (frame) => {
-                    const message = JSON.parse(frame.body);
+                client.subscribe(
+                    `/user/${currentUserId}/queue/messages`,
+                    (frame) => {
+                        const message = JSON.parse(frame.body);
 
-                    const senderUsername =
-                        users.find(u => u.id === message.senderId)?.username || "Bilinmeyen";
-
-                    setMessages(prev => ({
-                        ...prev,
-                        [message.senderId]: [
-                            ...(prev[message.senderId] || []),
-                            { from: senderUsername, text: message.content },
-                        ],
-                    }));
-                });
+                        setMessages(prev => ({
+                            ...prev,
+                            [message.senderId]: [
+                                ...(prev[message.senderId] || []),
+                                { from: "O", text: message.content },
+                            ],
+                        }));
+                    }
+                );
             },
             onDisconnect: () => setIsConnected(false),
         });
@@ -61,11 +64,12 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         setStompClient(client);
 
         return () => client.deactivate();
-    }, [currentUserId, users]);
+    }, [currentUserId]);
+
 
     // Öğrenci listesini çeker
     useEffect(() => {
-        fetch("http://localhost:8080/api/users/students", {
+        fetch(`${API_BASE}/api/users/students`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -82,7 +86,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
     useEffect(() => {
         if (!selectedUser) return;
 
-        fetch(`http://localhost:8080/api/messages/get/${currentUserId}/${selectedUser.id}`, {
+        fetch(`${API_BASE}/api/messages/get/${currentUserId}/${selectedUser.id}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -123,7 +127,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         }
 
         // DB'ye kaydet
-        fetch("http://localhost:8080/api/messages/send", {
+        fetch(`${API_BASE}/api/messages/send`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -131,6 +135,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
             },
             body: JSON.stringify(messageDto),
         });
+
 
         setMessages(prev => ({
             ...prev,

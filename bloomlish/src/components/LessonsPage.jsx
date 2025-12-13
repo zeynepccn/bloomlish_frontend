@@ -17,6 +17,9 @@ import {
     Empty,
 } from "antd";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
+
 import { UserOutlined, FilterOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -41,8 +44,7 @@ export default function LessonsPage() {
 
     // BACKEND'DEN DERSLERİ ÇEKELİM
     const fetchAllLessons = () => {
-        axios
-            .get("http://localhost:8080/api/lessons", {
+        axios.get(`${API_BASE}/api/lessons`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
             .then((res) => {
@@ -91,8 +93,7 @@ export default function LessonsPage() {
             return;
         }
 
-        axios
-            .get("http://localhost:8080/api/lessons/filter", {
+        axios.get(`${API_BASE}/api/lessons/filter`, {
                 params,
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
@@ -137,7 +138,8 @@ export default function LessonsPage() {
 
         try {
             const res = await axios.post(
-                `http://localhost:8080/api/payments/lesson/${lessonId}`,
+                `${API_BASE}/api/payments/lesson/${lessonId}`,
+
                 {},
                 { headers: { Authorization: "Bearer " + token } }
             );
@@ -152,7 +154,7 @@ export default function LessonsPage() {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        axios.get("http://localhost:8080/api/payments/my-lessons", {
+        axios.get(`${API_BASE}/api/payments/my-lessons`, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => {

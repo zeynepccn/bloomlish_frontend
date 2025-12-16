@@ -12,11 +12,11 @@ export default function MatchGameCard() {
 
   const levels = ["A1", "A2", "B1", "B2", "C1"];
   const xpByLevel = {
-    A1: 3,
+    A1: 5,
     A2: 5,
-    B1: 8,
-    B2: 12,
-    C1: 15,
+    B1: 5,
+    B2: 5,
+    C1: 5,
   };
   const [levelIndex, setLevelIndex] = useState(0);
   const currentLevel = levels[levelIndex];
@@ -108,8 +108,33 @@ export default function MatchGameCard() {
   useEffect(() => {
     if (!finished) return;
 
-    message.success(`+${currentXP} XP kazandın!`);
+    const giveXp = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/games/match/complete?level=${currentLevel}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
 
+        const data = await res.json();
+        message.success(`+${data.xpGained} XP kazandın!`);
+
+        // 🔥 İŞTE TAM BURAYA
+        localStorage.setItem("xpUpdated", "1");
+
+      } catch (e) {
+        message.error("XP kaydedilemedi");
+      }
+    };
+
+
+    giveXp();
+
+    // LEVEL GEÇİŞ MODALI
     if (levelIndex < levels.length - 1) {
       Modal.success({
         title: "Tebrikler 🎉",
@@ -123,6 +148,7 @@ export default function MatchGameCard() {
       });
     }
   }, [finished]);
+
 
   const [shakeSide, setShakeSide] = useState(null); // "word" | "meaning" | null
 
@@ -245,4 +271,4 @@ export default function MatchGameCard() {
       </div>
     </Card>
   );
-}
+} 

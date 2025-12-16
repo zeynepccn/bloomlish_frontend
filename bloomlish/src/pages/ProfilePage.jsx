@@ -18,6 +18,18 @@ export default function ProfilePage() {
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
+    useEffect(() => {
+        fetch("http://localhost:8080/api/users/me", {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => setUser(data))
+            .catch(() => console.error("Profil çekilemedi"));
+    }, []);
+
+
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -35,20 +47,7 @@ export default function ProfilePage() {
     }, []);
 
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
 
-        api
-            .get("/api/auth/me",)
-            .then((res) => {
-                console.log("Profil →", res.data);
-                setUser(res.data);
-            })
-            .catch((err) => {
-                console.error("Profil çekilemedi:", err);
-            });
-    }, []);
 
 
     const progressPct =
@@ -241,11 +240,16 @@ export default function ProfilePage() {
                             </Title>
 
                             <div className="flex flex-wrap items-center gap-2 mt-1">
-                                <Tag color="magenta" className="!rounded-full !px-3 !py-1">
-                                    SEVİYE: {user?.level || "—"}
+                                {/* XP (totalXp üzerinden) */}
+
+
+                                <Tag color="pink" className="!rounded-full !px-3 !py-1">
+                                    {(user?.totalXp ?? 0)} XP
                                 </Tag>
+
                                 <Text className="text-gray-600">{user?.email || "—"}</Text>
                             </div>
+
                         </div>
                     </div>
 
@@ -430,7 +434,6 @@ export default function ProfilePage() {
                                     }}
                                     footer={null}
                                     centered
-                                    className="rounded-2xl"
                                 >
                                     <div className="text-center p-4">
 

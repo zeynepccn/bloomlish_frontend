@@ -8,6 +8,7 @@ import {
     Card,
     Tag,
     message,
+    Modal,
 } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -258,7 +259,20 @@ export default function BillingSketchPage() {
                     <div className="text-center mt-10 mb-8">
                         <button
                             className="px-8 py-3 bg-yellow-400 rounded-full font-semibold shadow-md hover:scale-[1.02] transition"
-                            onClick={handleStartTrial}
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: "Ücretsiz denemeyi başlatmak istiyor musun?",
+                                    content:
+                                        "3 günlük ücretsiz deneme hemen başlayacak. Süre bitince aboneliğe geçmek istersen ödeme yapabilirsin.",
+                                    okText: "Evet, başlat",
+                                    cancelText: "Vazgeç",
+                                    centered: true,
+                                    okButtonProps: { className: "!bg-amber-400 !text-black border border-black/30 hover:!bg-amber-500" },
+                                    cancelButtonProps: { className: "!rounded-xl border border-black/30 hover:!border-black/60" },
+                                    onOk: () => handleStartTrial(),
+                                });
+                            }}
+
                         >
                             3 GÜNLÜK ÜCRETSİZ KULLAN!
                         </button>

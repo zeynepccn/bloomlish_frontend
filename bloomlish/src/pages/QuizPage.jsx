@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api"; 
+import api from "../api";
 
 function QuizPage() {
     const navigate = useNavigate();
@@ -78,35 +78,25 @@ function QuizPage() {
 
     };
 
+    const handleAiSuggestion = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await api.get("/api/ai/suggestion/me", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-    const handleAiSuggestion = () => {
-        const suggestions = [
-            { testType: "Kelime Bilgisi", difficulty: "Medium", duration: "5dk" },
-            { testType: "Dilbilgisi", difficulty: "Easy", duration: "10dk" },
-            { testType: "Okuma Anlama", difficulty: "Hard", duration: "15dk" },
-        ];
-        const random = suggestions[Math.floor(Math.random() * suggestions.length)];
-        setAiSuggestion(random);
+            const s = res.data;
 
-        const lowerType =
-            random.testType === "Kelime Bilgisi"
-                ? "kelime"
-                : random.testType === "Dilbilgisi"
-                    ? "dilbilgisi"
-                    : random.testType === "Okuma Anlama"
-                        ? "okuma"
-                        : "kelime";
-
-        setTestType(lowerType);
-        setDifficulty(random.difficulty);
-        setQuestionCount(
-            random.duration === "5dk"
-                ? 5
-                : random.duration === "10dk"
-                    ? 10
-                    : 15
-        );
+            setAiSuggestion(s);
+            setTestType(s.testType);
+            setDifficulty(s.difficulty);
+            setQuestionCount(s.limit);
+        } catch (err) {
+            console.error(err);
+            alert("AI önerisi alınamadı.");
+        }
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6 space-y-8">
@@ -208,16 +198,12 @@ function QuizPage() {
                         Test Önerisi Al
                     </button>
 
-                    {aiSuggestion && (
-                        <div className="mt-4 text-sm bg-gray-50 p-3 rounded border">
-                            <p>
-                                <strong>Test Türü:</strong> {aiSuggestion.testType}</p>
-                            <p>
-                                <strong>Zorluk:</strong> {aiSuggestion.difficulty}</p>
-                            <p>
-                                <strong>Süre:</strong> {aiSuggestion.duration}</p>
+                    {aiSuggestion?.reason && (
+                        <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-3 rounded border">
+                            {aiSuggestion.reason}
                         </div>
                     )}
+
                 </div>
             </div>
         </div>

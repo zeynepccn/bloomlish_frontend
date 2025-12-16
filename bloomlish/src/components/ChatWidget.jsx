@@ -2,13 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { MessageCircle } from "lucide-react";
+import api from "../api";
 
-const API_BASE = import.meta.env.VITE_API_BASE;
-const WS_URL = import.meta.env.VITE_WS_URL;
 
 function ChatWidget({ currentUserId, currentUserRole }) {
-
- 
     if (!currentUserId || currentUserRole !== "ROLE_STUDENT") {
         return null;
     }
@@ -32,9 +29,8 @@ function ChatWidget({ currentUserId, currentUserRole }) {
 
     // WebSocket bağlantısı
     useEffect(() => {
-        if (!currentUserId) return;
+        const socket = new SockJS("http://localhost:8080/socket");
 
-        const socket = new SockJS(WS_URL);
         const client = new Client({
             webSocketFactory: () => socket,
             reconnectDelay: 5000,
@@ -42,20 +38,20 @@ function ChatWidget({ currentUserId, currentUserRole }) {
             onConnect: () => {
                 setIsConnected(true);
 
-                client.subscribe(
-                    `/user/${currentUserId}/queue/messages`,
-                    (frame) => {
-                        const message = JSON.parse(frame.body);
+                client.subscribe(`/user/${currentUserId}/queue/messages`, (frame) => {
+                    const message = JSON.parse(frame.body);
 
-                        setMessages(prev => ({
-                            ...prev,
-                            [message.senderId]: [
-                                ...(prev[message.senderId] || []),
-                                { from: "O", text: message.content },
-                            ],
-                        }));
-                    }
-                );
+                    const senderUsername =
+                        users.find(u => u.id === message.senderId)?.username || "Bilinmeyen";
+
+                    setMessages(prev => ({
+                        ...prev,
+                        [message.senderId]: [
+                            ...(prev[message.senderId] || []),
+                            { from: senderUsername, text: message.content },
+                        ],
+                    }));
+                });
             },
             onDisconnect: () => setIsConnected(false),
         });
@@ -64,44 +60,48 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         setStompClient(client);
 
         return () => client.deactivate();
-    }, [currentUserId]);
-
+    }, [currentUserId, users]);
 
     // Öğrenci listesini çeker
     useEffect(() => {
-        fetch(`${API_BASE}/api/users/students`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then(res => res.ok ? res.json() : Promise.reject("Kullanıcı listesi alınamadı"))
-            .then(data => {
-                const filtered = data.filter(u => u.id !== currentUserId);
-                setUsers(filtered.map(u => ({ ...u, online: true })));
-            })
-            .catch(err => console.error(err));
+        if (!currentUserId) return;
+
+        const fetchUsers = async () => {
+            try {
+                const res = await api.get("/api/users/students");
+                const filtered = res.data.filter((u) => u.id !== currentUserId);
+                setUsers(filtered.map((u) => ({ ...u, online: true })));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchUsers();
     }, [currentUserId]);
 
     // Mesaj geçmişini çeker
     useEffect(() => {
         if (!selectedUser) return;
 
-        fetch(`${API_BASE}/api/messages/get/${currentUserId}/${selectedUser.id}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then(res => res.ok ? res.json() : Promise.reject("Mesaj alınamadı"))
-            .then(data => {
-                const formatted = data.map(m => ({
-                    from: m.senderId === currentUserId ? "Sen" : "O",
+        const fetchHistory = async () => {
+            try {
+                const res = await api.get(
+                    `/api/messages/get/${currentUserId}/${selectedUser.id}`
+                );
+
+                const formatted = res.data.map((m) => ({
+                    from: m.senderId === currentUserId ? "Ben" : selectedUser.email.split("@")[0],
                     text: m.content,
                 }));
-                setMessages(prev => ({ ...prev, [selectedUser.id]: formatted }));
-            })
-            .catch(err => console.error(err));
-    }, [selectedUser]);
 
+                setMessages((prev) => ({ ...prev, [selectedUser.id]: formatted }));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchHistory();
+    }, [selectedUser, currentUserId]);
     // Scroll en alta
     useEffect(() => {
         if (chatContainerRef.current) {
@@ -109,7 +109,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         }
     }, [messages, selectedUser]);
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (!input.trim() || !selectedUser) return;
 
         const messageDto = {
@@ -127,15 +127,12 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         }
 
         // DB'ye kaydet
-        fetch(`${API_BASE}/api/messages/send`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(messageDto),
-        });
-
+        try {
+            await api.post("/api/messages/send", messageDto);
+        } catch (err) {
+            console.error(err);
+            // istersen burada toast vs gösterirsin
+        }
 
         setMessages(prev => ({
             ...prev,
@@ -199,8 +196,8 @@ function ChatWidget({ currentUserId, currentUserRole }) {
                                     <div
                                         key={i}
                                         className={`px-3 py-2 rounded-lg max-w-[70%] ${msg.from === "Sen"
-                                                ? "bg-pink-100 self-end text-pink-700"
-                                                : "bg-gray-200 self-start text-gray-800"
+                                            ? "bg-pink-100 self-end text-pink-700"
+                                            : "bg-gray-200 self-start text-gray-800"
                                             }`}
                                     >
                                         <strong>{msg.from}: </strong>

@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
-import { UserIcon } from "@heroicons/react/24/solid";
-import { useNavigate } from "react-router-dom";
 import { Modal, message } from "antd";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
-
+import api from "../api";
 
 function GunlukPage() {
     const [text, setText] = useState("");
@@ -14,50 +10,46 @@ function GunlukPage() {
     const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/notes/get-all`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
+        const fetchNotes = async () => {
+            try {
+                const res = await api.get("/api/notes/get-all");
+                setPosts(res.data.content || []);
+            } catch (err) {
+                console.error(err);
+                message.error("Günlük yazıları alınamadı ");
             }
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                setPosts(data.content);
-            })
-            .catch((err) => console.error(err));
+        };
+
+        fetchNotes();
     }, []);
+
 
     const handlePublish = async () => {
         if (text.trim() === "") return;
 
         try {
             if (editingId) {
-                const res = await fetch(`${API_BASE}/api/notes/update/${editingId}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ content: text })
+                const res = await api.put(`/api/notes/update/${editingId}`, {
+                    content: text
                 });
-                const updatedPost = await res.json();
-                setPosts(posts.map((p) => (p.id === editingId ? updatedPost : p)));
+                const updatedPost = res.data;
+                setPosts((prev) =>
+                    prev.map((p) => (p.id === editingId ? updatedPost : p))
+                );
                 setEditingId(null);
                 setText("");
+                message.success("Günlük güncellendi ");
             } else {
-                const res = await fetch(`${API_BASE}/api/notes/create`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ content: text })
-                });
-                const savedPost = await res.json();
-                setPosts([savedPost, ...posts]);
+                const res = await api.post("/api/notes/create", { content: text });
+                const savedPost = res.data;
+
+                setPosts((prev) => [savedPost, ...prev]);
                 setText("");
+                message.success("Günlük eklendi ");
             }
         } catch (err) {
             console.error(err);
+            message.error("İşlem başarısız ");
         }
     };
     const handleEdit = (post) => {
@@ -74,19 +66,12 @@ function GunlukPage() {
             cancelText: "Vazgeç",
             onOk: async () => {
                 try {
-                    const res = await fetch(`${API_BASE}/api/notes/delete/${id}`, 
-{
-                        method: "DELETE",
-                        headers: {
-                            "Authorization": `Bearer ${token}`
-                        }
-                    });
-                    if (!res.ok) throw new Error("Yazı silinemedi");
-                    setPosts(posts.filter((p) => p.id !== id));
-                    message.success("Yazı silindi ✅");
+                    await api.delete(`/api/notes/delete/${id}`);
+                    setPosts((prev) => prev.filter((p) => p.id !== id));
+                    message.success("Yazı silindi ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Yazı silinemedi ❌");
+                    message.error("Yazı silinemedi ");
                 }
             }
         });
@@ -94,7 +79,6 @@ function GunlukPage() {
 
     return (
         <PageLayout title="GÜNLÜK YAZILAR">
-            {/* ÜST KART – yeni yazı alanı, ortalanmış */}
             <div className="w-full flex justify-center mb-8">
                 <div className="w-full max-w-md bg-pink-50 rounded-3xl shadow-lg p-6 border border-pink-200">
                     <textarea

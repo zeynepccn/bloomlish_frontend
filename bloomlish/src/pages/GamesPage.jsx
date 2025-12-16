@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Progress, Button as AntButton, Tag } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,9 @@ import {
     ClockCircleFilled,
     BookFilled,
 } from "@ant-design/icons";
+
+import api from "../api";
+
 
 export default function GamesPage() {
     const navigate = useNavigate();
@@ -22,13 +25,7 @@ export default function GamesPage() {
         rewardXP: 10,
     };
 
-    const leaderboard = [
-        { id: 1, name: "Deniz METİN", xp: 230 },
-        { id: 2, name: "AAAA", xp: 200 },
-        { id: 3, name: "ELA", xp: 187 },
-        { id: 4, name: "Zeynep", xp: 160 },
-        { id: 5, name: "AYT", xp: 150 },
-    ];
+
 
     const TabButton = ({ id, label }) => {
         const isActive = activeTab === id;
@@ -50,6 +47,32 @@ export default function GamesPage() {
     const progressPercent = Math.round(
         (weeklyGoal.done / weeklyGoal.total) * 100
     );
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [me, setMe] = useState(null);
+
+    useEffect(() => {
+        api
+            .get("/api/users/me")
+            .then((res) => {
+                console.log("GamesPage ME →", res.data);
+                setMe(res.data);
+            })
+            .catch((err) => console.error("Profil (me) alınamadı", err));
+    }, []);
+
+
+
+    useEffect(() => {
+        fetch("http://localhost:8080/api/leaderboard/weekly", {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        })
+            .then((res) => res.json())
+            .then(setLeaderboard)
+            .catch((err) => console.error("Leaderboard alınamadı", err));
+    }, []);
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-10">
@@ -79,7 +102,7 @@ export default function GamesPage() {
                     </div>
 
                     {/* Right side: weekly mission card */}
-                    <div className="w-full md:w-[320px]">
+                    {/*<div className="w-full md:w-[320px]">
                         <Card
                             className="!rounded-2xl border border-pink-200/70 bg-white/80 backdrop-blur shadow-[0_24px_48px_-12px_rgba(249,168,212,0.5)]"
                             bodyStyle={{ padding: "16px 20px 20px 20px" }}
@@ -134,53 +157,60 @@ export default function GamesPage() {
                                 Görevini Tamamla
                             </AntButton>
                         </Card>
-                    </div>
+                    </div>*/}
                 </section>
 
                 {/* MAIN CONTENT AREA */}
                 {activeTab === "games" && (
                     <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 xl:gap-6">
-                        <GameCard
-                            icon={<BookFilled className="text-xl text-white" />}
-                            badgeText="Günlük Kelime"
-                            title="Bugünün Kelimeleri"
-                            desc="Her gün yeni bir kelimeyle mini quiz!"
-                            xp="+2 XP"
-                            cta="BAŞLA"
-                            onClick={() => navigate("/games/daily-word")}
-                        />
 
-                        <GameCard
-                            icon={<ThunderboltFilled className="text-xl text-white" />}
-                            badgeText="Hızlı!"
-                            title="Hızlı Eşleştirme"
-                            desc="Kelimeleri anlamlarıyla saniyeler içinde eşleştir!"
-                            xp="+3 XP"
-                            cta="OYNA"
-                            onClick={() => navigate("/game/match")}
-                        />
+                        {/* AKTİF OYUNLAR (ORTALI) */}
+                        <div className="sm:col-span-2 xl:col-span-4 flex flex-col sm:flex-row justify-center gap-4 xl:gap-6">
+                            <GameCard
+                                icon={<BookFilled className="text-xl text-white" />}
+                                badgeText="Günlük Kelime"
+                                title="Bugünün Kelimesi"
+                                desc="Her gün yeni bir kelimeyle mini quiz!"
+                                xp="+2 XP"
+                                cta="BAŞLA"
+                                onClick={() => navigate("/games/daily-word")}
+                            />
 
-                        <GameCard
-                            icon={<SoundFilled className="text-xl text-white" />}
-                            badgeText="Dinleme"
-                            title="Dinleme Mini Oyunu"
-                            desc="Duyduğunu doğru kelimeyle eşleştir!"
-                            xp="+4 XP"
-                            cta="DİNLE ve CEVAPLA"
-                            onClick={() => navigate("/game/listen")}
-                        />
+                            <GameCard
+                                icon={<ThunderboltFilled className="text-xl text-white" />}
+                                badgeText="Hızlı!"
+                                title="Hızlı Eşleştirme"
+                                desc="Kelimeleri anlamlarıyla saniyeler içinde eşleştir!"
+                                xp="+5 XP"
+                                cta="OYNA"
+                                onClick={() => navigate("/game/match")}
+                            />
+                        </div>
 
-                        <GameCard
-                            icon={<ClockCircleFilled className="text-xl text-white" />}
-                            badgeText="Refleks"
-                            title="Hızlı Tepki Testi"
-                            desc="Görseli veya sesi en hızlı şekilde eşleştir!"
-                            xp="+5 XP"
-                            cta="BAŞLA"
-                            onClick={() => navigate("/game/reaction")}
-                        />
+                        {/*
+    <GameCard
+      icon={<SoundFilled className="text-xl text-white" />}
+      badgeText="Dinleme"
+      title="Dinleme Mini Oyunu"
+      desc="Duyduğunu doğru kelimeyle eşleştir!"
+      xp="+4 XP"
+      cta="DİNLE ve CEVAPLA"
+      onClick={() => navigate("/game/listen")}
+    />
+
+    <GameCard
+      icon={<ClockCircleFilled className="text-xl text-white" />}
+      badgeText="Refleks"
+      title="Hızlı Tepki Testi"
+      desc="Görseli veya sesi en hızlı şekilde eşleştir!"
+      xp="+5 XP"
+      cta="BAŞLA"
+      onClick={() => navigate("/game/reaction")}
+    />
+    */}
                     </section>
                 )}
+
 
                 {activeTab === "tasks" && (
                     <section className="flex flex-col items-center text-center py-10">
@@ -194,7 +224,7 @@ export default function GamesPage() {
 
                         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
                             <TaskCard
-                                title="3 oyun oyna"
+                                title="2 oyun oyna"
                                 detail="+4 XP"
                                 completed={false}
                             />
@@ -209,28 +239,27 @@ export default function GamesPage() {
 
                 {activeTab === "profile" && (
                     <section className="flex flex-col items-center text-center py-10">
-                        <div className="text-xl font-semibold text-pink-800">
-                            Profilim
-                        </div>
-                        <p className="text-pink-600 text-sm max-w-md mt-2 leading-relaxed">
-                            Seviye, toplam XP, istatistikler yakında burada
-                            gözükecek 💖
-                        </p>
+                        <div className="text-xl font-semibold text-pink-800">Profilim</div>
+
 
                         <div className="mt-6 w-full max-w-sm">
                             <Card className="!rounded-2xl border border-pink-200/70 bg-white/80 backdrop-blur shadow-[0_24px_48px_-12px_rgba(249,168,212,0.5)]">
                                 <div className="flex flex-col gap-3 items-center">
                                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-300 to-pink-400 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-pink-200/60">
-                                        Z
+                                        {(me?.name || me?.username || "U").charAt(0).toUpperCase()}
                                     </div>
+
                                     <div className="text-pink-800 font-semibold text-lg">
-                                        Zeynep
+                                        {me?.name || me?.username || "—"}
                                     </div>
+
                                     <div className="text-pink-500 text-sm">
-                                        Level 4 · 540 XP
+                                        {me?.totalXp || 0} XP
                                     </div>
+
                                     <AntButton
                                         className="!mt-2 !rounded-xl !border-pink-200/70 !text-pink-700 !bg-white/70 backdrop-blur hover:!bg-white hover:!shadow-sm"
+                                        onClick={() => navigate("/profile")}
                                     >
                                         Profili Gör
                                     </AntButton>
@@ -239,6 +268,7 @@ export default function GamesPage() {
                         </div>
                     </section>
                 )}
+
 
                 {activeTab === "ranking" && (
                     <section className="flex flex-col items-center py-10">
@@ -256,9 +286,7 @@ export default function GamesPage() {
                                     </div>
                                 </div>
 
-                                <Tag
-                                    className="!rounded-lg !border-none !text-[10px] !px-2 !py-1 !font-semibold !bg-gradient-to-r !from-pink-300 !to-pink-400 !text-white shadow-lg shadow-pink-200/60"
-                                >
+                                <Tag className="!rounded-lg !border-none !text-[10px] !px-2 !py-1 !font-semibold !bg-gradient-to-r !from-pink-300 !to-pink-400 !text-white shadow-lg shadow-pink-200/60">
                                     Haftalık
                                 </Tag>
                             </div>
@@ -269,13 +297,20 @@ export default function GamesPage() {
                                         key={user.id}
                                         rank={idx + 1}
                                         name={user.name}
-                                        xp={user.xp}
+                                        xp={user.weeklyXp}
                                     />
                                 ))}
+
+                                {leaderboard.length === 0 && (
+                                    <div className="text-center text-gray-400 text-sm">
+                                        Henüz sıralama yok
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     </section>
                 )}
+
             </div>
         </div>
     );

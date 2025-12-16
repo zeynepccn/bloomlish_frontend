@@ -19,7 +19,7 @@ const VideoLessonPage = () => {
 
     const peerConnectionRef = useRef(null);
     const stompRef = useRef(null);
-    const pendingCandidatesRef = useRef([]); 
+    const pendingCandidatesRef = useRef([]);
 
     const [isCameraOn, setIsCameraOn] = useState(false);
     const [error, setError] = useState("");
@@ -217,7 +217,7 @@ const VideoLessonPage = () => {
             }
         };
 
-        
+
         pc.oniceconnectionstatechange = () => {
             console.log("ICE state:", pc.iceConnectionState);
         };
@@ -303,7 +303,7 @@ const VideoLessonPage = () => {
                     console.log("Ben hostum, offer gönderiyorum");
                     startCall();
                 }
-               
+
                 break;
 
             case "leave":
@@ -472,7 +472,7 @@ const VideoLessonPage = () => {
                     marginBottom: "25px",
                 }}
             >
-                Video Ders 
+                Video Ders
             </h1>
 
             {/* VİDEO ALANI */}
@@ -567,7 +567,7 @@ const VideoLessonPage = () => {
                     maxWidth: "700px",
                 }}
             >
-            
+
 
                 <button
                     onClick={leaveCall}

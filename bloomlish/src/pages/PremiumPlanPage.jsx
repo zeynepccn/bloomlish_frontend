@@ -10,12 +10,34 @@ const { Title, Text } = Typography;
 const formatDateTR = (iso) => {
     if (!iso) return "-";
     try {
-        const [y, m, d] = iso.split("-");
-        return `${d}/${m}/${y}`;
+        const d = new Date(iso);
+        return d.toLocaleString("tr-TR"); // 26.11.2025 14:30:00 gibi
     } catch {
         return iso;
     }
 };
+const getCountdown = (expiresAt) => {
+    if (!expiresAt) return { text: "-", expired: true };
+
+    const end = new Date(expiresAt).getTime();
+    const now = Date.now();
+    const diff = end - now;
+
+    if (diff <= 0) return { text: "Süre doldu", expired: true };
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / (3600 * 24));
+    const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const text =
+        (days > 0 ? `${days} gün ` : "") + `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+    return { text, expired: false };
+};
+
 
 const planLabelMap = {
     MONTHLY: "Aylık",
@@ -23,6 +45,13 @@ const planLabelMap = {
 };
 
 export default function PremiumPlanPage() {
+    const [tick, setTick] = useState(0);
+
+    useEffect(() => {
+        const t = setInterval(() => setTick((x) => x + 1), 1000);
+        return () => clearInterval(t);
+    }, []);
+
     const [subscription, setSubscription] = useState(null); // SubscriptionDto
     const [payments, setPayments] = useState([]);          // PaymentHistoryItemDto[]
     const [loading, setLoading] = useState(true);
@@ -175,9 +204,19 @@ export default function PremiumPlanPage() {
 
                                 {/* Sağ altta geçerlilik tarihi */}
                                 {hasActive && (
-                                    <div className="mt-10 text-right text-gray-500">
-                                        <span>Son geçerlilik tarihi {expiresAt}</span>
+                                    <div className="mt-10 text-right text-gray-600 space-y-1">
+                                        <div>
+                                            <span>Son geçerlilik tarihi: {expiresAt}</span>
+                                        </div>
+
+                                        <div>
+                                            <span className="font-medium">Kalan süre: </span>
+                                            <span className={getCountdown(subscription?.expiresAt).expired ? "text-red-600" : "text-green-700"}>
+                                                {getCountdown(subscription?.expiresAt).text}
+                                            </span>
+                                        </div>
                                     </div>
+
                                 )}
                             </div>
                         </Card>

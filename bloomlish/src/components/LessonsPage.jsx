@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pagination } from "antd";
-import axios from "axios";
+import api from "../api";
 import {
     Layout,
     Card,
@@ -16,9 +16,6 @@ import {
     Button,
     Empty,
 } from "antd";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
-
 
 import { UserOutlined, FilterOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -42,28 +39,40 @@ export default function LessonsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 4;
 
-    // BACKEND'DEN DERSLERİ ÇEKELİM
-    const fetchAllLessons = () => {
-        axios.get(`${API_BASE}/api/lessons`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            })
-            .then((res) => {
-                setLessons(res.data);
-                setCurrentPage(1);
-            })
-            .catch((err) => console.error(err));
+    const fetchAllLessons = async () => {
+        try {
+            const res = await api.get("/api/lessons");
+            setLessons(res.data || []);
+            setCurrentPage(1);
+        } catch (err) {
+            console.error(err);
+            message.error("Dersler alınamadı ");
+        }
     };
 
     useEffect(() => {
         fetchAllLessons();
     }, []);
 
-    // HOCALAR + LEVEL LİSTESİ
+    useEffect(() => {
+        const fetchMyLessons = async () => {
+            try {
+                const res = await api.get("/api/payments/my-lessons");
+                setEnrolledLessonIds(Array.isArray(res.data) ? res.data.map((l) => l.id) : []);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchMyLessons();
+    }, []);
+
+
     const teacherList = [...new Set(lessons.map((l) => l.instructorName))];
     const levelList = [...new Set(lessons.map((l) => l.level))];
 
     // FİLTRELEME
-    const applyFiltersToBackend = () => {
+    const applyFiltersToBackend = async () => {
         const params = {};
 
         // Sayfalamayı sıfırla
@@ -93,17 +102,15 @@ export default function LessonsPage() {
             return;
         }
 
-        axios.get(`${API_BASE}/api/lessons/filter`, {
-                params,
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            })
-            .then((res) => {
-                setLessons(res.data);
-                setCurrentPage(1);
-            })
-            .catch((err) => console.error(err));
+        try {
+            const res = await api.get("/api/lessons/filter", { params });
+            setLessons(res.data || []);
+            setCurrentPage(1);
+        } catch (err) {
+            console.error(err);
+            message.error("Filtreleme başarısız ");
+        }
     };
-
 
     // TÜM FİLTRELERİ SIFIRLA
     const resetFilters = () => {
@@ -129,41 +136,17 @@ export default function LessonsPage() {
     };
 
     const handleEnroll = async (lessonId) => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            alert("Derse kaydolmak için önce giriş yapmalısınız!");
-            return;
-        }
 
         try {
-            const res = await axios.post(
-                `${API_BASE}/api/payments/lesson/${lessonId}`,
-
-                {},
-                { headers: { Authorization: "Bearer " + token } }
-            );
-
+            const res = await api.post(
+                `/api/payments/lesson/${lessonId}`,
+                {},);
             window.location.href = res.data.paymentUrl;
         } catch (err) {
             console.error(err);
             alert("Ödeme başlatılamadı.");
         }
     };
-
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-
-        axios.get(`${API_BASE}/api/payments/my-lessons`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => {
-                setEnrolledLessonIds(res.data.map(l => l.id));
-            });
-    }, []);
-
-
-
 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -176,10 +159,10 @@ export default function LessonsPage() {
                 {/* HEADER */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Title level={2} style={{ color:"#e75480"}} >
+                        <Title level={2} style={{ color: "#e75480" }} >
                             DERSLER
                         </Title>
-                       
+
                     </div>
 
                     <Button onClick={resetFilters}>
@@ -188,7 +171,7 @@ export default function LessonsPage() {
                 </div>
 
                 {/* FİLTRE KARTI */}
-                
+
                 <Card className="rounded-2xl mt-4 shadow-sm border border-gray-100 w-auto ">
 
                     <Row gutter={[16, 12]}>
@@ -300,7 +283,7 @@ export default function LessonsPage() {
 
                                                 <div className="flex flex-col text-gray-600 mt-2 text-sm">
                                                     <div className="flex items-center gap-1">
-                                    
+
                                                         {dayjs(lesson.date).format("DD.MM.YYYY")}
                                                     </div>
 
@@ -330,17 +313,17 @@ export default function LessonsPage() {
                                             {enrolledLessonIds.includes(lesson.id) ? (
                                                 <Button
                                                     shape="round"
-                                                    disabled 
+                                                    disabled
                                                     style={{ marginTop: "10px", backgroundColor: "#f0f0f0", color: "#888" }}
                                                 >
-                                                     Kayıtlı
+                                                    Kayıtlı
                                                 </Button>
                                             ) : (
                                                 <Button
                                                     type="primary"
                                                     shape="round"
-                                                        onClick={() => handleEnroll(lesson.id)}
-                                                        style={{marginTop:"10px"}}
+                                                    onClick={() => handleEnroll(lesson.id)}
+                                                    style={{ marginTop: "10px" }}
                                                 >
                                                     Kaydol
                                                 </Button>

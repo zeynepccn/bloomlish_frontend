@@ -1,68 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { Modal } from "antd";
+import { Modal, Upload, message, Dropdown } from "antd";
 
-import {
-    Layout,
-    Card,
-    Row,
-    Col,
-    Typography,
-    Avatar,
-    Button,
-    Tag,
-    Progress,
-    List,
-    Badge,
-    Tooltip,
-} from "antd";
-import {
-    UserOutlined,
-    EditOutlined,
-    CreditCardOutlined,
-    LogoutOutlined,
-    SmileOutlined,
-    TrophyOutlined,
-    BulbOutlined,
-    CheckCircleTwoTone,
-    BookOutlined,
-    
-} from "@ant-design/icons";
+import { Layout, Card, Row, Col, Typography, Avatar, Button, Tag, Progress, List, } from "antd";
+import { UserOutlined, EditOutlined, CreditCardOutlined, LogoutOutlined, SmileOutlined, TrophyOutlined, BulbOutlined, BookOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-
-
-
-const MOCK_USER = {
-    name: "Zeynep Cocen",
-    level: "B1",
-    email: "yarencocen88@gmail.com",
-    badges: ["Kelime Ustası", "Quiz Şampiyonu"],
-    weeklyGoal: { completed: 3, target: 5 },
-    totals: { lessons: 20, tests: 12, points: 8450 },
-    aiTip:
-        "Zeynep, kelime testlerinde çok iyisin! Dinleme pratiğine biraz daha zaman ayırmalısın.",
-};
+const MOCK_USER = { name: "Zeynep Cocen", level: "B1", email: "yarencocen88@gmail.com", badges: ["Kelime Ustası", "Quiz Şampiyonu"], weeklyGoal: { completed: 3, target: 5 }, totals: { lessons: 20, tests: 12, points: 8450 }, aiTip: "Zeynep, kelime testlerinde çok iyisin! Dinleme pratiğine biraz daha zaman ayırmalısın.", };
 
 export default function ProfilePage() {
     const n = useNavigate();
-
+    const [user, setUser] = useState(null);
 
     const [myLessons, setMyLessons] = useState([]);
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
 
-   
     useEffect(() => {
         const token = localStorage.getItem("token");
+        if (!token) return;
 
-        axios
-            .get("http://localhost:8080/api/payments/my-lessons", {
-                headers: { Authorization: `Bearer ${token}` },
-            })
+        api
+            .get("/api/payments/my-lessons",)
             .then((res) => {
                 console.log("Dersler → ", res.data);
                 setMyLessons(res.data);
@@ -72,41 +34,55 @@ export default function ProfilePage() {
             });
     }, []);
 
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        api
+            .get("/api/auth/me",)
+            .then((res) => {
+                console.log("Profil →", res.data);
+                setUser(res.data);
+            })
+            .catch((err) => {
+                console.error("Profil çekilemedi:", err);
+            });
+    }, []);
+
+
     const progressPct =
         Math.round(
             (MOCK_USER.weeklyGoal.completed / MOCK_USER.weeklyGoal.target) * 100
         ) || 0;
-    
+
     const getLessonStatus = (lesson) => {
-    const now = new Date();
-    const start = new Date(lesson.date + " " + lesson.startTime);
-    const end = new Date(lesson.date + " " + lesson.endTime);
-
-    if (now > end) return { status: "Tamamlandı", color: "default", disabled: true };
-    if (now > start && now < end) return { status: "Ders Devam Ediyor", color: "green", disabled: false };
-    return { status: "Yaklaşan Ders", color: "magenta", disabled: false };
-};
-
-// --- Sıralama fonksiyonu (Tamamlananlar en altta) ---
-const sortLessons = (lessons) => {
-    return [...lessons].sort((a, b) => {
         const now = new Date();
-        const startA = new Date(a.date + " " + a.startTime);
-        const endA = new Date(a.date + " " + a.endTime);
-        const startB = new Date(b.date + " " + b.startTime);
-        const endB = new Date(b.date + " " + b.endTime);
+        const start = new Date(lesson.date + " " + lesson.startTime);
+        const end = new Date(lesson.date + " " + lesson.endTime);
 
-        const doneA = now > endA;
-        const doneB = now > endB;
+        if (now > end) return { status: "Tamamlandı", color: "default", disabled: true };
+        if (now > start && now < end) return { status: "Ders Devam Ediyor", color: "green", disabled: false };
+        return { status: "Yaklaşan Ders", color: "magenta", disabled: false };
+    };
 
-        if (doneA && !doneB) return 1;
-        if (!doneA && doneB) return -1;
+    const sortLessons = (lessons) => {
+        return [...lessons].sort((a, b) => {
+            const now = new Date();
+            const startA = new Date(a.date + " " + a.startTime);
+            const endA = new Date(a.date + " " + a.endTime);
+            const startB = new Date(b.date + " " + b.startTime);
+            const endB = new Date(b.date + " " + b.endTime);
 
-        return startA - startB;
-    });
-};
+            const doneA = now > endA;
+            const doneB = now > endB;
 
+            if (doneA && !doneB) return 1;
+            if (!doneA && doneB) return -1;
 
+            return startA - startB;
+        });
+    };
 
     const calculateTimeLeft = (lesson) => {
         const now = new Date();
@@ -129,21 +105,16 @@ const sortLessons = (lessons) => {
         return `${days} gün ${hours} saat ${minutes} dk ${seconds} sn`;
     };
 
-    // --- Kart tıklama fonksiyonu ---
+
     const handleLessonClick = async (lesson) => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
         try {
-            const res = await axios.get(
-                `http://localhost:8080/api/lessons/join-check/${lesson.id}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
+            const res = await api.get(`/api/lessons/join-check/${lesson.id}`,);
             const result = res.data;
 
             if (result === "OK") {
-                // Ders başladı → direkt video sayfasına git
                 n(`/lesson/${lesson.id}`);
                 return;
             }
@@ -163,8 +134,6 @@ const sortLessons = (lessons) => {
                 });
                 return;
             }
-
-            // Yaklaşan ders → mevcut modal’ını açıyoruz
             if (result === "NOT_STARTED" || result === "WRONG_DAY") {
                 setSelectedLesson(lesson);
                 setOpenLessonModal(true);
@@ -187,7 +156,58 @@ const sortLessons = (lessons) => {
         }
     };
 
+    const uploadAvatar = async (file) => {
+        const token = localStorage.getItem("token");
+        if (!token) return false;
 
+        try {
+            const form = new FormData();
+            form.append("file", file);
+
+            const res = await api.post("/api/auth/me/avatar", form,);
+
+            setUser(res.data);
+            message.success("Profil fotoğrafı güncellendi!");
+        } catch (err) {
+            console.error("Avatar yüklenemedi:", err);
+            message.error("Profil fotoğrafı yüklenemedi!");
+        }
+
+        return false;
+    };
+    const handleRemoveAvatar = async () => {
+        try {
+            await api.delete("/api/auth/me/avatar/delete");
+            setUser((prev) => ({
+                ...prev,
+                profileImageUrl: null,
+            }));
+            message.success("Profil fotoğrafı kaldırıldı");
+        } catch (err) {
+            console.error("Avatar silinemedi:", err);
+            message.error("Profil fotoğrafı kaldırılamadı");
+        }
+    };
+    const avatarMenu = {
+        items: [
+            {
+                key: "upload",
+                label: "Fotoğraf Yükle",
+                icon: <UploadOutlined />,
+                onClick: () => {
+                    document.getElementById("avatar-upload-input").click();
+                },
+            },
+            {
+                key: "remove",
+                label: "Fotoğrafı Kaldır",
+                icon: <DeleteOutlined />,
+                danger: true,
+                disabled: !user?.profileImageUrl, // foto yoksa pasif
+                onClick: handleRemoveAvatar,
+            },
+        ],
+    };
 
     return (
         <Layout className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-white">
@@ -195,20 +215,36 @@ const sortLessons = (lessons) => {
                 {/* HEADER */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                     <div className="flex items-start gap-4">
-                        <Avatar
-                            size={72}
-                            icon={<UserOutlined />}
-                            className="bg-pink-100 text-pink-600"
-                        />
+                        {/* 🔽 AVATAR */}
+                        <Dropdown menu={avatarMenu} trigger={["hover"]}>
+                            <div className="cursor-pointer">
+                                <Upload
+                                    id="avatar-upload-input"
+                                    showUploadList={false}
+                                    beforeUpload={uploadAvatar}
+                                >
+                                    <Avatar
+                                        size={72}
+                                        src={user?.profileImageUrl || undefined}
+                                        icon={!user?.profileImageUrl ? <UserOutlined /> : undefined}
+                                        className="bg-pink-100 text-pink-600"
+                                    />
+                                </Upload>
+                            </div>
+                        </Dropdown>
+                        {/* 🔼 AVATAR */}
+
+                        {/* ✅ İSİM/LEVEL/EMAIL TEK YER */}
                         <div>
                             <Title level={2} className="!m-0 !leading-tight text-pink-700">
-                                {MOCK_USER.name}
+                                {user?.name || user?.username || "—"}
                             </Title>
+
                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                 <Tag color="magenta" className="!rounded-full !px-3 !py-1">
-                                    SEVİYE: {MOCK_USER.level}
+                                    SEVİYE: {user?.level || "—"}
                                 </Tag>
-                                <Text className="text-gray-600">{MOCK_USER.email}</Text>
+                                <Text className="text-gray-600">{user?.email || "—"}</Text>
                             </div>
                         </div>
                     </div>
@@ -242,10 +278,11 @@ const sortLessons = (lessons) => {
                 {/* GREETING */}
                 <div className="text-center mb-6">
                     <div className="inline-flex items-center gap-2">
-                        <span className="text-2xl">🫶</span>
+                        <span className="text-2xl"></span>
                         <Text className="text-pink-600 font-semibold text-lg">
-                            “Merhaba Zeynep! Bugün harika bir gün, İngilizce pratiğine devam edelim”
+                            {`Merhaba ${user?.name || user?.username || ""}! Bugün harika bir gün, İngilizce pratiğine devam edelim`}
                         </Text>
+
                     </div>
                 </div>
 
@@ -282,7 +319,7 @@ const sortLessons = (lessons) => {
                         <Card
                             title={
                                 <div className="flex items-center gap-2">
-                                    <span>🎯</span>
+                                    <span></span>
                                     <span>Hedef kutusu</span>
                                 </div>
                             }

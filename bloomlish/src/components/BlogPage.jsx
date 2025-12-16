@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import PageLayout from "./PageLayout";
 import { Button, Input, List, Modal, message } from "antd";
 import { HeartIcon } from "@heroicons/react/24/solid";
+import api from "../api";
 
 const { TextArea } = Input;
-
-const API_URL = "http://localhost:8080/api/posts";
 
 function BlogPage() {
     const [text, setText] = useState("");
@@ -23,44 +22,34 @@ function BlogPage() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        fetch(`${API_URL}/get-all?page=${page}&size=10`, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error("Postlar alınamadı");
-                return res.json();
-            })
-            .then((data) => {
-                setPosts(data.content);
-                setTotalPages(data.totalPages);
-            })
-            .catch((err) => console.error(err));
+        const fetchPosts = async () => {
+            try {
+                const res = await api.get("/api/posts/get-all", {
+                    params: { page, size: 10 },
+                });
+                setPosts(res.data.content);
+                setTotalPages(res.data.totalPages);
+            } catch (err) {
+                console.error(err);
+                message.error("Postlar alınamadı ");
+            }
+        };
+
+        fetchPosts();
     }, [page]);
 
     const handlePublish = async () => {
         if (text.trim() === "") return;
-
-        const token = localStorage.getItem("token");
-
         try {
-            const res = await fetch(`${API_URL}/create`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ content: text }),
-            });
-            if (!res.ok) throw new Error("Post oluşturulamadı");
-            const savedPost = await res.json();
+            const res = await api.post("/api/posts/create", { content: text });
+            const savedPost = res.data;
 
-            setPosts([savedPost, ...posts]);
+            setPosts((prev) => [savedPost, ...prev]);
             setText("");
+            message.success("Post paylaşıldı ");
         } catch (err) {
             console.error(err);
+            message.error("Post oluşturulamadı ");
         }
     };
     const handleEdit = (post) => {
@@ -69,32 +58,21 @@ function BlogPage() {
         setIsEditModalOpen(true);
     };
     const handleSaveEdit = async () => {
-        const token = localStorage.getItem("token");
         try {
-            const res = await fetch(`${API_URL}/update/${editPost.id}`, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ content: editText }),
+            const res = await api.put(`/api/posts/update/${editPost.id}`, {
+                content: editText,
             });
 
-            if (!res.ok) throw new Error("Post güncellenemedi");
-            const updatedPost = await res.json();
+            const updatedPost = res.data;
 
-            setPosts((prev) =>
-                prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
-            );
-
+            setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
             setIsEditModalOpen(false);
-            message.success("Post başarıyla güncellendi ✅");
+            message.success("Post başarıyla güncellendi ");
         } catch (err) {
             console.error(err);
-            message.error("Post güncellenemedi ❌");
+            message.error("Post güncellenemedi ");
         }
     };
-
     const handleDelete = (id) => {
         Modal.confirm({
             title: "Emin misiniz?",
@@ -103,76 +81,46 @@ function BlogPage() {
             okType: "danger",
             cancelText: "Vazgeç",
             onOk: async () => {
-                const token = localStorage.getItem("token");
                 try {
-                    const res = await fetch(`${API_URL}/delete/${id}`, {
-                        method: "DELETE",
-                        headers: { "Authorization": `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                        setPosts((prev) => prev.filter((post) => post.id !== id));
-                    } else {
-                        throw new Error("Post silinemedi");
-                    }
+                    await api.delete(`/api/posts/delete/${id}`);
+                    setPosts((prev) => prev.filter((post) => post.id !== id));
+                    message.success("Post silindi ");
                 } catch (err) {
                     console.error(err);
+                    message.error("Post silinemedi ");
                 }
-            }
+            },
         });
     };
 
 
     const handleLike = async (id) => {
-        const token = localStorage.getItem("token");
         try {
-            const res = await fetch(`${API_URL}/${id}/like`, {
-                method: "PATCH",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
-            });
-            if (!res.ok) {
-                const errorText = await res.text();
-                message.warning(errorText || "Beğeni hatası");
-                return;
-            }
+            const res = await api.patch(`/api/posts/${id}/like`);
+            const updatedPost = res.data;
 
-            const updatedPost = await res.json();
-
-            setPosts((prev) =>
-                prev.map((post) =>
-                    post.id === id ? updatedPost : post
-                )
-            );
+            setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
         } catch (err) {
             console.error(err);
+            message.warning("Kendi postunuzu beğenemezsiniz ");
         }
     };
 
     const handleAddComment = async (id, commentText) => {
         if (commentText.trim() === "") return;
-        const token = localStorage.getItem("token");
+
         try {
-            const res = await fetch(`${API_URL}/${id}/comment`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ text: commentText }),
-            });
-            if (!res.ok) throw new Error("Yorum eklenemedi");
-            const newComment = await res.json();
+            const res = await api.post(`/api/posts/${id}/comment`, { text: commentText });
+            const newComment = res.data;
+
             setPosts((prev) =>
                 prev.map((post) =>
-                    post.id === id
-                        ? { ...post, comments: [...(post.comments || []), newComment] }
-                        : post
+                    post.id === id ? { ...post, comments: [...(post.comments || []), newComment] } : post
                 )
             );
         } catch (err) {
             console.error(err);
+            message.error("Yorum eklenemedi ");
         }
     };
 
@@ -184,13 +132,8 @@ function BlogPage() {
             okType: "danger",
             cancelText: "Vazgeç",
             onOk: async () => {
-                const token = localStorage.getItem("token");
                 try {
-                    const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
-                        method: "DELETE",
-                        headers: { "Authorization": `Bearer ${token}` },
-                    });
-                    if (!res.ok) throw new Error("Yorum silinemedi");
+                    await api.delete(`/api/comments/delete/${commentId}`);
 
                     setPosts((prev) =>
                         prev.map((post) =>
@@ -199,49 +142,37 @@ function BlogPage() {
                                 : post
                         )
                     );
-                    message.success("Yorum başarıyla silindi ✅");
+                    message.success("Yorum başarıyla silindi ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Yorum silinemedi ❌");
+                    message.error("Yorum silinemedi ");
                 }
-            }
+            },
         });
     };
 
-    // Yorum güncelleme
     const handleUpdateComment = async (postId, commentId, newText) => {
-        const token = localStorage.getItem("token");
         try {
-            const res = await fetch(`http://localhost:8080/api/comments/update/${commentId}`, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ text: newText }),
-            });
-            if (!res.ok) throw new Error("Yorum güncellenemedi");
+            const res = await api.put(`/api/comments/update/${commentId}`, { text: newText });
+            const updatedComment = res.data;
 
-            const updatedComment = await res.json();
-
-            // UI'da yorumu güncelle
             setPosts((prev) =>
                 prev.map((post) =>
                     post.id === postId
                         ? {
                             ...post,
-                            comments: post.comments.map((c) =>
-                                c.id === commentId ? updatedComment : c
-                            ),
+                            comments: post.comments.map((c) => (c.id === commentId ? updatedComment : c)),
                         }
                         : post
                 )
             );
+            message.success("Yorum güncellendi ");
         } catch (err) {
             console.error(err);
-            message.error("Yorum güncellenemedi");
+            message.error("Yorum güncellenemedi ");
         }
     };
+
 
     return (
         <PageLayout title="BLOG YAZILARI">

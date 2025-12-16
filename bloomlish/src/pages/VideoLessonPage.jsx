@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import { useParams } from "react-router-dom";
+ 
 
 const VideoLessonPage = () => {
     useEffect(() => {
@@ -167,7 +168,7 @@ const VideoLessonPage = () => {
                 return resolve();
             }
 
-            const socket = new SockJS("http://localhost:8080/socket");
+            const socket = new SockJS(`${import.meta.env.VITE_API_URL}/socket`);
             const client = over(socket);
 
             socket.onclose = () => {

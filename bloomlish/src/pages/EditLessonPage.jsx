@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 function EditLessonPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [form, setForm] = useState(null);
-    const BASE_URL = "http://localhost:8080";
+
 
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        axios
-            .get(`${BASE_URL}/api/lessons/${id}`, {
-                headers: { Authorization: "Bearer " + token },
-            })
+        api.get(`/api/lessons/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
             .then((res) => setForm(res.data))
             .catch((err) => console.error(err));
     }, [id]);
@@ -33,12 +32,12 @@ function EditLessonPage() {
             formData.append("file", file);
 
             try {
-                const res = await axios.post(
-                    `${BASE_URL}/api/lessons/${id}/upload-resource`,
+                const res = await api.post(
+                    `/api/lessons/${id}/upload-resource`,
                     formData,
                     {
                         headers: {
-                            Authorization: "Bearer " + token,
+                            Authorization: `Bearer ${token}`,
                             "Content-Type": "multipart/form-data",
                         },
                     }
@@ -60,9 +59,9 @@ function EditLessonPage() {
         const token = localStorage.getItem("token");
 
         try {
-            await axios.delete(
-                `${BASE_URL}/api/lessons/${id}/resource/${encodeURIComponent(fileName)}`,
-                { headers: { Authorization: "Bearer " + token } }
+            await api.delete(
+                `/api/lessons/${id}/resource/${encodeURIComponent(fileName)}`,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
 
             setForm((prev) => ({
@@ -80,8 +79,8 @@ function EditLessonPage() {
         const token = localStorage.getItem("token");
 
         try {
-            await axios.put(`${BASE_URL}/api/lessons/${id}`, form, {
-                headers: { Authorization: "Bearer " + token },
+            await api.put(`/api/lessons/${id}`, form, {
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             alert("Ders başarıyla güncellendi!");

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import axios from "axios";
+import api from "../api";
+
 import {
     Layout,
     Typography,
@@ -91,15 +92,10 @@ export default function BillingSketchPage() {
         }
 
         try {
-            await axios.post(
-                "http://localhost:8080/api/billing/start-trial",
-                {},
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            await api.post("/api/billing/start-trial", {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
 
             message.success("3 günlük ücretsiz denemen başladı! 🎉");
 
@@ -148,8 +144,8 @@ export default function BillingSketchPage() {
                 planType: selectedPlan,
             };
 
-            const res = await axios.post(
-                "http://localhost:8080/api/billing/start-checkout",
+            const res = await api.post(
+                "/api/billing/start-checkout",
                 body,
                 {
                     headers: {

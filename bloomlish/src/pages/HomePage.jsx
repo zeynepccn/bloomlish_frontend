@@ -6,6 +6,7 @@ import ing2 from "../assets/images/ing2.jpg";
 import ing3 from "../assets/images/ing3.jpg";
 import ing4 from "../assets/images/ing4.jpg";
 import { message } from "antd";
+import api from "../api";
 
 
 // isLoggedIn artık props'tan geliyor
@@ -26,13 +27,11 @@ function HomePage({ isLoggedIn }) {
 
         // Zaten login’liyse: direkt trial endpoint’ini çağır
         try {
-            await axios.post(
-                "http://localhost:8080/api/billing/start-trial",
+            await api.post(
+                "/api/billing/start-trial",
                 {},
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { Authorization: `Bearer ${token}` },
                 }
             );
 

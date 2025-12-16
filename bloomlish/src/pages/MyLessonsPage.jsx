@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate, useLocation } from "react-router-dom";
 
 function MyLessonsPage() {
@@ -13,8 +13,8 @@ function MyLessonsPage() {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        axios
-            .get("http://localhost:8080/api/lessons/my-lessons", {
+        api
+            .get("/api/lessons/my-lessons", {
                 headers: {
                     Authorization: "Bearer " + token,
                 },
@@ -34,7 +34,7 @@ function MyLessonsPage() {
         if (!window.confirm("Bu dersi silmek istediğine emin misin?")) return;
 
         try {
-            await axios.delete(`http://localhost:8080/api/lessons/${lessonId}`, {
+            await api.delete(`/api/lessons/${lessonId}`, {
                 headers: {
                     Authorization: "Bearer " + token,
                 },

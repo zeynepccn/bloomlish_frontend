@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
+
 
 function CreateLessonPage() {
     const navigate = useNavigate();
@@ -60,7 +61,7 @@ function CreateLessonPage() {
             alert("Bitiş saati başlangıç saatinden önce olamaz!");
             return;
         }
-        
+
 
         const dto = {
             name: form.name,
@@ -75,38 +76,32 @@ function CreateLessonPage() {
         };
 
         try {
-            const token = localStorage.getItem("token");
-
             const formData = new FormData();
-
-            
             formData.append(
                 "dto",
                 new Blob([JSON.stringify(dto)], { type: "application/json" })
             );
 
-            
+
             if (form.resources && form.resources.length > 0) {
                 form.resources.forEach((file) => {
                     formData.append("files", file);
                 });
             }
 
-            await axios.post("http://localhost:8080/api/lessons/create", formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            await api.post("/api/lessons/create", formData, {
+
             });
 
             alert("Ders başarıyla oluşturuldu!");
-            navigate("/mylessons"); 
+            navigate("/mylessons");
 
         } catch (error) {
             console.error("Hata:", error);
             alert("Ders oluşturulamadı!");
         }
     };
-    
+
     const todayString = new Date().toISOString().split("T")[0];
 
     const roles = getUserRole();
@@ -119,7 +114,7 @@ function CreateLessonPage() {
         );
     }
     return (
-        
+
         <div className="min-h-screen bg-pink-50 flex items-center justify-center relative">
 
             {/* ← Eğitmen Paneline Dön */}
@@ -287,5 +282,5 @@ function CreateLessonPage() {
     );
 }
 
-export default CreateLessonPage; 
+export default CreateLessonPage;
 

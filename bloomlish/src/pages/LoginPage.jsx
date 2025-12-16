@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import api from "../api"; 
 
 function LoginPage({ setIsLoggedIn }) {
     const navigate = useNavigate();
@@ -28,69 +29,43 @@ function LoginPage({ setIsLoggedIn }) {
         }
 
         try {
-            const response = await fetch("http://localhost:8080/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
 
-            const text = await response.text();
-            let data = null;
-            try {
-                data = text ? JSON.parse(text) : null;
-            } catch (err) {
-                console.error("JSON parse hatası:", err);
-            }
+            const response = await api.post("/api/auth/login", formData);
+            const data = response.data;
 
-            if (!response.ok) {
-                alert("Giriş başarısız: " + (data?.message || response.status));
-                return;
-            }
-
-            // Giriş başarılı
+       
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("email", data.email);
-            setIsLoggedIn(true);
 
-            // Eğer bu login, anasayfadaki "Ücretsiz Deneme" butonundan geldiyse:
+            setIsLoggedIn(true);
+            
             if (fromTrial) {
                 try {
-                    const trialResp = await fetch(
-                        "http://localhost:8080/api/billing/start-trial",
-                        {
-                            method: "POST",
-                            headers: {
-                                "Authorization": `Bearer ${data.token}`,
-                            },
-                        }
-                    );
+                    await api.post("/api/billing/start-trial", null, {
+                        headers: { Authorization: `Bearer ${data.token}` }
+                    });
 
-                    if (trialResp.ok) {
-                        alert("3 günlük ücretsiz denemen başladı! 🎉");
-                        navigate("/premium");
-                    } else if (trialResp.status === 409) {
-                        alert("Ücretsiz denemeyi daha önce kullanmışsın.");
-                        navigate("/premium");
-                    } else {
-                        alert("Deneme başlatılırken bir hata oluştu.");
-                        navigate("/");
-                    }
+                    alert("3 günlük ücretsiz denemen başladı! 🎉");
+                    navigate("/premium");
                 } catch (err) {
-                    console.error("Trial başlatma hatası:", err);
-                    alert("Deneme başlatılırken bir hata oluştu.");
+                    console.error("Deneme hatası:", err);
+                    alert("Deneme başlatılırken hata oluştu.");
                     navigate("/");
                 }
             } else {
-                // Normal login akışı
                 alert("Giriş başarılı!");
                 navigate("/");
             }
+
         } catch (error) {
             console.error("Giriş hatası:", error);
-            alert("Sunucuya bağlanırken hata oluştu.");
+
+            if (error.response?.status === 401) {
+                alert("Email veya şifre hatalı!");
+            } else {
+                alert("Sunucuya bağlanırken hata oluştu.");
+            }
         }
     };
 

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import api from "../api"; 
+import { message } from "antd";
+
+import api from "../api";
 
 function LoginPage({ setIsLoggedIn }) {
     const navigate = useNavigate();
@@ -33,13 +35,13 @@ function LoginPage({ setIsLoggedIn }) {
             const response = await api.post("/api/auth/login", formData);
             const data = response.data;
 
-       
+
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("email", data.email);
 
             setIsLoggedIn(true);
-            
+
             if (fromTrial) {
                 try {
                     await api.post("/api/billing/start-trial", null, {
@@ -58,13 +60,11 @@ function LoginPage({ setIsLoggedIn }) {
                 navigate("/");
             }
 
-        } catch (error) {
-            console.error("Giriş hatası:", error);
-
-            if (error.response?.status === 401) {
-                alert("Email veya şifre hatalı!");
+        } catch (err) {
+            if (err.response?.status === 401) {
+                message.error(err.response.data.message);
             } else {
-                alert("Sunucuya bağlanırken hata oluştu.");
+                message.error("Bir hata oluştu");
             }
         }
     };

@@ -10,8 +10,9 @@ const { Content } = Layout;
 const { Title, Text } = Typography;
 const MOCK_USER = { name: "Zeynep Cocen", level: "B1", email: "yarencocen88@gmail.com", badges: ["Kelime Ustası", "Quiz Şampiyonu"], weeklyGoal: { completed: 3, target: 5 }, totals: { lessons: 20, tests: 12, points: 8450 }, aiTip: "Zeynep, kelime testlerinde çok iyisin! Dinleme pratiğine biraz daha zaman ayırmalısın.", };
 
-export default function ProfilePage() {
+export default function ProfilePage({ onLogout }) {
     const n = useNavigate();
+
     const [user, setUser] = useState(null);
 
     const [myLessons, setMyLessons] = useState([]);
@@ -208,6 +209,10 @@ export default function ProfilePage() {
             },
         ],
     };
+    const handleLogout = () => {
+        onLogout?.();
+        n("/", { replace: true });
+    };
 
     return (
         <Layout className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-white">
@@ -268,7 +273,7 @@ export default function ProfilePage() {
                             danger
                             icon={<LogoutOutlined />}
                             className="!rounded-xl"
-                            onClick={() => n("/logout")}
+                            onClick={handleLogout}
                         >
                             Çıkış
                         </Button>

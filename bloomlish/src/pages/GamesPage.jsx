@@ -143,11 +143,11 @@ export default function GamesPage() {
                         <GameCard
                             icon={<BookFilled className="text-xl text-white" />}
                             badgeText="Günlük Kelime"
-                            title="Bugünün Kelimesi"
+                            title="Bugünün Kelimeleri"
                             desc="Her gün yeni bir kelimeyle mini quiz!"
                             xp="+2 XP"
                             cta="BAŞLA"
-                            onClick={() => navigate("/game/word-of-the-day")}
+                            onClick={() => navigate("/games/daily-word")}
                         />
 
                         <GameCard

@@ -19,15 +19,20 @@ export default function ProfilePage() {
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
     useEffect(() => {
-        fetch("http://localhost:8080/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then((res) => res.json())
-            .then((data) => setUser(data))
-            .catch(() => console.error("Profil çekilemedi"));
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        api
+            .get("/api/users/me")
+            .then((res) => {
+                console.log("Profil →", res.data);
+                setUser(res.data);
+            })
+            .catch((err) => {
+                console.error("Profil çekilemedi:", err);
+            });
     }, []);
+
 
 
 

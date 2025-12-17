@@ -61,17 +61,28 @@ export default function GamesPage() {
     }, []);
 
 
-
     useEffect(() => {
-        fetch("http://localhost:8080/api/leaderboard/weekly", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then((res) => res.json())
-            .then(setLeaderboard)
-            .catch((err) => console.error("Leaderboard alınamadı", err));
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        api
+            .get("/api/leaderboard/weekly")
+            .then((res) => {
+                console.log("Leaderboard →", res.data);
+
+                // ✅ Array garanti (res.data bazen object gelirse patlamasın)
+                const list = Array.isArray(res.data)
+                    ? res.data
+                    : (res.data?.data || res.data?.content || res.data?.leaderboard || []);
+
+                setLeaderboard(list);
+            })
+            .catch((err) => {
+                console.error("Leaderboard alınamadı:", err);
+                setLeaderboard([]); // ✅ yine de array kalsın
+            });
     }, []);
+
 
 
     return (
@@ -292,14 +303,15 @@ export default function GamesPage() {
                             </div>
 
                             <div className="mt-6 flex flex-col gap-3">
-                                {leaderboard.map((user, idx) => (
+                                {Array.isArray(leaderboard) && leaderboard.map((user, idx) => (
                                     <LeaderboardRow
-                                        key={user.id}
+                                        key={user.userID ?? user.id ?? idx}
                                         rank={idx + 1}
-                                        name={user.name}
-                                        xp={user.weeklyXp}
+                                        name={user.displayName || user.name || user.username || "—"}
+                                        xp={user.weeklyXp ?? 0}
                                     />
                                 ))}
+
 
                                 {leaderboard.length === 0 && (
                                     <div className="text-center text-gray-400 text-sm">

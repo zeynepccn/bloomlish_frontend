@@ -18,16 +18,42 @@ export default function ProfilePage() {
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
+    
     useEffect(() => {
-        fetch("http://localhost:8080/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then((res) => res.json())
-            .then((data) => setUser(data))
-            .catch(() => console.error("Profil çekilemedi"));
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        api
+            .get("/api/users/me")
+            .then((res) => {
+                console.log("Profil →", res.data);
+                setUser(res.data);
+            })
+            .catch((err) => {
+                console.error("Profil çekilemedi:", err);
+            });
     }, []);
+
+    useEffect(() => {
+        const handler = () => {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            api
+                .get("/api/users/me")
+                .then((res) => {
+                    console.log("XP update →", res.data);
+                    setUser(res.data);
+                })
+                .catch((err) => {
+                    console.error("XP güncellenemedi:", err);
+                });
+        };
+
+        window.addEventListener("xp-updated", handler);
+        return () => window.removeEventListener("xp-updated", handler);
+    }, []);
+
 
 
 

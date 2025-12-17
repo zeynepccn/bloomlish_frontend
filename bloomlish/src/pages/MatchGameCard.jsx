@@ -9,6 +9,8 @@ export default function MatchGameCard() {
   const [correctPairs, setCorrectPairs] = useState({});
   const [selectedWord, setSelectedWord] = useState(null);
   const [matched, setMatched] = useState({}); // word -> meaning
+  const [xpGiven, setXpGiven] = useState(false);
+
 
   const levels = ["A1", "A2", "B1", "B2", "C1"];
   const xpByLevel = {
@@ -60,6 +62,7 @@ export default function MatchGameCard() {
     setLoading(true);
     setSelectedWord(null);
     setMatched({});
+    setXpGiven(false);
     try {
       const url = `http://localhost:8080/api/games/match/round?level=${level}&count=6&t=${Date.now()}`;
       const res = await fetch(url, {
@@ -105,8 +108,11 @@ export default function MatchGameCard() {
   const isMeaningUsed = (m) => Object.values(matched).includes(m);
 
   const finished = total > 0 && doneCount === total;
+
   useEffect(() => {
-    if (!finished) return;
+    if (!finished || xpGiven) return;
+
+    setXpGiven(true);
 
     const giveXp = async () => {
       try {
@@ -123,14 +129,13 @@ export default function MatchGameCard() {
         const data = await res.json();
         message.success(`+${data.xpGained} XP kazandın!`);
 
-        // 🔥 İŞTE TAM BURAYA
-        localStorage.setItem("xpUpdated", "1");
+        // 🔥 HER YER HABER ALSIN
+        window.dispatchEvent(new Event("xp-updated"));
 
       } catch (e) {
         message.error("XP kaydedilemedi");
       }
     };
-
 
     giveXp();
 
@@ -143,11 +148,14 @@ export default function MatchGameCard() {
         onOk: () => {
           const next = levelIndex + 1;
           setLevelIndex(next);
+          setXpGiven(false); // 🔁 YENİ TUR İÇİN RESET
           fetchRound(levels[next]);
         },
       });
     }
-  }, [finished]);
+
+  }, [finished, xpGiven]);
+
 
 
   const [shakeSide, setShakeSide] = useState(null); // "word" | "meaning" | null

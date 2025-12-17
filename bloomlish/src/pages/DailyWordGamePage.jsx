@@ -5,6 +5,7 @@ import api from "../api";
 export default function DailyWordGamePage() {
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [pendingSummary, setPendingSummary] = useState(null);
 
 
     const startGame = async (newRound = false) => {
@@ -40,7 +41,21 @@ export default function DailyWordGamePage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            setGame(res.data);
+            if (
+                res.data.type === "SUMMARY" &&
+                res.data.lastResult // 🔥 RESULT VARSA
+            ) {
+                setPendingSummary(res.data);
+                setGame({
+                    type: "RESULT",
+                    result: res.data.lastResult
+                });
+            } else {
+                setGame(res.data);
+            }
+
+
+
         } catch (e) {
             console.error(e);
             alert("Cevap gönderilemedi");
@@ -48,6 +63,7 @@ export default function DailyWordGamePage() {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         startGame(false);
@@ -72,9 +88,20 @@ export default function DailyWordGamePage() {
                 {game.type === "RESULT" && (
                     <ResultView
                         game={game}
-                        onNext={() => startGame(true)} 
+                        onNext={() => {
+                            if (game.result.completed) {
+                                // 🔥 SON SORU BİTTİ → SUMMARY AL
+                                startGame(false);
+                            } else {
+                                // 🔹 normal devam
+                                startGame(true);
+                            }
+                        }}
+
+
                     />
                 )}
+
 
                 {game.type === "SUMMARY" && (
                     <SummaryView
@@ -150,6 +177,7 @@ function QuestionView({ game, onAnswer }) {
 
 
 function ResultView({ game, onNext }) {
+    if (!game?.result) return null;
     const { correct, word, meaning } = game.result;
 
     return (
@@ -215,20 +243,47 @@ function SummaryView({ game, onNewRound }) {
         page * PAGE_SIZE + PAGE_SIZE
     );
 
+    
+
     return (
         <Card className="!rounded-3xl shadow-xl border-0 bg-gradient-to-br from-pink-50 to-white">
 
             <div className="flex items-center justify-between mb-6">
+
+                {/* SOL ÜST – OYUNLARA DÖN */}
+                <Button
+                    onClick={() => window.location.href = "/games"}
+                    className="
+                    !rounded-xl
+                    !border
+                    !border-pink-300
+                    !text-pink-600
+                    !px-4
+                    !py-1
+                    hover:!bg-pink-50
+                    transition-all
+                "
+                >
+                    ← Oyunlara Dön
+                </Button>
+
+                {/* BAŞLIK */}
                 <div className="text-2xl font-extrabold text-pink-800">
-                     Günün Turları
+                    Günün Turları
                 </div>
 
-                {rounds.length > 0 && (
+                {/* SAĞ ROZET */}
+                {rounds.length > 0 ? (
                     <div className="text-xs bg-pink-100 text-pink-600 px-3 py-1 rounded-full">
                         Toplam {rounds.length} Tur
                     </div>
-                )}
+                ) : (
+                    <div className="w-20" />  
+                )
+                }
+
             </div>
+
 
             {rounds.length === 0 && (
                 <div className="text-center text-pink-500 mb-6 italic">
@@ -325,6 +380,7 @@ function SummaryView({ game, onNewRound }) {
             >
                  Yeni Tur Oyna
             </Button>
+           
 
         </Card>
     );

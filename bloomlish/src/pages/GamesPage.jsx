@@ -63,16 +63,19 @@ export default function GamesPage() {
 
 
     useEffect(() => {
-        fetch("http://localhost:8080/api/leaderboard/weekly", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        })
-            .then((res) => res.json())
-            .then(setLeaderboard)
-            .catch((err) => console.error("Leaderboard alınamadı", err));
-    }, []);
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
+        api
+            .get("/api/leaderboard/weekly")
+            .then((res) => {
+                console.log("Leaderboard →", res.data);
+                setLeaderboard(res.data);
+            })
+            .catch((err) => {
+                console.error("Leaderboard alınamadı:", err);
+            });
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-10">

@@ -28,6 +28,7 @@ import PaymentSuccess from "./pages/PaymentSuccessPage.jsx";
 import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 import DailyWordGamePage from "./pages/DailyWordGamePage.jsx";
+import MatchGamePage from "./pages/MatchGamePage.jsx";
 
 function App() {
   // Başlangıçta localStorage'da token varsa true başlasın
@@ -94,6 +95,7 @@ function App() {
           <Route path="/results" element={<ResultsOverviewPage />} />
           <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
           <Route path="/games/daily-word" element={<DailyWordGamePage />} />
+          <Route path="/game/match" element={<MatchGamePage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

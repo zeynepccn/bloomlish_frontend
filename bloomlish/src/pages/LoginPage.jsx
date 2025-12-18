@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { message } from "antd";
-
 import api from "../api";
 
 function LoginPage({ setIsLoggedIn }) {

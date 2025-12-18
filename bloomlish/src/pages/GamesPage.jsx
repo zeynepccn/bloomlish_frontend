@@ -26,7 +26,6 @@ export default function GamesPage() {
     };
 
 
-
     const TabButton = ({ id, label }) => {
         const isActive = activeTab === id;
         return (
@@ -63,19 +62,40 @@ export default function GamesPage() {
 
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        if (activeTab !== "ranking") return;
 
-        api
-            .get("/api/leaderboard/weekly")
+        api.get("/api/leaderboard/weekly")
             .then((res) => {
-                console.log("Leaderboard →", res.data);
-                setLeaderboard(res.data);
+                let data = res.data;
+
+                console.log("LEADERBOARD RAW →", data);
+                console.log("isArray?", Array.isArray(data), "type:", typeof data);
+
+                // ✅ Eğer string geldiyse JSON'a çevir
+                if (typeof data === "string") {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        console.error("Leaderboard JSON parse edilemedi:", e);
+                        data = [];
+                    }
+                }
+
+                // ✅ Spring Page vs vs (opsiyonel)
+                const safeArray =
+                    Array.isArray(data) ? data :
+                        Array.isArray(data?.content) ? data.content :
+                            Array.isArray(data?.data) ? data.data :
+                                Array.isArray(data?.items) ? data.items :
+                                    [];
+
+                setLeaderboard(safeArray);
             })
             .catch((err) => {
                 console.error("Leaderboard alınamadı:", err);
+                setLeaderboard([]);
             });
-    }, []);
+    }, [activeTab]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-10">
@@ -97,7 +117,7 @@ export default function GamesPage() {
 
                         {/* tabs */}
                         <div className="flex flex-wrap gap-2">
-                            <TabButton id="tasks" label="Günlük Görevler" />
+                            {/*<TabButton id="tasks" label="Günlük Görevler" />*/}
                             <TabButton id="games" label="Oyunlar" />
                             <TabButton id="profile" label="Profilim" />
                             <TabButton id="ranking" label="Sıralama" />
@@ -214,7 +234,7 @@ export default function GamesPage() {
                     </section>
                 )}
 
-
+                {/*
                 {activeTab === "tasks" && (
                     <section className="flex flex-col items-center text-center py-10">
                         <div className="text-xl font-semibold text-pink-800">
@@ -238,7 +258,7 @@ export default function GamesPage() {
                             />
                         </div>
                     </section>
-                )}
+                )}*/}
 
                 {activeTab === "profile" && (
                     <section className="flex flex-col items-center text-center py-10">
@@ -295,16 +315,25 @@ export default function GamesPage() {
                             </div>
 
                             <div className="mt-6 flex flex-col gap-3">
-                                {leaderboard.map((user, idx) => (
-                                    <LeaderboardRow
-                                        key={user.id}
-                                        rank={idx + 1}
-                                        name={user.name}
-                                        xp={user.weeklyXp}
-                                    />
-                                ))}
+                                {console.log(
+                                    "UI order weeklyXp:",
+                                    (Array.isArray(leaderboard) ? leaderboard : []).map(u => u.weeklyXp)
+                                )}
 
-                                {leaderboard.length === 0 && (
+                                {Array.isArray(leaderboard) &&
+                                    [...leaderboard]
+                                        .sort((a, b) => Number(b?.weeklyXp ?? 0) - Number(a?.weeklyXp ?? 0))
+                                        .map((user, idx) => (
+                                            <LeaderboardRow
+                                                key={user.userID ?? `${idx}`}
+                                                rank={idx + 1}
+                                                name={user.displayName || user.username}
+                                                xp={Number(user.weeklyXp ?? 0)}
+                                            />
+                                        ))}
+
+
+                                {(!Array.isArray(leaderboard) || leaderboard.length === 0) && (
                                     <div className="text-center text-gray-400 text-sm">
                                         Henüz sıralama yok
                                     </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, Button, Tag, message, Modal } from "antd";
+import { useNavigate } from "react-router-dom";
 
 
 export default function MatchGameCard() {
@@ -10,6 +11,7 @@ export default function MatchGameCard() {
   const [selectedWord, setSelectedWord] = useState(null);
   const [matched, setMatched] = useState({}); // word -> meaning
   const [xpGiven, setXpGiven] = useState(false);
+  const navigate = useNavigate();
 
 
   const levels = ["A1", "A2", "B1", "B2", "C1"];
@@ -187,24 +189,31 @@ export default function MatchGameCard() {
         </div>
       }
       extra={
-        <Button
-          loading={loading}
-          onClick={() => {
-            // Eğer tur bitmişse bir sonraki seviyeye geç
-            if (finished && levelIndex < levels.length - 1) {
-              const next = levelIndex + 1;
-              setLevelIndex(next);
-              fetchRound(levels[next]);
-            } else {
-              // Bitmemişse aynı seviyede yeni set getir
-              fetchRound(currentLevel);
-            }
-          }}
-        >
-          Yeni Tur
-        </Button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button
+            onClick={() => navigate("/games")}
+          >
+            ← Oyunlara Dön
+          </Button>
 
+          <Button
+            loading={loading}
+            type="primary"
+            onClick={() => {
+              if (finished && levelIndex < levels.length - 1) {
+                const next = levelIndex + 1;
+                setLevelIndex(next);
+                fetchRound(levels[next]);
+              } else {
+                fetchRound(currentLevel);
+              }
+            }}
+          >
+            Yeni Tur
+          </Button>
+        </div>
       }
+
       style={{ borderRadius: 16 }}
     >
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>

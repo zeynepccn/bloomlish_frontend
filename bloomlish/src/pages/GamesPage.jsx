@@ -61,6 +61,7 @@ export default function GamesPage() {
     }, []);
 
 
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -69,21 +70,12 @@ export default function GamesPage() {
             .get("/api/leaderboard/weekly")
             .then((res) => {
                 console.log("Leaderboard →", res.data);
-
-                // ✅ Array garanti (res.data bazen object gelirse patlamasın)
-                const list = Array.isArray(res.data)
-                    ? res.data
-                    : (res.data?.data || res.data?.content || res.data?.leaderboard || []);
-
-                setLeaderboard(list);
+                setLeaderboard(res.data);
             })
             .catch((err) => {
                 console.error("Leaderboard alınamadı:", err);
-                setLeaderboard([]); // ✅ yine de array kalsın
             });
     }, []);
-
-
 
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-10">
@@ -303,15 +295,14 @@ export default function GamesPage() {
                             </div>
 
                             <div className="mt-6 flex flex-col gap-3">
-                                {Array.isArray(leaderboard) && leaderboard.map((user, idx) => (
+                                {leaderboard.map((user, idx) => (
                                     <LeaderboardRow
-                                        key={user.userID ?? user.id ?? idx}
+                                        key={user.id}
                                         rank={idx + 1}
-                                        name={user.displayName || user.name || user.username || "—"}
-                                        xp={user.weeklyXp ?? 0}
+                                        name={user.name}
+                                        xp={user.weeklyXp}
                                     />
                                 ))}
-
 
                                 {leaderboard.length === 0 && (
                                     <div className="text-center text-gray-400 text-sm">

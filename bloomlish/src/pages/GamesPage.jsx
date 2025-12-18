@@ -71,7 +71,6 @@ export default function GamesPage() {
                 console.log("LEADERBOARD RAW →", data);
                 console.log("isArray?", Array.isArray(data), "type:", typeof data);
 
-                // ✅ Eğer string geldiyse JSON'a çevir
                 if (typeof data === "string") {
                     try {
                         data = JSON.parse(data);
@@ -81,7 +80,6 @@ export default function GamesPage() {
                     }
                 }
 
-                // ✅ Spring Page vs vs (opsiyonel)
                 const safeArray =
                     Array.isArray(data) ? data :
                         Array.isArray(data?.content) ? data.content :
@@ -111,7 +109,7 @@ export default function GamesPage() {
                             </h1>
                             <p className="text-base text-pink-700 max-w-md mt-2">
                                 Dil öğrenirken eğlen! Mini oyunları oyna, XP kazan,
-                                haftalık görevleri tamamla ve liderlik tablosunda yüksel 🏆
+                               ve liderlik tablosunda yüksel 
                             </p>
                         </div>
 
@@ -191,10 +189,10 @@ export default function GamesPage() {
                         <div className="sm:col-span-2 xl:col-span-4 flex flex-col sm:flex-row justify-center gap-4 xl:gap-6">
                             <GameCard
                                 icon={<BookFilled className="text-xl text-white" />}
-                                badgeText="Günlük Kelime"
-                                title="Bugünün Kelimesi"
-                                desc="Her gün yeni bir kelimeyle mini quiz!"
-                                xp="+2 XP"
+                                badgeText="Günlük Kelimeler"
+                                title="Bugünün Kelimeleri"
+                                desc="Her gün yeni kelimeler ile mini quiz!"
+                                xp="+5 XP"
                                 cta="BAŞLA"
                                 onClick={() => navigate("/games/daily-word")}
                             />

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import ing1 from "../assets/images/ing1.jpg";
+import bloomlish1 from "../assets/images/bloomlish1.jpg";
 import ing2 from "../assets/images/ing2.jpg";
 import ing3 from "../assets/images/ing3.jpg";
 import ing4 from "../assets/images/ing4.jpg";
@@ -11,7 +11,7 @@ import api from "../api";
 
 // isLoggedIn artık props'tan geliyor
 function HomePage({ isLoggedIn }) {
-    const images = [ing1, ing2, ing3, ing4];
+    const images = [bloomlish1, ing2, ing3, ing4];
     const [current, setCurrent] = useState(0);
     const navigate = useNavigate();
 
@@ -88,6 +88,7 @@ function HomePage({ isLoggedIn }) {
         },
     ];
 
+    
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-white font-sans">
             {/* Hero */}

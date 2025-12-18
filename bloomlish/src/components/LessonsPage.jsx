@@ -15,6 +15,7 @@ import {
     Avatar,
     Button,
     Empty,
+    message,
 } from "antd";
 
 import { UserOutlined, FilterOutlined } from "@ant-design/icons";
@@ -57,8 +58,15 @@ export default function LessonsPage() {
     useEffect(() => {
         const fetchMyLessons = async () => {
             try {
-                const res = await api.get("/api/payments/my-lessons");
-                setEnrolledLessonIds(Array.isArray(res.data) ? res.data.map((l) => l.id) : []);
+                const token = localStorage.getItem("token");
+
+                const res = await api.get("/api/payments/my-lessons", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                setEnrolledLessonIds(
+                    Array.isArray(res.data) ? res.data.map((l) => l.id) : []
+                );
             } catch (err) {
                 console.error(err);
             }
@@ -67,22 +75,21 @@ export default function LessonsPage() {
         fetchMyLessons();
     }, []);
 
-
     const teacherList = [...new Set(lessons.map((l) => l.instructorName))];
     const levelList = [...new Set(lessons.map((l) => l.level))];
 
+    // =====================
     // FİLTRELEME
+    // =====================
     const applyFiltersToBackend = async () => {
         const params = {};
 
-        // Sayfalamayı sıfırla
         setCurrentPage(1);
 
         if (query) params.name = query;
         if (teacher) params.instructor = teacher;
         if (level) params.level = level;
 
-        // Fiyat filtresi SADECE kullanıcı varsayılandan farklı seçerse gönderilsin
         const [minSel, maxSel] = selectedPriceRange;
         const [defMin, defMax] = DEFAULT_PRICE_RANGE;
 
@@ -96,7 +103,6 @@ export default function LessonsPage() {
             params.endDate = dateRange[1].format("YYYY-MM-DD");
         }
 
-        // Eğer hiç parametre yoksa, normal tüm dersleri çek
         if (Object.keys(params).length === 0) {
             fetchAllLessons();
             return;
@@ -112,7 +118,6 @@ export default function LessonsPage() {
         }
     };
 
-    // TÜM FİLTRELERİ SIFIRLA
     const resetFilters = () => {
         setQuery("");
         setTeacher(undefined);
@@ -135,18 +140,33 @@ export default function LessonsPage() {
         }
     };
 
+    // =====================
+    // SATIN ALMA
+    // =====================
     const handleEnroll = async (lessonId) => {
-
         try {
+            const token = localStorage.getItem("token");
+
             const res = await api.post(
                 `/api/payments/lesson/${lessonId}`,
-                {},);
+                {
+                    callbackUrl: window.location.origin + "/payment/callback"
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("payment response:", res.data);
             window.location.href = res.data.paymentUrl;
         } catch (err) {
-            console.error(err);
+            console.log("ERROR:", err.response?.data);
             alert("Ödeme başlatılamadı.");
         }
     };
+
 
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -162,20 +182,13 @@ export default function LessonsPage() {
                         <Title level={2} style={{ color: "#e75480" }} >
                             DERSLER
                         </Title>
-
                     </div>
-
-                    <Button onClick={resetFilters}>
-                        Filtreleri Temizle
-                    </Button>
+                    <Button onClick={resetFilters}>Filtreleri Temizle</Button>
                 </div>
 
                 {/* FİLTRE KARTI */}
-
                 <Card className="rounded-2xl mt-4 shadow-sm border border-gray-100 w-auto ">
-
                     <Row gutter={[16, 12]}>
-                        {/* Arama */}
                         <Col xs={24} md={8}>
                             <Input
                                 placeholder="Ders adı"
@@ -185,7 +198,6 @@ export default function LessonsPage() {
                             />
                         </Col>
 
-                        {/* Hoca */}
                         <Col xs={12} md={4}>
                             <Select
                                 allowClear
@@ -201,7 +213,6 @@ export default function LessonsPage() {
                             />
                         </Col>
 
-                        {/* Seviye */}
                         <Col xs={12} md={4}>
                             <Select
                                 allowClear
@@ -217,7 +228,6 @@ export default function LessonsPage() {
                             />
                         </Col>
 
-                        {/* Tarih */}
                         <Col xs={24} md={6}>
                             <RangePicker
                                 className="w-full h-11"
@@ -226,7 +236,6 @@ export default function LessonsPage() {
                             />
                         </Col>
 
-                        {/* Filtre Butonu */}
                         <Col xs={24} md={2} style={{ display: "flex", alignItems: "center" }}>
                             <Button
                                 type="primary"
@@ -237,10 +246,8 @@ export default function LessonsPage() {
                                 Filtrele
                             </Button>
                         </Col>
-
                     </Row>
 
-                    {/* Fiyat Slider */}
                     <Row className="mt-4">
                         <Col span={24}>
                             <Slider
@@ -263,8 +270,6 @@ export default function LessonsPage() {
                             <Col span={24} key={lesson.id}>
                                 <Card className="rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
                                     <div className="flex items-start justify-between w-full">
-
-                                        {/* SOL TARAF */}
                                         <div className="flex items-start gap-4">
                                             <Avatar size={50} icon={<UserOutlined />} className="bg-gray-200" />
 
@@ -283,7 +288,6 @@ export default function LessonsPage() {
 
                                                 <div className="flex flex-col text-gray-600 mt-2 text-sm">
                                                     <div className="flex items-center gap-1">
-
                                                         {dayjs(lesson.date).format("DD.MM.YYYY")}
                                                     </div>
 
@@ -300,7 +304,6 @@ export default function LessonsPage() {
                                             </div>
                                         </div>
 
-                                        {/* SAĞ TARAF */}
                                         <div className="flex flex-col items-end">
                                             <Tag color={getLevelColor(lesson.level)} className="px-3 py-1 text-sm rounded-md">
                                                 {lesson.level}
@@ -328,9 +331,6 @@ export default function LessonsPage() {
                                                     Kaydol
                                                 </Button>
                                             )}
-
-
-
                                         </div>
                                     </div>
                                 </Card>
@@ -339,7 +339,6 @@ export default function LessonsPage() {
                     )}
                 </Row>
 
-                {/* PAGINATION */}
                 <div className="flex justify-center mt-6">
                     <Pagination
                         current={currentPage}

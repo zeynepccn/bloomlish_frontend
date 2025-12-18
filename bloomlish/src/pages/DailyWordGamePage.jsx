@@ -39,22 +39,15 @@ export default function DailyWordGamePage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // 💥 TUR BİTTİYSE → XP MESAJI GÖSTER
             if (res.data.type === "RESULT" && res.data.result?.completed) {
-
                 const gainedXP =
                     res.data.gainedXp ??
                     res.data.correctCount ??
                     res.data.totalCorrect ??
                     0;
 
-                if (res.data.gainedXp > 0) {
-                    message.success(`🎉 +${res.data.gainedXp} XP kazandın!`);
-                }
-
+                message.success(`🎉 Bu tur +${gainedXP} XP kazandın!`);
             }
-
-            // 📌 Normal akış
             if (
                 res.data.type === "SUMMARY" &&
                 res.data.lastResult
@@ -117,6 +110,15 @@ export default function DailyWordGamePage() {
             </div>
         </div>
     );
+}
+
+
+function formatMeaning(text) {
+    if (!text) return "";
+    return text
+        .split(" ")
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
 }
 
 function QuestionView({ game, onAnswer }) {
@@ -200,12 +202,18 @@ function ResultView({ game, onNext }) {
             </div>
 
             <div className="text-pink-800 font-extrabold text-3xl mb-2">
-                {word}
+                {correct ? (
+                    word
+                ) : (
+                    <>Doğru Cevap: {word}</>
+                )}
             </div>
 
+
             <div className="text-pink-600 text-base italic mb-6">
-                {meaning}
+                {formatMeaning(meaning)}
             </div>
+
 
             <div className="w-12 h-1 bg-pink-200 rounded-full mx-auto mb-6" />
 
@@ -304,11 +312,12 @@ function SummaryView({ game, onNewRound }) {
                                 "
                                 >
                                     <span className="font-medium text-pink-800">
-                                        {w.word}
+                                         {w.word}
                                     </span>
                                     <span className="text-pink-600 text-sm italic">
-                                        {w.meaning}
+                                        {formatMeaning(w.meaning)}
                                     </span>
+
                                 </div>
                             ))}
                         </div>
@@ -362,4 +371,6 @@ function SummaryView({ game, onNewRound }) {
 
         </Card>
     );
+
+
 }

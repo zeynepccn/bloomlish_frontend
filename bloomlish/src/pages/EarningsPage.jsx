@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../api";
 import {
     BarChart,
     Bar,
@@ -15,25 +16,67 @@ import { Users, Wallet, CalendarDays, BarChart3, Briefcase } from "lucide-react"
 export default function EarningsPage() {
     const [filter, setFilter] = useState("");
 
-    const summary = {
-        totalStudents: 42,
-        totalEarnings: 7850,
-        thisMonth: 1350,
-    };
-
-    const data = [
-        { month: "Ocak", gelir: 2400 },
-        { month: "Şubat", gelir: 3000 },
-        { month: "Mart", gelir: 1800 },
-        { month: "Nisan", gelir: 3500 },
-        { month: "Mayıs", gelir: 4200 },
+    const [summary, setSummary] = useState(null);
+    const [data, setData] = useState([]);
+    const [tableData, setTableData] = useState([]);
+    const months = [
+        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+        "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
     ];
 
-    const tableData = [
-        { date: "28.10.2025", lesson: "Present Perfect Tense", student: "Elif Y.", price: 120, status: "Ödendi" },
-        { date: "25.10.2025", lesson: "Speaking Practice #2", student: "Ali K.", price: 100, status: "Beklemede" },
-        { date: "22.10.2025", lesson: "Grammar Basics", student: "Zeynep A.", price: 150, status: "Ödendi" },
-    ];
+
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+        // SUMMARY DATASI
+        api.get("/api/instructor/earnings/summary", {
+            headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => {
+            setSummary({
+                totalSoldLessons: res.data.totalSoldLessons,
+                totalRevenue: res.data.totalRevenue,
+                thisMonthRevenue: res.data.thisMonthRevenue
+            });
+        });
+
+        // MONTHLY DATASI
+        api.get("/api/instructor/earnings/monthly", {
+            headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => {
+
+            const monthlyData = res.data.data;
+
+            const formatted = months.map((monthName) => ({
+                month: monthName,
+                gelir: monthlyData[monthName] ? Number(monthlyData[monthName]) : 0
+            }));
+
+            setData(formatted);
+        });
+
+
+        // TABLE DATASI
+        api.get("/api/instructor/earnings/table", {
+            headers: { Authorization: `Bearer ${token}` },
+        }).then((res) => {
+            const formatted = res.data.data.map((row) => ({
+                date: new Date(row.date).toLocaleDateString("tr-TR"),
+                lesson: row.lesson,
+                student: row.student,
+                price: row.price,
+                status: row.status,
+            }));
+            setTableData(formatted);
+        });
+    }, []);
+
+    if (!summary) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-xl text-pink-600">
+                Yükleniyor...
+            </div>
+        );
+    }
 
     const filteredData = tableData.filter((row) =>
         row.lesson.toLowerCase().includes(filter.toLowerCase())
@@ -46,18 +89,19 @@ export default function EarningsPage() {
             {/* Özet Kartlar */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
                 <SummaryCard
-                    title="Toplam Öğrenci"
-                    value={summary.totalStudents}
+                    title="Toplam Ders Sayısı"
+                    value={summary.totalSoldLessons}
                     icon={<Users className="w-8 h-8 text-pink-500 mx-auto" />}
                 />
+
                 <SummaryCard
                     title="Toplam Kazanç"
-                    value={`₺${summary.totalEarnings}`}
+                    value={`₺${summary.totalRevenue}`}
                     icon={<Wallet className="w-8 h-8 text-pink-500 mx-auto" />}
                 />
                 <SummaryCard
                     title="Bu Ay"
-                    value={`₺${summary.thisMonth}`}
+                    value={`₺${summary.thisMonthRevenue}`}
                     icon={<CalendarDays className="w-8 h-8 text-pink-500 mx-auto" />}
                 />
             </div>

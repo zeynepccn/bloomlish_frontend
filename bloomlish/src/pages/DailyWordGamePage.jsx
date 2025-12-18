@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Spin } from "antd";
+import { Card, Button, Spin, message } from "antd";
 import api from "../api";
 
 export default function DailyWordGamePage() {
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
     const [pendingSummary, setPendingSummary] = useState(null);
-
 
     const startGame = async (newRound = false) => {
         try {
@@ -29,7 +28,6 @@ export default function DailyWordGamePage() {
         }
     };
 
-    /* CEVAP  */
     const answerQuestion = async (wordId, selected) => {
         try {
             setLoading(true);
@@ -41,9 +39,25 @@ export default function DailyWordGamePage() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
+            // 💥 TUR BİTTİYSE → XP MESAJI GÖSTER
+            if (res.data.type === "RESULT" && res.data.result?.completed) {
+
+                const gainedXP =
+                    res.data.gainedXp ??
+                    res.data.correctCount ??
+                    res.data.totalCorrect ??
+                    0;
+
+                if (res.data.gainedXp > 0) {
+                    message.success(`🎉 +${res.data.gainedXp} XP kazandın!`);
+                }
+
+            }
+
+            // 📌 Normal akış
             if (
                 res.data.type === "SUMMARY" &&
-                res.data.lastResult // 🔥 RESULT VARSA
+                res.data.lastResult
             ) {
                 setPendingSummary(res.data);
                 setGame({
@@ -54,8 +68,6 @@ export default function DailyWordGamePage() {
                 setGame(res.data);
             }
 
-
-
         } catch (e) {
             console.error(e);
             alert("Cevap gönderilemedi");
@@ -63,7 +75,6 @@ export default function DailyWordGamePage() {
             setLoading(false);
         }
     };
-
 
     useEffect(() => {
         startGame(false);
@@ -80,7 +91,6 @@ export default function DailyWordGamePage() {
     return (
         <div className="min-h-screen bg-gray-50 flex justify-center px-4 py-10">
             <div className="w-full max-w-xl">
-
                 {game.type === "QUESTION" && (
                     <QuestionView game={game} onAnswer={answerQuestion} />
                 )}
@@ -90,26 +100,20 @@ export default function DailyWordGamePage() {
                         game={game}
                         onNext={() => {
                             if (game.result.completed) {
-                                // 🔥 SON SORU BİTTİ → SUMMARY AL
                                 startGame(false);
                             } else {
-                                // 🔹 normal devam
                                 startGame(true);
                             }
                         }}
-
-
                     />
                 )}
-
 
                 {game.type === "SUMMARY" && (
                     <SummaryView
                         game={game}
-                        onNewRound={() => startGame(true)} 
+                        onNewRound={() => startGame(true)}
                     />
                 )}
-
             </div>
         </div>
     );
@@ -120,8 +124,6 @@ function QuestionView({ game, onAnswer }) {
 
     return (
         <Card className="!rounded-3xl shadow-xl border-0 bg-gradient-to-br from-pink-50 to-white">
-
-      
             <div className="flex justify-between items-center mb-4">
                 <div className="text-xs font-semibold text-pink-500">
                     Soru {order} / 5
@@ -135,17 +137,19 @@ function QuestionView({ game, onAnswer }) {
                 Boşluğu doğru kelimeyle tamamla
             </div>
 
-            <div className="
-            text-pink-700
-            bg-white/80
-            backdrop-blur
-            p-5
-            rounded-2xl
-            mb-6
-            text-lg
-            shadow-inner
-            border border-pink-100
-        ">
+            <div
+                className="
+                text-pink-700
+                bg-white/80
+                backdrop-blur
+                p-5
+                rounded-2xl
+                mb-6
+                text-lg
+                shadow-inner
+                border border-pink-100
+            "
+            >
                 {sentence}
             </div>
 
@@ -172,9 +176,7 @@ function QuestionView({ game, onAnswer }) {
             </div>
         </Card>
     );
-
 }
-
 
 function ResultView({ game, onNext }) {
     if (!game?.result) return null;
@@ -189,7 +191,8 @@ function ResultView({ game, onNext }) {
                     px-6 py-2 rounded-full text-sm font-semibold
                     ${correct
                             ? "bg-green-50 text-green-600 border border-green-200"
-                            : "bg-red-50 text-red-500 border border-red-200"}
+                            : "bg-red-50 text-red-500 border border-red-200"
+                        }
                 `}
                 >
                     {correct ? "Doğru Cevap" : "Yanlış Cevap"}
@@ -204,7 +207,6 @@ function ResultView({ game, onNext }) {
                 {meaning}
             </div>
 
-            {/* AYIRICI */}
             <div className="w-12 h-1 bg-pink-200 rounded-full mx-auto mb-6" />
 
             <Button
@@ -227,8 +229,6 @@ function ResultView({ game, onNext }) {
             </Button>
         </Card>
     );
-
-
 }
 
 function SummaryView({ game, onNewRound }) {
@@ -243,14 +243,9 @@ function SummaryView({ game, onNewRound }) {
         page * PAGE_SIZE + PAGE_SIZE
     );
 
-    
-
     return (
         <Card className="!rounded-3xl shadow-xl border-0 bg-gradient-to-br from-pink-50 to-white">
-
             <div className="flex items-center justify-between mb-6">
-
-                {/* SOL ÜST – OYUNLARA DÖN */}
                 <Button
                     onClick={() => window.location.href = "/games"}
                     className="
@@ -267,31 +262,18 @@ function SummaryView({ game, onNewRound }) {
                     ← Oyunlara Dön
                 </Button>
 
-                {/* BAŞLIK */}
                 <div className="text-2xl font-extrabold text-pink-800">
                     Günün Turları
                 </div>
 
-                {/* SAĞ ROZET */}
                 {rounds.length > 0 ? (
                     <div className="text-xs bg-pink-100 text-pink-600 px-3 py-1 rounded-full">
                         Toplam {rounds.length} Tur
                     </div>
                 ) : (
-                    <div className="w-20" />  
-                )
-                }
-
+                    <div className="w-20" />
+                )}
             </div>
-
-
-            {rounds.length === 0 && (
-                <div className="text-center text-pink-500 mb-6 italic">
-                    Bugün henüz oyun oynamadın 🌸
-                    <br />
-                    Aşağıdan yeni bir tur başlatabilirsin
-                </div>
-            )}
 
             <div className="flex flex-col gap-6">
                 {pagedRounds.map((r) => (
@@ -303,7 +285,6 @@ function SummaryView({ game, onNewRound }) {
                             <div className="text-sm font-bold text-pink-700">
                                 Tur {r.roundNumber}
                             </div>
-                            
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -335,7 +316,6 @@ function SummaryView({ game, onNewRound }) {
                 ))}
             </div>
 
-            {/* SAYFALAMA */}
             {rounds.length > PAGE_SIZE && (
                 <div className="flex justify-between items-center mt-6">
                     <Button
@@ -360,7 +340,6 @@ function SummaryView({ game, onNewRound }) {
                 </div>
             )}
 
-            {/* YENİ TUR */}
             <Button
                 onClick={onNewRound}
                 className="
@@ -378,11 +357,9 @@ function SummaryView({ game, onNewRound }) {
                 transition-all
             "
             >
-                 Yeni Tur Oyna
+                Yeni Tur Oyna
             </Button>
-           
 
         </Card>
     );
-
 }

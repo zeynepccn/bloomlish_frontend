@@ -1,63 +1,58 @@
-import React, { useState } from "react";
-import {
-    Layout,
-    Card,
-    Typography,
-    Form,
-    Input,
-    Button,
-    Upload,
-    Avatar,
-    message,
-} from "antd";
-import {
-    UserOutlined,
-    InboxOutlined,
-    SaveOutlined,
-    ArrowLeftOutlined,
-} from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
+import { Layout, Card, Typography, Form, Input, Button, message } from "antd";
+import { SaveOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-const { Dragger } = Upload;
-const { TextArea } = Input;
 
 export default function EditProfilePage() {
     const navigate = useNavigate();
-    const [avatarUrl, setAvatarUrl] = useState(null);
+    const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
+    const [loadingMe, setLoadingMe] = useState(true);
 
-    const initialValues = {
-        email: "yarencococen@gmail.com",
-        username: "zeynep.cocen",
-        bio: "",
-    };
-
-    const beforeUpload = (file) => {
-        const isImage = file.type.startsWith("image/");
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isImage) message.error("Lütfen bir resim dosyası yükleyin.");
-        if (!isLt2M) message.error("Dosya 2MB'den küçük olmalı.");
-        return isImage && isLt2M ? true : Upload.LIST_IGNORE;
-    };
-
-    const handleAvatarPreview = (file) => {
-        const reader = new FileReader();
-        reader.onload = () => setAvatarUrl(reader.result);
-        reader.readAsDataURL(file);
-    };
-
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await api.get("/api/profile/me");
+                form.setFieldsValue({
+                    email: res.data.email,
+                    username: res.data.username,
+                    password: "",
+                });
+            } catch (e) {
+                message.error("Profil bilgileri alınamadı. Giriş yapman gerekebilir.");
+            } finally {
+                setLoadingMe(false);
+            }
+        })();
+    }, [form]);
     const onFinish = async (values) => {
         setSubmitting(true);
         try {
-            // burada API çağrısı yaparsın:
-            // await api.updateProfile({ ...values, avatar: avatarFile });
-            await new Promise((r) => setTimeout(r, 800));
-            message.success("Profil bilgilerin kaydedildi ✨");
+            const payload = {
+                email: values.email,
+                username: values.username,
+                password: values.password || "",
+            };
+
+            const res = await api.put("/api/profile/me", payload);
+            if (res.data?.token) {
+                localStorage.setItem("token", res.data.token);
+                api.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
+            }
+            if (res.data?.email) {
+                localStorage.setItem("email", res.data.email);
+            }
+
+            message.success("Profil güncellendi ✨");
             navigate("/profile");
+
         } catch (e) {
-            message.error("Kaydetme sırasında bir hata oluştu.");
+            const msg = e?.response?.data || "Güncelleme başarısız.";
+            message.error(typeof msg === "string" ? msg : "Güncelleme başarısız.");
         } finally {
             setSubmitting(false);
         }
@@ -66,130 +61,65 @@ export default function EditProfilePage() {
     return (
         <Layout className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-white">
             <Content className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <Avatar
-                            size={72}
-                            src={avatarUrl || undefined}
-                            icon={!avatarUrl ? <UserOutlined /> : undefined}
-                            className="bg-pink-100 text-pink-600"
-                        />
-                        <div>
-                            <Title className="!m-0 !leading-tight">
-                                <span className="bg-gradient-to-r from-pink-600 to-fuchsia-600 text-transparent bg-clip-text text-large font-normal">
-                                    Hesap Ayarları
-                                </span>
-                            </Title>
-                            <Text className="text-gray-500">
-                                Bilgilerini güncelle, profilini kişiselleştir.
-                            </Text>
-                        </div>
+                    <div>
+                        <Title className="!m-0">
+                            <span className="bg-gradient-to-r from-pink-600 to-fuchsia-600 text-transparent bg-clip-text font-normal">
+                                Hesap Ayarları
+                            </span>
+                        </Title>
+                        <Text className="text-gray-500">Email, kullanıcı adı ve şifre değiştir.</Text>
                     </div>
-
-                    <Button
-                        icon={<ArrowLeftOutlined />}
-                        className="!rounded-xl"
-                        onClick={() => navigate(-1)}
-                    >
+                    <Button icon={<ArrowLeftOutlined />} className="!rounded-xl" onClick={() => navigate(-1)}>
                         Geri
                     </Button>
                 </div>
 
                 <Card className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur">
                     <Form
+                        form={form}
                         layout="vertical"
-                        initialValues={initialValues}
                         onFinish={onFinish}
                         requiredMark={false}
+                        disabled={loadingMe}
                     >
-                        {/* Email */}
                         <Form.Item
-                            label="Email Address"
+                            label="Email"
                             name="email"
                             rules={[
                                 { required: true, message: "Email zorunlu" },
                                 { type: "email", message: "Geçerli bir email girin" },
                             ]}
                         >
-                            <Input
-                                size="large"
-                                placeholder="ornek@mail.com"
-                                className="!rounded-xl"
-                            />
+                            <Input size="large" className="!rounded-xl" />
                         </Form.Item>
 
-                        {/* Username */}
                         <Form.Item
-                            label="UserName"
+                            label="Kullanıcı adı"
                             name="username"
                             rules={[
-                                { required: true, message: "Kullanıcı adı zorunlu" },
-                                {
-                                    pattern: /^[a-zA-Z0-9_.-]{3,20}$/,
-                                    message:
-                                        "3–20 karakter, harf/rakam/._- kullanılabilir.",
-                                },
+                                { required: true, message: "Kullanıcı adı zorunlu" }
                             ]}
                         >
                             <Input size="large" className="!rounded-xl" />
                         </Form.Item>
 
-                        {/* Password */}
                         <Form.Item
-                            label="Password"
+                            label="Yeni şifre"
                             name="password"
-                            extra="Boş bırakırsan mevcut şifre korunur."
+                            extra="Boş bırakırsan şifren değişmez."
                             rules={[
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        if (!value || value.length >= 6) return Promise.resolve();
-                                        return Promise.reject(
-                                            new Error("Şifre en az 6 karakter olmalı.")
-                                        );
-                                    },
-                                }),
+                                {
+                                    validator: (_, value) =>
+                                        !value || value.length >= 6
+                                            ? Promise.resolve()
+                                            : Promise.reject(new Error("Şifre en az 6 karakter olmalı.")),
+                                },
                             ]}
                         >
                             <Input.Password size="large" className="!rounded-xl" />
                         </Form.Item>
 
-                        {/* Profil Fotoğrafı */}
-                        <Form.Item label="PP değiştir" name="avatar">
-                            <Dragger
-                                name="file"
-                                multiple={false}
-                                maxCount={1}
-                                beforeUpload={(file) => {
-                                    const ok = beforeUpload(file);
-                                    if (ok) handleAvatarPreview(file);
-                                    // gerçek upload yapmayacağız; sadece önizleme:
-                                    return false;
-                                }}
-                                className="!rounded-xl border-dashed"
-                            >
-                                <p className="ant-upload-drag-icon">
-                                    <InboxOutlined className="text-pink-500" />
-                                </p>
-                                <p className="ant-upload-text">
-                                    Dosyayı buraya sürükle bırak veya tıkla
-                                </p>
-                                <p className="ant-upload-hint text-gray-500">
-                                    PNG/JPG, maksimum 2MB
-                                </p>
-                            </Dragger>
-                        </Form.Item>
-
-                        {/* Biyografi */}
-                        <Form.Item label="Biyografi" name="bio">
-                            <TextArea
-                                rows={4}
-                                placeholder="Kendin hakkında kısa bir açıklama…"
-                                className="!rounded-xl"
-                            />
-                        </Form.Item>
-
-                        {/* Actions */}
                         <div className="flex justify-end">
                             <Button
                                 htmlType="submit"

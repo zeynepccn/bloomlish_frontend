@@ -31,11 +31,14 @@ import DailyWordGamePage from "./pages/DailyWordGamePage.jsx";
 import MatchGamePage from "./pages/MatchGamePage.jsx";
 
 function App() {
-  // Başlangıçta localStorage'da token varsa true başlasın
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return !!localStorage.getItem("token");
-  });
-
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role"); // varsa
+    setIsLoggedIn(false);
+  };
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
@@ -67,7 +70,7 @@ function App() {
 
 
     <Router>
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} onLogout={logout} />
       <div className="pt-20">
         <Routes>
           <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} />} />
@@ -78,7 +81,7 @@ function App() {
           <Route path="/footer" element={<Foooter />} />
           <Route path="/start" element={<BloomlishStartScreen />} />
           <Route path="/lessons" element={<LessonsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage onLogout={logout} />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/billing" element={<BillingSketchPage />} />
           <Route path="/premium" element={<PremiumPlanPage />} />

@@ -110,8 +110,7 @@ export default function GamesPage() {
                                 Eğlenerek Öğren
                             </h1>
                             <p className="text-base text-pink-700 max-w-md mt-2">
-                                Dil öğrenirken eğlen! Mini oyunları oyna, XP kazan,
-                                haftalık görevleri tamamla ve liderlik tablosunda yüksel 🏆
+                                Dil öğrenirken eğlen! Mini oyunları oyna, XP kazan ve liderlik tablosunda yüksel 🏆
                             </p>
                         </div>
 

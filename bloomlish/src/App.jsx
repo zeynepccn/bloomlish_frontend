@@ -17,7 +17,7 @@ import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
 import InstructorPage from "./pages/InstructorPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
-import AdminPage from "./pages/AdminPage.jsx";
+import AdminPage from "./pages/admin/AdminPage.jsx";
 import EarningsPage from "./pages/EarningsPage.jsx";
 import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
@@ -29,6 +29,7 @@ import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 import DailyWordGamePage from "./pages/DailyWordGamePage.jsx";
 import MatchGamePage from "./pages/MatchGamePage.jsx";
+import AdminGuard from "./routes/AdminGuard.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
@@ -87,7 +88,7 @@ function App() {
           <Route path="/premium" element={<PremiumPlanPage />} />
           <Route path="/instructor" element={<InstructorPage />} />
           <Route path="/createlesson" element={<CreateLessonPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
           <Route path="/earnings" element={<EarningsPage />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/quiz" element={<QuizPage />} />

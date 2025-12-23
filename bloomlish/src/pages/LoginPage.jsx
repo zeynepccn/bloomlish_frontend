@@ -38,6 +38,7 @@ function LoginPage({ setIsLoggedIn }) {
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("email", data.email);
+            localStorage.setItem("role", data.role);
 
             setIsLoggedIn(true);
 
@@ -56,7 +57,11 @@ function LoginPage({ setIsLoggedIn }) {
                 }
             } else {
                 alert("Giriş başarılı!");
-                navigate("/");
+                if ((data.role || "").toUpperCase() === "ROLE_ADMIN") {
+                    navigate("/admin");
+                } else {
+                    navigate("/");
+                }
             }
 
         } catch (err) {

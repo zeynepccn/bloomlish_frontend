@@ -16,8 +16,10 @@ export default function AdminPage() {
     const [users, setUsers] = useState([]);
     const [enrollments, setEnrollments] = useState([]);
 
+    const [payments, setPayments] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+    const [loadingPayments, setLoadingPayments] = useState(false);
 
     const fetchUsers = async () => {
         setLoadingUsers(true);
@@ -55,10 +57,43 @@ export default function AdminPage() {
         }
     };
 
+    const fetchPayments = async () => {
+        setLoadingPayments(true);
+        try {
+            const res = await api.get("/api/admin/payments?page=0&size=50");
+            const page = res.data;
+            const list = page.content ?? page;
+
+            // Backend DTO: {id,user,plan,amount,currency,status,createdAt}
+            // PaymentsTab: {id,user,order,amount,currency,status,createdAt} bekleyecek
+            const mapped = list.map((p) => ({
+                id: p.id,
+                user: p.user,
+                order: p.plan, // planType'ı order alanına koyuyoruz
+                amount: p.amount,
+                currency: p.currency || "TRY",
+                status: p.status,
+                createdAt: p.createdAt, // iso string gelir
+            }));
+            setPayments(mapped);
+        } finally {
+            setLoadingPayments(false);
+        }
+    };
+
+
     useEffect(() => {
         fetchUsers();
         fetchEnrollments();
+        fetchPayments(); // istersen her seferinde değil, tab'a girince
     }, []);
+
+    useEffect(() => {
+        if (activeTab === "payments") fetchPayments();
+        if (activeTab === "lessons") fetchEnrollments();
+        if (activeTab === "users") fetchUsers();
+    }, [activeTab]);
+
 
     // 3) Role change -> backend PATCH
     const handleRoleChange = async (id, role) => {
@@ -80,29 +115,15 @@ export default function AdminPage() {
         await api.patch(`/api/admin/users/${id}/premium`, { premium: next });
         setUsers(prev => prev.map(u => (u.id === id ? { ...u, premium: next } : u)));
     };
-
-
-    // payments ve purchases’ı enrollments’tan üret:
-    const payments = enrollments.map(e => ({
-        id: e.id,
-        user: e.studentEmail,
+    const purchases = enrollments.map((e) => ({
+        id: e.enrollmentId ?? e.id,
+        user: e.userEmail ?? e.studentEmail ?? e.userName,
         lesson: e.lessonName,
-        amount: e.price,
-        status: e.paid ? "SUCCESS" : "FAILED",
-        provider: "—",
-        createdAt: e.enrolledAt,
-        errorMessage: e.paid ? "" : "Ödeme yapılmadı",
-        rawResponse: "",
+        amount: e.amount ?? e.price,
+        paymentStatus: e.paymentStatus ?? (e.paid ? "PAID" : "UNPAID"),
+        createdAt: e.date ?? e.enrolledAt,
     }));
 
-    const purchases = enrollments.map(e => ({
-        id: e.id,
-        user: e.studentEmail,
-        lesson: e.lessonName,
-        amount: e.price,
-        paymentStatus: e.paid ? "SUCCESS" : "FAILED",
-        createdAt: e.enrolledAt,
-    }));
 
 
     return (
@@ -144,12 +165,19 @@ export default function AdminPage() {
                         onRoleChange={handleRoleChange}
                         onStatusChange={handleStatusChange}
                         onPremiumToggle={handlePremiumToggle}
+                        loading={loadingUsers}
                     />
                 )}
 
-                {activeTab === "payments" && <PaymentsTab payments={payments} />}
+                {activeTab === "payments" && (
+                    <PaymentsTab data={payments} loading={loadingPayments} />
+                )}
 
-                {activeTab === "lessons" && <LessonsTab purchases={purchases} />}
+
+                {activeTab === "lessons" && (
+                    <LessonsTab purchases={purchases} loading={loadingEnrollments} />
+                )}
+
             </div>
         </div>
     );

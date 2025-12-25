@@ -1,72 +1,90 @@
 import React, { useMemo, useState } from "react";
-import PaymentDetailModal from "../components/PaymentDetailModal";
+import { Card, Table, Tag, Input, Select, Space, Typography } from "antd";
 
+const { Title } = Typography;
 
-export default function PaymentsTab({ payments }) {
+const statusTag = (status) => {
+    const map = {
+        SUCCESS: "green",
+        FAILED: "red",
+        PENDING: "orange",
+    };
+    return <Tag color={map[status] || "default"}>{status}</Tag>;
+};
+
+export default function PaymentsTab({ data = [], loading = false }) {
+    const [query, setQuery] = useState("");
     const [status, setStatus] = useState("ALL");
-    const [selected, setSelected] = useState(null);
 
-    const filtered = useMemo(() => {
-        return payments.filter(p => (status === "ALL" ? true : p.status === status));
-    }, [payments, status]);
+    const filteredData = useMemo(() => {
+        const q = query.toLowerCase().trim();
+
+        return (data || [])
+            .filter((r) => (status === "ALL" ? true : r.status === status))
+            .filter((r) => {
+                if (!q) return true;
+                return (
+                    (r.user || "").toLowerCase().includes(q) ||
+                    (r.order || "").toLowerCase().includes(q)
+                );
+            });
+    }, [data, query, status]);
+
+    const columns = [
+        { title: "User", dataIndex: "user", key: "user", ellipsis: true },
+        { title: "Plan", dataIndex: "order", key: "order", ellipsis: true },
+        {
+            title: "Amount",
+            key: "amount",
+            render: (_, r) => `${Number(r.amount).toFixed(2)} ${r.currency || "TRY"}`,
+            width: 140,
+        },
+        {
+            title: "Status",
+            dataIndex: "status",
+            key: "status",
+            render: statusTag,
+            width: 120,
+        },
+        { title: "CreatedAt", dataIndex: "createdAt", key: "createdAt", width: 200 },
+    ];
 
     return (
-        <div>
-            <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-                <h2 className="text-lg font-semibold text-pink-600">Ödemeler</h2>
+        <Card className="!rounded-2xl">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12 }}>
+                <Title level={4} style={{ margin: 0 }}>
+                    Ödemeler
+                </Title>
 
-                <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="border rounded-xl px-3 py-2"
-                >
-                    <option value="ALL">ALL</option>
-                    <option value="SUCCESS">SUCCESS</option>
-                    <option value="FAILED">FAILED</option>
-                    <option value="PENDING">PENDING</option>
-                </select>
+                <Space>
+                    <Input
+                        placeholder="User veya Plan ara"
+                        allowClear
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        style={{ width: 260 }}
+                    />
+                    <Select
+                        value={status}
+                        onChange={setStatus}
+                        style={{ width: 160 }}
+                        options={[
+                            { value: "ALL", label: "All" },
+                            { value: "SUCCESS", label: "SUCCESS" },
+                            { value: "FAILED", label: "FAILED" },
+                            { value: "PENDING", label: "PENDING" },
+                        ]}
+                    />
+                </Space>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full border border-pink-200 rounded-lg overflow-hidden">
-                    <thead>
-                        <tr className="bg-pink-100">
-                            <th className="p-2 text-left">User</th>
-                            <th className="p-2 text-left">Lesson/Order</th>
-                            <th className="p-2 text-left">Amount</th>
-                            <th className="p-2 text-left">Status</th>
-                            <th className="p-2 text-left">Provider</th>
-                            <th className="p-2 text-left">CreatedAt</th>
-                            <th className="p-2 text-left">Error</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.map(p => (
-                            <tr
-                                key={p.id}
-                                className="border-b hover:bg-pink-50 cursor-pointer"
-                                onClick={() => setSelected(p)}
-                            >
-                                <td className="p-2">{p.user}</td>
-                                <td className="p-2">{p.lesson}</td>
-                                <td className="p-2">{p.amount} TL</td>
-                                <td className={`p-2 font-semibold ${p.status === "SUCCESS" ? "text-green-600" :
-                                    p.status === "FAILED" ? "text-red-500" : "text-yellow-600"
-                                    }`}>
-                                    {p.status}
-                                </td>
-                                <td className="p-2">{p.provider}</td>
-                                <td className="p-2">{p.createdAt}</td>
-                                <td className="p-2 text-sm text-gray-500">
-                                    {p.status === "FAILED" ? (p.errorMessage || "—").slice(0, 60) : "—"}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            <PaymentDetailModal payment={selected} onClose={() => setSelected(null)} />
-        </div>
+            <Table
+                rowKey="id"
+                columns={columns}
+                dataSource={filteredData}
+                loading={loading}
+                pagination={{ pageSize: 10 }}
+            />
+        </Card>
     );
 }

@@ -30,6 +30,7 @@ import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 import DailyWordGamePage from "./pages/DailyWordGamePage.jsx";
 import MatchGamePage from "./pages/MatchGamePage.jsx";
 import AdminGuard from "./routes/AdminGuard.jsx";
+import PlacementTestPage from "./pages/PlacementTestPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
@@ -100,6 +101,7 @@ function App() {
           <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
           <Route path="/games/daily-word" element={<DailyWordGamePage />} />
           <Route path="/game/match" element={<MatchGamePage />} />
+          <Route path="/placement" element={<PlacementTestPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

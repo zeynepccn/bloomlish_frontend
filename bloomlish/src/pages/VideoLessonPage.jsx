@@ -506,88 +506,53 @@ const VideoLessonPage = () => {
             {/* VİDEO ALANI */}
             <div
                 style={{
-                    display: "flex",
-                    gap: "30px",
-                    marginTop: "10px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
+                    position: "relative",
+                    width: "100%",
+                    maxWidth: "1100px",
+                    height: "620px",
+                    marginTop: "20px",
+                    backgroundColor: "#000",
+                    borderRadius: "20px",
+                    overflow: "hidden",
                 }}
             >
-                {/* BEN */}
-                <div
-                    style={{
-                        background: "white",
-                        padding: "15px",
-                        borderRadius: "16px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        width: "340px",
-                    }}
-                >
-                    <h3
-                        style={{
-                            textAlign: "center",
-                            marginBottom: "10px",
-                            color: "#444",
-                            fontSize: "18px",
-                            fontWeight: "600",
-                        }}
-                    >
-                        Ben
-                    </h3>
-                    <video
-                        ref={localVideoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        style={{
-                            width: "100%",
-                            height: "auto",
-                            borderRadius: "12px",
-                            backgroundColor: "#000",
-                        }}
-                    />
-                </div>
-
                 {/* KARŞI TARAF */}
-                <div
+                <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
                     style={{
-                        background: "white",
-                        padding: "15px",
-                        borderRadius: "16px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        width: "340px",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        backgroundColor: "#000",
                     }}
-                >
-                    <h3
-                        style={{
-                            textAlign: "center",
-                            marginBottom: "10px",
-                            color: "#444",
-                            fontSize: "18px",
-                            fontWeight: "600",
-                        }}
-                    >
-                        Karşı Taraf
-                    </h3>
+                />
 
-                    <video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        style={{
-                            width: "100%",
-                            height: "auto",
-                            borderRadius: "12px",
-                            backgroundColor: "#000",
-                        }}
-                    />
-                </div>
+                {/* BEN */}
+                <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        right: "20px",
+                        width: "260px",
+                        height: "160px",
+                        objectFit: "cover",
+                        borderRadius: "14px",
+                        border: "2px solid white",
+                        backgroundColor: "#000",
+                    }}
+                />
             </div>
 
-            {/* BUTONLAR */}
+            {/* BUTONLAR (VIDEO ALTINDA) */}
             <div
                 style={{
-                    marginTop: "30px",
+                    marginTop: "20px",
                     display: "grid",
                     gap: "12px",
                     gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
@@ -595,19 +560,11 @@ const VideoLessonPage = () => {
                     maxWidth: "700px",
                 }}
             >
-
-
-                <button
-                    onClick={leaveCall}
-                    style={buttonStyleDanger}
-                >
+                <button onClick={leaveCall} style={buttonStyleDanger}>
                     Dersten Ayrıl
                 </button>
 
-                <button
-                    onClick={toggleCamera}
-                    style={buttonStyleSecondary}
-                >
+                <button onClick={toggleCamera} style={buttonStyleSecondary}>
                     {isCameraOn ? "Kamera Kapat" : "Kamera Aç"}
                 </button>
 
@@ -615,16 +572,12 @@ const VideoLessonPage = () => {
                     {isMicOn ? "Mikrofon Kapat" : "Mikrofon Aç"}
                 </button>
 
-
-                <button
-                    onClick={startScreenShare}
-                    style={buttonStyleSecondary}
-                >
+                <button onClick={startScreenShare} style={buttonStyleSecondary}>
                     Ekran Paylaş
                 </button>
             </div>
 
-            {/* HATA MESAJI */}
+            {/* HATA MESAJI (VIDEO ALTINDA) */}
             {error && (
                 <p style={{ color: "red", marginTop: "15px", fontWeight: 600 }}>
                     {error}

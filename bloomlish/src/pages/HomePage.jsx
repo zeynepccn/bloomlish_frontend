@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { FaBookOpen, FaBrain, FaVideo, FaGamepad, FaPenFancy } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import bloomlish1 from "../assets/images/bloomlish1.jpg";
-import ing2 from "../assets/images/ing2.jpg";
-import ing3 from "../assets/images/ing3.jpg";
-import ing4 from "../assets/images/ing4.jpg";
+import bloomlish1 from "../assets/images/ingresim5.jpeg";
+import ing2 from "../assets/images/ingresim3.jpeg";
+import ing3 from "../assets/images/ingresim4.jpeg";
 import { message } from "antd";
 import api from "../api";
 
 
 // isLoggedIn artık props'tan geliyor
 function HomePage({ isLoggedIn }) {
-    const images = [bloomlish1, ing2, ing3, ing4];
+    const images = [bloomlish1, ing2, ing3];
     const [current, setCurrent] = useState(0);
     const navigate = useNavigate();
 
@@ -72,11 +71,6 @@ function HomePage({ isLoggedIn }) {
             icon: <FaBrain className="text-purple-600 text-4xl mx-auto mb-3" />,
         },
         {
-            title: "GÖRÜNTÜLÜ DERS VE GRUP SOHBETİ!",
-            desc: "Canlı dersler ve grup sohbetleri",
-            icon: <FaVideo className="text-pink-500 text-4xl mx-auto mb-3" />,
-        },
-        {
             title: "OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!",
             desc: "Eğlenceli ve interaktif içerikler",
             icon: <FaGamepad className="text-green-500 text-4xl mx-auto mb-3" />,
@@ -117,7 +111,8 @@ function HomePage({ isLoggedIn }) {
             </section>
 
             {/* Özellik kartları */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 px-10 mb-20">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-10 mb-20">
+
                 {features.map((item, i) => (
                     <div
                         key={i}
@@ -147,8 +142,6 @@ function HomePage({ isLoggedIn }) {
                                         navigate("/quiz");
                                     } else if (item.title === "OYUNLAR VE ETKİLEŞİMLİ İÇERİKLER!") {
                                         navigate("/games");                               
-                                    } else if (item.title === "GÖRÜNTÜLÜ DERS VE GRUP SOHBETİ!") {
-                                        navigate("/video-lesson");
                                     } else {
                                         console.log(`${item.title} yakında eklenecek ✨`);
                                     }

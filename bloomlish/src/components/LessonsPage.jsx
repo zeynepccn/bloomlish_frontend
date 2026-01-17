@@ -29,6 +29,7 @@ const DEFAULT_PRICE_RANGE = [100, 1000];
 
 export default function LessonsPage() {
     const [lessons, setLessons] = useState([]);
+    const [myLessons, setMyLessons] = useState([]); // ✅ kullanıcının kayıtlı dersleri
 
     const [query, setQuery] = useState("");
     const [teacher, setTeacher] = useState(undefined);
@@ -42,7 +43,7 @@ export default function LessonsPage() {
 
     const fetchAllLessons = async () => {
         try {
-            const res = await api.get("/api/lessons");
+            const res = await api.get("/api/lessons"); // ✅ sadece boş dersler
             setLessons(res.data || []);
             setCurrentPage(1);
         } catch (err) {
@@ -51,39 +52,58 @@ export default function LessonsPage() {
         }
     };
 
+    const fetchMyLessons = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setMyLessons([]);
+                setEnrolledLessonIds([]);
+                return;
+            }
+
+            const res = await api.get("/api/payments/my-lessons", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const arr = Array.isArray(res.data) ? res.data : [];
+            setMyLessons(arr);
+            setEnrolledLessonIds(arr.map((l) => l.id));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
         fetchAllLessons();
-    }, []);
-
-    useEffect(() => {
-        const fetchMyLessons = async () => {
-            try {
-                const token = localStorage.getItem("token");
-
-                const res = await api.get("/api/payments/my-lessons", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                setEnrolledLessonIds(
-                    Array.isArray(res.data) ? res.data.map((l) => l.id) : []
-                );
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
         fetchMyLessons();
     }, []);
 
-    const teacherList = [...new Set(lessons.map((l) => l.instructorName))];
-    const levelList = [...new Set(lessons.map((l) => l.level))];
+    // ✅ sekmeye geri dönünce yenile (başkası satın aldıysa kaybolsun)
+    useEffect(() => {
+        const onFocus = () => {
+            fetchAllLessons();
+            fetchMyLessons();
+        };
+        window.addEventListener("focus", onFocus);
+        return () => window.removeEventListener("focus", onFocus);
+    }, []);
+
+    // ✅ boş dersler + benim derslerimi birleştir (benimkiler "Kayıtlı" görünsün)
+    const mergedLessons = React.useMemo(() => {
+        const map = new Map();
+        (lessons || []).forEach((l) => map.set(l.id, l));
+        (myLessons || []).forEach((l) => map.set(l.id, l)); // benim derslerimi ekle/üstüne yaz
+        return Array.from(map.values());
+    }, [lessons, myLessons]);
+
+    const teacherList = [...new Set(mergedLessons.map((l) => l.instructorName))];
+    const levelList = [...new Set(mergedLessons.map((l) => l.level))];
 
     // =====================
     // FİLTRELEME
     // =====================
     const applyFiltersToBackend = async () => {
         const params = {};
-
         setCurrentPage(1);
 
         if (query) params.name = query;
@@ -103,15 +123,19 @@ export default function LessonsPage() {
             params.endDate = dateRange[1].format("YYYY-MM-DD");
         }
 
+        // Filtre yoksa normal fetch
         if (Object.keys(params).length === 0) {
             fetchAllLessons();
+            fetchMyLessons();
             return;
         }
 
         try {
-            const res = await api.get("/api/lessons/filter", { params });
-            setLessons(res.data || []);
+            const res = await api.get("/api/lessons/filter", { params }); // ✅ sadece boş dersler filtreli gelir
+            setLessons(res.data || []); // boş dersleri güncelle
             setCurrentPage(1);
+            // ✅ kayıtlı dersler her zaman görünsün diye ayrıca çekmeye devam
+            await fetchMyLessons();
         } catch (err) {
             console.error(err);
             message.error("Filtreleme başarısız ");
@@ -126,6 +150,7 @@ export default function LessonsPage() {
         setSelectedPriceRange(DEFAULT_PRICE_RANGE);
         setCurrentPage(1);
         fetchAllLessons();
+        fetchMyLessons();
     };
 
     const getLevelColor = (lvl) => {
@@ -140,37 +165,48 @@ export default function LessonsPage() {
         }
     };
 
-    // =====================
-    // SATIN ALMA
-    // =====================
+    const [enrollingId, setEnrollingId] = useState(null);
+
     const handleEnroll = async (lessonId) => {
         try {
+            setEnrollingId(lessonId);
             const token = localStorage.getItem("token");
 
             const res = await api.post(
                 `/api/payments/lesson/${lessonId}`,
-                {
-                    callbackUrl: window.location.origin + "/payment/callback"
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                { callbackUrl: window.location.origin + "/payment/callback" },
+                { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            console.log("payment response:", res.data);
             window.location.href = res.data.paymentUrl;
+
         } catch (err) {
+            const status = err.response?.status;
+            const code = err.response?.data?.code;
+
+            if (status === 409 && code === "LESSON_FULL") {
+                message.error("Bu ders az önce alındı, ders doldu.");
+                setLessons((prev) => prev.filter((l) => l.id !== lessonId)); // boş ders listesinden kaldır
+                return;
+            }
+
+            if (status === 409 && code === "ALREADY_ENROLLED") {
+                message.info("Bu derse zaten kayıtlısın.");
+                await fetchMyLessons();
+                return;
+            }
+
             console.log("ERROR:", err.response?.data);
-            alert("Ödeme başlatılamadı.");
+            message.error("Ödeme başlatılamadı.");
+        }
+        finally {
+            setEnrollingId(null);
         }
     };
 
-
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const paginatedLessons = lessons.slice(startIndex, endIndex);
+    const paginatedLessons = mergedLessons.slice(startIndex, endIndex);
 
     return (
         <Layout className="min-h-screen bg-white">
@@ -263,7 +299,7 @@ export default function LessonsPage() {
 
                 {/* DERS LİSTESİ */}
                 <Row gutter={[16, 16]}>
-                    {lessons.length === 0 ? (
+                    {mergedLessons.length === 0 ? (
                         <Empty description="Ders bulunamadı" />
                     ) : (
                         paginatedLessons.map((lesson) => (
@@ -325,6 +361,8 @@ export default function LessonsPage() {
                                                 <Button
                                                     type="primary"
                                                     shape="round"
+                                                    loading={enrollingId === lesson.id}
+                                                    disabled={enrollingId === lesson.id}
                                                     onClick={() => handleEnroll(lesson.id)}
                                                     style={{ marginTop: "10px" }}
                                                 >
@@ -343,7 +381,7 @@ export default function LessonsPage() {
                     <Pagination
                         current={currentPage}
                         pageSize={pageSize}
-                        total={lessons.length}
+                        total={mergedLessons.length}
                         onChange={(page) => setCurrentPage(page)}
                         showSizeChanger={false}
                     />

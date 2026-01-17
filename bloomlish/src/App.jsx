@@ -29,6 +29,7 @@ import ResultsOverviewPage from "./pages/ResultsOverviewPage.jsx";
 import VideoLessonPage from "./pages/VideoLessonPage.jsx";
 import DailyWordGamePage from "./pages/DailyWordGamePage.jsx";
 import MatchGamePage from "./pages/MatchGamePage.jsx";
+import PlacementTestPage from "./pages/PlacementTestPage.jsx";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
@@ -36,7 +37,7 @@ function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("email");
-    localStorage.removeItem("role"); // varsa
+    localStorage.removeItem("role"); 
     setIsLoggedIn(false);
   };
   useEffect(() => {
@@ -99,6 +100,7 @@ function App() {
           <Route path="/lesson/:lessonId" element={<VideoLessonPage />} />
           <Route path="/games/daily-word" element={<DailyWordGamePage />} />
           <Route path="/game/match" element={<MatchGamePage />} />
+          <Route path="/placement" element={<PlacementTestPage />} />
         </Routes>
       </div>
       {currentUserId && currentUserRole === "ROLE_STUDENT" && (

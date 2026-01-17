@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Upload, message, Dropdown } from "antd";
+import { Modal, Upload, message, Dropdown, Rate, Input } from "antd";
+import { Layout, Card, Row, Col, Typography, Avatar, Button, Tag, Progress, List } from "antd";
 
-import { Layout, Card, Row, Col, Typography, Avatar, Button, Tag, Progress, List, } from "antd";
+const { TextArea } = Input;
+
+
 import { UserOutlined, EditOutlined, CreditCardOutlined, LogoutOutlined, SmileOutlined, TrophyOutlined, BulbOutlined, BookOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
@@ -17,6 +20,13 @@ export default function ProfilePage({ onLogout }) {
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
+
+    const [openFeedbackModal, setOpenFeedbackModal] = useState(false);
+    const [feedbackLesson, setFeedbackLesson] = useState(null);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
+    const [sendingFeedback, setSendingFeedback] = useState(false);
+    const [feedbackSubmittedMap, setFeedbackSubmittedMap] = useState({});
 
     useEffect(() => {
         api
@@ -49,7 +59,7 @@ export default function ProfilePage({ onLogout }) {
         const start = new Date(lesson.date + " " + lesson.startTime);
         const end = new Date(lesson.date + " " + lesson.endTime);
 
-        if (now > end) return { status: "Tamamlandı", color: "default", disabled: true };
+        if (now > end) return { status: "Tamamlandı", color: "default", disabled: false };
         if (now > start && now < end) return { status: "Ders Devam Ediyor", color: "green", disabled: false };
         return { status: "Yaklaşan Ders", color: "magenta", disabled: false };
     };
@@ -98,8 +108,49 @@ export default function ProfilePage({ onLogout }) {
         const token = localStorage.getItem("token");
         if (!token) return;
 
+        const { status } = getLessonStatus(lesson);
+
+        // ✅ Ders tamamlandıysa: yorum/puan modalı
+        if (status === "Tamamlandı") {
+            try {
+                // önce local map
+                if (feedbackSubmittedMap[lesson.id]) {
+                    Modal.info({
+                        title: "Geri bildirim zaten gönderildi",
+                        content: "Bu ders için yorumunu daha önce iletmişsin.",
+                    });
+                    return;
+                }
+
+                // backend'den kontrol
+                const s = await api.get(`/api/feedbacks/status/${lesson.id}`);
+                if (s.data?.submitted) {
+                    setFeedbackSubmittedMap((prev) => ({ ...prev, [lesson.id]: true }));
+                    Modal.info({
+                        title: "Geri bildirim zaten gönderildi",
+                        content: "Bu ders için yorumunu daha önce iletmişsin.",
+                    });
+                    return;
+                }
+
+                setFeedbackLesson(lesson);
+                setRating(5);
+                setComment("");
+                setOpenFeedbackModal(true);
+                return;
+            } catch (err) {
+                console.error("feedback status error:", err);
+                Modal.error({
+                    title: "Bir Hata Oluştu",
+                    content: "Geri bildirim kontrolü yapılamadı.",
+                });
+                return;
+            }
+        }
+
+        // ⬇️ eski akışın aynen devam
         try {
-            const res = await api.get(`/api/lessons/join-check/${lesson.id}`,);
+            const res = await api.get(`/api/lessons/join-check/${lesson.id}`);
             const result = res.data;
 
             if (result === "OK") {
@@ -122,11 +173,11 @@ export default function ProfilePage({ onLogout }) {
                 });
                 return;
             }
+
             if (result === "NOT_STARTED" || result === "WRONG_DAY") {
                 setSelectedLesson(lesson);
                 setOpenLessonModal(true);
 
-                // geri sayım başlat
                 const interval = setInterval(() => {
                     setTimeLeft(calculateTimeLeft(lesson));
                 }, 1000);
@@ -134,7 +185,6 @@ export default function ProfilePage({ onLogout }) {
                 window.currentCountdown = interval;
                 return;
             }
-
         } catch (err) {
             console.error("join-check error:", err);
             Modal.error({
@@ -143,6 +193,7 @@ export default function ProfilePage({ onLogout }) {
             });
         }
     };
+
 
     const uploadAvatar = async (file) => {
         const token = localStorage.getItem("token");
@@ -482,12 +533,11 @@ export default function ProfilePage({ onLogout }) {
                                                 }
                                             />
 
-                                            <Tag
-                                                color={color}
-                                                className="!rounded-full px-3 py-1 text-xs"
-                                            >
+                                            <Tag color={color} className="!rounded-full px-3 py-1 text-xs">
                                                 {status}
+                                                {status === "Tamamlandı" && feedbackSubmittedMap[lesson.id] ? " • Gönderildi" : ""}
                                             </Tag>
+
                                         </List.Item>
                                     );
                                 }}
@@ -497,6 +547,8 @@ export default function ProfilePage({ onLogout }) {
                                 <Modal
                                     open={openLessonModal}
                                     onCancel={() => {
+                                
+
                                         setOpenLessonModal(false);
                                         clearInterval(window.currentCountdown);
                                     }}
@@ -535,8 +587,78 @@ export default function ProfilePage({ onLogout }) {
                                         </div>
                                     </div>
                                 </Modal>
+
+                                
+                                
                             )}
+                           
+
                         </Card>
+                        <Modal
+                            open={openFeedbackModal}
+                            onCancel={() => setOpenFeedbackModal(false)}
+                            centered
+                            title="Ders Değerlendir"
+                            okText="Gönder"
+                            cancelText="Vazgeç"
+                            confirmLoading={sendingFeedback}
+                            onOk={async () => {
+                                if (!feedbackLesson) return;
+
+                                if (!comment.trim()) {
+                                    message.error("Yorum boş olamaz.");
+                                    return;
+                                }
+
+                                try {
+                                    setSendingFeedback(true);
+
+                                    await api.post("/api/feedbacks", {
+                                        lessonId: feedbackLesson.id,
+                                        rating,
+                                        comment: comment.trim(),
+                                    });
+
+                                    message.success("Geri bildirimin gönderildi!");
+                                    setFeedbackSubmittedMap((prev) => ({ ...prev, [feedbackLesson.id]: true }));
+                                    setFeedbackLesson(null);
+                                    setComment("");
+                                    setRating(5);
+                                    setOpenFeedbackModal(false);
+                                } catch (err) {
+                                    console.error("feedback post error:", err);
+                                    message.error("Geri bildirim gönderilemedi!");
+                                } finally {
+                                    setSendingFeedback(false);
+                                }
+                            }}
+                        >
+                            <div className="space-y-3">
+                                <div className="text-sm text-gray-600">
+                                    <b>{feedbackLesson?.name}</b>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        {feedbackLesson?.date} • {feedbackLesson?.startTime} - {feedbackLesson?.endTime}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-sm font-medium mb-1">Puan</div>
+                                    <Rate value={rating} onChange={setRating} />
+                                </div>
+
+                                <div>
+                                    <div className="text-sm font-medium mb-1">Yorum</div>
+                                    <TextArea
+                                        rows={4}
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        placeholder="Hocam konuyu çok güzel anlattınız..."
+                                        maxLength={500}
+                                        showCount
+                                    />
+                                </div>
+                            </div>
+                        </Modal>
                     </Col>
                 </Row>
             </Content>

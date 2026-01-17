@@ -6,6 +6,7 @@ function MyLessonsPage() {
     const [lessons, setLessons] = useState([]);
     const [page, setPage] = useState(1);
     const lessonsPerPage = 4;
+    const [joinStatus, setJoinStatus] = useState({});
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,9 +20,65 @@ function MyLessonsPage() {
                     Authorization: "Bearer " + token,
                 },
             })
-            .then((res) => setLessons(res.data))
+            .then(async (res) => {
+                setLessons(res.data);
+                setPage(1);
+                const statuses = {};
+
+                await Promise.all(
+                    res.data.map(async (lesson) => {
+                        try {
+                            const r = await api.get(
+                                `/api/lessons/instructor-join-check/${lesson.id}`,
+                                {
+                                    headers: {
+                                        Authorization: "Bearer " + token,
+                                    },
+                                }
+                            );
+                            statuses[lesson.id] = r.data;
+                        } catch (e) {
+                            statuses[lesson.id] = "ERROR";
+                        }
+                    })
+                );
+                setJoinStatus(statuses);
+            })
             .catch((err) => console.error(err));
     }, []);
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!lessons.length) return;
+
+        const refreshStatuses = async () => {
+            const statuses = {};
+            await Promise.all(
+                lessons.map(async (lesson) => {
+                    try {
+                        const r = await api.get(
+                            `/api/lessons/instructor-join-check/${lesson.id}`,
+                            {
+                                headers: {
+                                    Authorization: "Bearer " + token,
+                                },
+                            }
+                        );
+                        statuses[lesson.id] = r.data;
+                    } catch (e) {
+                        statuses[lesson.id] = "ERROR";
+                    }
+                })
+            );
+            setJoinStatus(statuses);
+        };
+
+        refreshStatuses(); // hemen bir kere kontrol et
+        const interval = setInterval(refreshStatuses, 15000); // 15 sn'de bir güncelle
+
+        return () => clearInterval(interval);
+    }, [lessons]);
+
+
 
     const startIndex = (page - 1) * lessonsPerPage;
     const paginatedLessons = lessons.slice(startIndex, startIndex + lessonsPerPage);
@@ -75,7 +132,7 @@ function MyLessonsPage() {
             {/* DERSTEN GELEN BAŞARI BİLGİSİ */}
             {location.state?.from === "create" && (
                 <div className="mb-6 w-full max-w-4xl p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm shadow">
-                    🎉 Ders başarıyla oluşturuldu!
+                    Ders başarıyla oluşturuldu!
                 </div>
             )}
 
@@ -87,7 +144,7 @@ function MyLessonsPage() {
                         onClick={() => navigate("/createlesson")}
                         className="px-6 py-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition"
                     >
-                        İlk dersini oluştur ✨
+                        İlk dersini oluştur
                     </button>
                 </div>
             )}
@@ -139,6 +196,18 @@ function MyLessonsPage() {
                             >
                                 Sil
                             </button>
+                            <button
+                                onClick={() => navigate(`/lesson/${lesson.id}`)}
+                                disabled={joinStatus[lesson.id] !== "OK"}
+                                className={`px-6 py-2 rounded-xl shadow transition transform hover:scale-105
+    ${joinStatus[lesson.id] === "OK"
+                                        ? "bg-green-500 hover:bg-green-600 text-white"
+                                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                    }`}
+                            >
+                                Derse Katıl
+                            </button>
+
                         </div>
                     </div>
                 ))}
@@ -151,8 +220,8 @@ function MyLessonsPage() {
                         disabled={page === 1}
                         onClick={() => setPage(page - 1)}
                         className={`px-6 py-2 rounded-xl shadow-md text-white transition ${page === 1
-                                ? "bg-gray-300 cursor-not-allowed"
-                                : "bg-pink-400 hover:bg-pink-500"
+                            ? "bg-gray-300 cursor-not-allowed"
+                            : "bg-pink-400 hover:bg-pink-500"
                             }`}
                     >
                         Önceki
@@ -166,8 +235,8 @@ function MyLessonsPage() {
                         disabled={page === totalPages}
                         onClick={() => setPage(page + 1)}
                         className={`px-6 py-2 rounded-xl shadow-md text-white transition ${page === totalPages
-                                ? "bg-gray-300 cursor-not-allowed"
-                                : "bg-pink-400 hover:bg-pink-500"
+                            ? "bg-gray-300 cursor-not-allowed"
+                            : "bg-pink-400 hover:bg-pink-500"
                             }`}
                     >
                         Sonraki

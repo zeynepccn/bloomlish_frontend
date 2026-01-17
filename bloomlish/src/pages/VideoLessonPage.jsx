@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
-import { useParams } from "react-router-dom";
- 
+import { useParams, useNavigate } from "react-router-dom";
+
 
 const VideoLessonPage = () => {
     useEffect(() => {
@@ -12,6 +12,8 @@ const VideoLessonPage = () => {
     const { lessonId, id } = useParams();
     const roomKey = lessonId || id || "default";
     const roomId = `room-${roomKey}`;
+    const navigate = useNavigate();
+
 
     const localStreamRef = useRef(null);
     const localVideoRef = useRef(null);
@@ -23,6 +25,8 @@ const VideoLessonPage = () => {
 
     const [isCameraOn, setIsCameraOn] = useState(false);
     const [error, setError] = useState("");
+    const [isMicOn, setIsMicOn] = useState(true);
+
 
     const [clientId] = useState(
         () =>
@@ -58,58 +62,82 @@ const VideoLessonPage = () => {
     const leaveCall = () => {
         console.log("Dersten ayrılıyor...");
 
-        // Karşı tarafa leave sinyali gönder
-        if (stompRef.current && stompRef.current.connected) {
-            stompRef.current.send(
+        // 1) karşı tarafa leave (best effort)
+        try {
+            stompRef.current?.send?.(
                 `/app/video/${roomId}`,
                 {},
                 JSON.stringify({ type: "leave", senderId: clientId })
             );
+        } catch (e) {
+            console.warn("leave send hata:", e);
         }
 
-        // PeerConnection kapat
-        if (peerConnectionRef.current) {
+        // 2) PeerConnection kapat
+        const pc = peerConnectionRef.current;
+        if (pc) {
             try {
-                peerConnectionRef.current.ontrack = null;
-                peerConnectionRef.current.onicecandidate = null;
-                peerConnectionRef.current.oniceconnectionstatechange = null;
-                peerConnectionRef.current.close();
+                pc.ontrack = null;
+                pc.onicecandidate = null;
+                pc.oniceconnectionstatechange = null;
+                pc.onnegotiationneeded = null;
+
+                // sender track'leri durdur (opsiyonel)
+                pc.getSenders().forEach((s) => {
+                    try { s.track?.stop?.(); } catch { }
+                });
+
+                pc.close();
             } catch (e) {
                 console.warn("PC kapanırken hata:", e);
             }
             peerConnectionRef.current = null;
         }
 
-        // Remote video temizle
-        if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = null;
-        }
-
-        // Local stream durdur
+        // 3) Local stream durdur
         if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach((t) => t.stop());
+            localStreamRef.current.getTracks().forEach((t) => {
+                try { t.stop(); } catch { }
+            });
             localStreamRef.current = null;
         }
 
-        if (localVideoRef.current) {
-            localVideoRef.current.srcObject = null;
+        // 4) Video elementlerini temizle (donuk frame olmasın)
+        if (remoteVideoRef.current) {
+            try { remoteVideoRef.current.pause?.(); } catch { }
+            remoteVideoRef.current.srcObject = null;
+            try { remoteVideoRef.current.load?.(); } catch { }
         }
 
-        // WS bağlantısını kapat
+        if (localVideoRef.current) {
+            try { localVideoRef.current.pause?.(); } catch { }
+            localVideoRef.current.srcObject = null;
+            try { localVideoRef.current.load?.(); } catch { }
+        }
+
+        // 5) STOMP/WS kapat
         if (stompRef.current) {
             try {
-                stompRef.current.disconnect(() => {
-                    console.log("STOMP: Disconnected");
-                });
+                stompRef.current.disconnect?.(() => console.log("STOMP disconnected"));
             } catch (e) {
-                console.warn("STOMP disconnect hata:", e);
+                console.warn("disconnect hata:", e);
             }
+
+            try {
+                stompRef.current.ws?.close();
+            } catch (e) {
+                console.warn("ws close hata:", e);
+            }
+
             stompRef.current = null;
         }
 
         pendingCandidatesRef.current = [];
         setIsCameraOn(false);
+        setError("");
+        navigate(-1);
     };
+
 
 
     const startCamera = async () => {
@@ -152,14 +180,14 @@ const VideoLessonPage = () => {
     };
 
     const toggleMic = () => {
-        const audioTrack = localStreamRef.current
-            ?.getAudioTracks()
-            ?.find((t) => t.kind === "audio");
+        const pc = peerConnectionRef.current;
+        if (!pc) return;
 
-        if (audioTrack) {
-            audioTrack.enabled = !audioTrack.enabled;
-            console.log("Mic:", audioTrack.enabled ? "Açık" : "Kapalı");
-        }
+        const sender = pc.getSenders().find((s) => s.track?.kind === "audio");
+        if (!sender?.track) return;
+
+        sender.track.enabled = !sender.track.enabled;
+        setIsMicOn(sender.track.enabled);
     };
 
     const connectWebSocket = () => {
@@ -583,12 +611,10 @@ const VideoLessonPage = () => {
                     {isCameraOn ? "Kamera Kapat" : "Kamera Aç"}
                 </button>
 
-                <button
-                    onClick={toggleMic}
-                    style={buttonStyleSecondary}
-                >
-                    Mikrofon Aç / Kapat
+                <button onClick={toggleMic} style={buttonStyleSecondary}>
+                    {isMicOn ? "Mikrofon Kapat" : "Mikrofon Aç"}
                 </button>
+
 
                 <button
                     onClick={startScreenShare}

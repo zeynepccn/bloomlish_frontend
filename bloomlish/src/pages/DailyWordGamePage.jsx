@@ -22,6 +22,9 @@ export default function DailyWordGamePage() {
             setGame(res.data);
         } catch (e) {
             console.error(e);
+            console.log("STATUS:", err.response?.status);
+            console.log("DATA:", err.response?.data);
+            console.log("HEADERS:", err.response?.headers);
             alert("Oyun başlatılamadı");
         } finally {
             setLoading(false);
@@ -312,7 +315,7 @@ function SummaryView({ game, onNewRound }) {
                                 "
                                 >
                                     <span className="font-medium text-pink-800">
-                                         {w.word}
+                                        {w.word}
                                     </span>
                                     <span className="text-pink-600 text-sm italic">
                                         {formatMeaning(w.meaning)}

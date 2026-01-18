@@ -18,15 +18,10 @@ function InstructorPage() {
     const navigate = useNavigate();
 
     const [lessons, setLessons] = useState({});
-    
+
+    const [feedbacks, setFeedbacks] = useState([]);
 
 
-
-    const feedbacks = [
-        { student: "Zeynep A.", lesson: "Present Perfect Tense", text: "Hocam konuyu çok güzel anlattınız.", rating: 5, date: "2025-10-28", time: "14:35" },
-        { student: "Ali K.", lesson: "Speaking Practice #2", text: "Konuşma pratiği çok eğlenceliydi.", rating: 4, date: "2025-10-25", time: "16:10" },
-        { student: "Deniz M.", lesson: "Grammar Basics", text: "Ders çok verimliydi, örnekler anlaşılırdı.", rating: 5, date: "2025-10-22", time: "11:45" },
-    ];
 
     const studentData = [{ name: "Öğrenci", value: 45 }];
     const incomeData = [{ name: "Gelir", value: 70 }];
@@ -61,6 +56,19 @@ function InstructorPage() {
 
     const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
+    useEffect(() => {
+        api
+            .get("/api/feedbacks/instructor")
+            .then((res) => {
+                console.log("feedbacks:", res.data);
+                setFeedbacks(res.data);
+            })
+            .catch((err) => {
+                console.error("feedbacks çekilemedi:", err);
+            });
+    }, []);
+
+
 
     useEffect(() => {
         api
@@ -94,6 +102,13 @@ function InstructorPage() {
             })
             .catch((err) => console.error(err));
     }, []);
+
+    const formatDateTime = (iso) => {
+        const d = new Date(iso);
+        const date = d.toISOString().slice(0, 10);
+        const time = d.toTimeString().slice(0, 5);
+        return `${date} • ${time}`;
+    };
 
 
 
@@ -148,19 +163,20 @@ function InstructorPage() {
                     </h2>
 
                     <div className="space-y-4">
-                        {feedbacks.map((f, index) => (
+                        {feedbacks.map((f) => (
                             <div
-                                key={index}
+                                key={f.id}
                                 onClick={() => setSelectedFeedback(f)}
                                 className="p-4 bg-pink-50 border border-pink-200 rounded-2xl text-gray-700 cursor-pointer hover:bg-pink-100 transition"
                             >
-                                <p className="text-gray-800 italic mb-2">“{f.text}”</p>
+                                <p className="text-gray-800 italic mb-2">“{f.comment}”</p>
                                 <div className="text-xs text-gray-600 flex justify-between">
-                                    <span>{f.date}</span>
+                                    <span>{new Date(f.createdAt).toISOString().slice(0, 10)}</span>
                                     <span>{f.rating}/5 ★</span>
                                 </div>
                             </div>
                         ))}
+
                     </div>
                 </div>
 
@@ -235,13 +251,12 @@ function InstructorPage() {
                             Geri Bildirim Detayı
                         </h2>
 
-                        <div className="text-gray-700 text-sm space-y-2">
-                            <p><User className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Öğrenci:</b> {selectedFeedback.student}</p>
-                            <p><BookOpen className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Ders:</b> {selectedFeedback.lesson}</p>
-                            <p><Clock className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Tarih:</b> {selectedFeedback.date} • {selectedFeedback.time}</p>
-                            <p><MessageSquare className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Yorum:</b> “{selectedFeedback.text}”</p>
-                            <p><Star className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Puan:</b> {selectedFeedback.rating}/5</p>
-                        </div>
+                        <p><User className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Öğrenci:</b> {selectedFeedback.studentName}</p>
+                        <p><BookOpen className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Ders:</b> {selectedFeedback.lessonName}</p>
+                        <p><Clock className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Tarih:</b> {formatDateTime(selectedFeedback.createdAt)}</p>
+                        <p><MessageSquare className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Yorum:</b> “{selectedFeedback.comment}”</p>
+                        <p><Star className="inline w-4 h-4 text-pink-500 mr-1" /> <b>Puan:</b> {selectedFeedback.rating}/5</p>
+
 
                         <button
                             onClick={() => setSelectedFeedback(null)}

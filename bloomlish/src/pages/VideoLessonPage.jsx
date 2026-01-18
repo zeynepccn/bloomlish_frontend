@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
-import { useParams } from "react-router-dom";
- 
+import { useParams, useNavigate } from "react-router-dom";
+
 
 const VideoLessonPage = () => {
     useEffect(() => {
@@ -12,6 +12,8 @@ const VideoLessonPage = () => {
     const { lessonId, id } = useParams();
     const roomKey = lessonId || id || "default";
     const roomId = `room-${roomKey}`;
+    const navigate = useNavigate();
+
 
     const localStreamRef = useRef(null);
     const localVideoRef = useRef(null);
@@ -23,6 +25,8 @@ const VideoLessonPage = () => {
 
     const [isCameraOn, setIsCameraOn] = useState(false);
     const [error, setError] = useState("");
+    const [isMicOn, setIsMicOn] = useState(true);
+
 
     const [clientId] = useState(
         () =>
@@ -58,58 +62,82 @@ const VideoLessonPage = () => {
     const leaveCall = () => {
         console.log("Dersten ayrılıyor...");
 
-        // Karşı tarafa leave sinyali gönder
-        if (stompRef.current && stompRef.current.connected) {
-            stompRef.current.send(
+        // 1) karşı tarafa leave (best effort)
+        try {
+            stompRef.current?.send?.(
                 `/app/video/${roomId}`,
                 {},
                 JSON.stringify({ type: "leave", senderId: clientId })
             );
+        } catch (e) {
+            console.warn("leave send hata:", e);
         }
 
-        // PeerConnection kapat
-        if (peerConnectionRef.current) {
+        // 2) PeerConnection kapat
+        const pc = peerConnectionRef.current;
+        if (pc) {
             try {
-                peerConnectionRef.current.ontrack = null;
-                peerConnectionRef.current.onicecandidate = null;
-                peerConnectionRef.current.oniceconnectionstatechange = null;
-                peerConnectionRef.current.close();
+                pc.ontrack = null;
+                pc.onicecandidate = null;
+                pc.oniceconnectionstatechange = null;
+                pc.onnegotiationneeded = null;
+
+                // sender track'leri durdur (opsiyonel)
+                pc.getSenders().forEach((s) => {
+                    try { s.track?.stop?.(); } catch { }
+                });
+
+                pc.close();
             } catch (e) {
                 console.warn("PC kapanırken hata:", e);
             }
             peerConnectionRef.current = null;
         }
 
-        // Remote video temizle
-        if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = null;
-        }
-
-        // Local stream durdur
+        // 3) Local stream durdur
         if (localStreamRef.current) {
-            localStreamRef.current.getTracks().forEach((t) => t.stop());
+            localStreamRef.current.getTracks().forEach((t) => {
+                try { t.stop(); } catch { }
+            });
             localStreamRef.current = null;
         }
 
-        if (localVideoRef.current) {
-            localVideoRef.current.srcObject = null;
+        // 4) Video elementlerini temizle (donuk frame olmasın)
+        if (remoteVideoRef.current) {
+            try { remoteVideoRef.current.pause?.(); } catch { }
+            remoteVideoRef.current.srcObject = null;
+            try { remoteVideoRef.current.load?.(); } catch { }
         }
 
-        // WS bağlantısını kapat
+        if (localVideoRef.current) {
+            try { localVideoRef.current.pause?.(); } catch { }
+            localVideoRef.current.srcObject = null;
+            try { localVideoRef.current.load?.(); } catch { }
+        }
+
+        // 5) STOMP/WS kapat
         if (stompRef.current) {
             try {
-                stompRef.current.disconnect(() => {
-                    console.log("STOMP: Disconnected");
-                });
+                stompRef.current.disconnect?.(() => console.log("STOMP disconnected"));
             } catch (e) {
-                console.warn("STOMP disconnect hata:", e);
+                console.warn("disconnect hata:", e);
             }
+
+            try {
+                stompRef.current.ws?.close();
+            } catch (e) {
+                console.warn("ws close hata:", e);
+            }
+
             stompRef.current = null;
         }
 
         pendingCandidatesRef.current = [];
         setIsCameraOn(false);
+        setError("");
+        navigate(-1);
     };
+
 
 
     const startCamera = async () => {
@@ -152,14 +180,14 @@ const VideoLessonPage = () => {
     };
 
     const toggleMic = () => {
-        const audioTrack = localStreamRef.current
-            ?.getAudioTracks()
-            ?.find((t) => t.kind === "audio");
+        const pc = peerConnectionRef.current;
+        if (!pc) return;
 
-        if (audioTrack) {
-            audioTrack.enabled = !audioTrack.enabled;
-            console.log("Mic:", audioTrack.enabled ? "Açık" : "Kapalı");
-        }
+        const sender = pc.getSenders().find((s) => s.track?.kind === "audio");
+        if (!sender?.track) return;
+
+        sender.track.enabled = !sender.track.enabled;
+        setIsMicOn(sender.track.enabled);
     };
 
     const connectWebSocket = () => {
@@ -478,88 +506,53 @@ const VideoLessonPage = () => {
             {/* VİDEO ALANI */}
             <div
                 style={{
-                    display: "flex",
-                    gap: "30px",
-                    marginTop: "10px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
+                    position: "relative",
+                    width: "100%",
+                    maxWidth: "1100px",
+                    height: "620px",
+                    marginTop: "20px",
+                    backgroundColor: "#000",
+                    borderRadius: "20px",
+                    overflow: "hidden",
                 }}
             >
-                {/* BEN */}
-                <div
-                    style={{
-                        background: "white",
-                        padding: "15px",
-                        borderRadius: "16px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        width: "340px",
-                    }}
-                >
-                    <h3
-                        style={{
-                            textAlign: "center",
-                            marginBottom: "10px",
-                            color: "#444",
-                            fontSize: "18px",
-                            fontWeight: "600",
-                        }}
-                    >
-                        Ben
-                    </h3>
-                    <video
-                        ref={localVideoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        style={{
-                            width: "100%",
-                            height: "auto",
-                            borderRadius: "12px",
-                            backgroundColor: "#000",
-                        }}
-                    />
-                </div>
-
                 {/* KARŞI TARAF */}
-                <div
+                <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
                     style={{
-                        background: "white",
-                        padding: "15px",
-                        borderRadius: "16px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                        width: "340px",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        backgroundColor: "#000",
                     }}
-                >
-                    <h3
-                        style={{
-                            textAlign: "center",
-                            marginBottom: "10px",
-                            color: "#444",
-                            fontSize: "18px",
-                            fontWeight: "600",
-                        }}
-                    >
-                        Karşı Taraf
-                    </h3>
+                />
 
-                    <video
-                        ref={remoteVideoRef}
-                        autoPlay
-                        playsInline
-                        style={{
-                            width: "100%",
-                            height: "auto",
-                            borderRadius: "12px",
-                            backgroundColor: "#000",
-                        }}
-                    />
-                </div>
+                {/* BEN */}
+                <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        right: "20px",
+                        width: "260px",
+                        height: "160px",
+                        objectFit: "cover",
+                        borderRadius: "14px",
+                        border: "2px solid white",
+                        backgroundColor: "#000",
+                    }}
+                />
             </div>
 
-            {/* BUTONLAR */}
+            {/* BUTONLAR (VIDEO ALTINDA) */}
             <div
                 style={{
-                    marginTop: "30px",
+                    marginTop: "20px",
                     display: "grid",
                     gap: "12px",
                     gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
@@ -567,38 +560,24 @@ const VideoLessonPage = () => {
                     maxWidth: "700px",
                 }}
             >
-
-
-                <button
-                    onClick={leaveCall}
-                    style={buttonStyleDanger}
-                >
+                <button onClick={leaveCall} style={buttonStyleDanger}>
                     Dersten Ayrıl
                 </button>
 
-                <button
-                    onClick={toggleCamera}
-                    style={buttonStyleSecondary}
-                >
+                <button onClick={toggleCamera} style={buttonStyleSecondary}>
                     {isCameraOn ? "Kamera Kapat" : "Kamera Aç"}
                 </button>
 
-                <button
-                    onClick={toggleMic}
-                    style={buttonStyleSecondary}
-                >
-                    Mikrofon Aç / Kapat
+                <button onClick={toggleMic} style={buttonStyleSecondary}>
+                    {isMicOn ? "Mikrofon Kapat" : "Mikrofon Aç"}
                 </button>
 
-                <button
-                    onClick={startScreenShare}
-                    style={buttonStyleSecondary}
-                >
+                <button onClick={startScreenShare} style={buttonStyleSecondary}>
                     Ekran Paylaş
                 </button>
             </div>
 
-            {/* HATA MESAJI */}
+            {/* HATA MESAJI (VIDEO ALTINDA) */}
             {error && (
                 <p style={{ color: "red", marginTop: "15px", fontWeight: 600 }}>
                     {error}

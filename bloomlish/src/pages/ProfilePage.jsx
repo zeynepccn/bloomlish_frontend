@@ -17,10 +17,17 @@ export default function ProfilePage({ onLogout }) {
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
+    const isInstructor = user?.role === "ROLE_INSTRUCTOR";
 
     useEffect(() => {
+        if (!user) return;
+
+        if (user.role === "INSTRUCTOR") {
+            return;
+        }
+
         api
-            .get("/api/payments/my-lessons",)
+            .get("/api/payments/my-lessons")
             .then((res) => {
                 console.log("Dersler → ", res.data);
                 setMyLessons(res.data);
@@ -28,7 +35,8 @@ export default function ProfilePage({ onLogout }) {
             .catch((err) => {
                 console.error("Dersler çekilemedi:", err);
             });
-    }, []);
+    }, [user]);
+
 
 
     useEffect(() => {
@@ -428,115 +436,116 @@ export default function ProfilePage({ onLogout }) {
 
                 {/* GRID BOTTOM */}
                 <Row gutter={[16, 16]}>
-                    {/* Derslerim (full width) */}
-                    <Col xs={24}>
-                        <Card
-                            title={
-                                <div className="flex items-center gap-2">
-                                    <BookOutlined className="text-pink-500" />
-                                    <span>Derslerim</span>
-                                </div>
-                            }
-                            className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
-                        >
-                            <List
-                                itemLayout="horizontal"
-                                pagination={{
-                                    pageSize: 4,
-                                    align: "center",
-                                }}
-                                dataSource={sortLessons(myLessons)}
-                                renderItem={(lesson) => {
-                                    const { status, color, disabled } = getLessonStatus(lesson);
-
-                                    return (
-                                        <List.Item
-                                            className={`border border-gray-200 p-3 rounded-xl flex items-center justify-between hover:bg-rose-50 transition ${disabled
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : "cursor-pointer"
-                                                }`}
-                                            onClick={() => handleLessonClick(lesson)}
-                                        >
-                                            <List.Item.Meta
-                                                avatar={
-                                                    <Avatar
-                                                        size={42}
-                                                        className="bg-pink-100 text-pink-600"
-                                                        icon={<BookOutlined />}
-                                                    />
-                                                }
-                                                title={
-                                                    <div className="font-medium text-gray-800">
-                                                        {lesson.name}
-                                                    </div>
-                                                }
-                                                description={
-                                                    <div className="text-gray-500 text-xs">
-                                                        {lesson.description}
-                                                        <br />
-                                                        <span className="text-gray-400">
-                                                            {lesson.date} • {lesson.startTime} – {lesson.endTime}
-                                                        </span>
-                                                    </div>
-                                                }
-                                            />
-
-                                            <Tag
-                                                color={color}
-                                                className="!rounded-full px-3 py-1 text-xs"
-                                            >
-                                                {status}
-                                            </Tag>
-                                        </List.Item>
-                                    );
-                                }}
-                            />
-
-                            {selectedLesson && (
-                                <Modal
-                                    open={openLessonModal}
-                                    onCancel={() => {
-                                        setOpenLessonModal(false);
-                                        clearInterval(window.currentCountdown);
-                                    }}
-                                    footer={null}
-                                    centered
-                                    className="rounded-2xl"
-                                >
-                                    <div className="text-center p-4">
-                                        <h2 className="text-lg font-semibold text-pink-600 mb-2">
-                                            Derse Daha Var
-                                        </h2>
-
-                                        <p className="text-gray-700">
-                                            <strong>{selectedLesson.name}</strong> dersi henüz başlamadı.
-                                        </p>
-
-                                        <p className="text-gray-500 mt-2">
-                                            <strong>Tarih:</strong> {selectedLesson.date}
-                                            <br />
-                                            <strong>Saat:</strong> {selectedLesson.startTime} –{" "}
-                                            {selectedLesson.endTime}
-                                        </p>
-
-                                        <p className="text-pink-600 font-semibold text-lg mt-3">
-                                            ⏳ {timeLeft}
-                                        </p>
-
-                                        <div className="mt-4 flex justify-center">
-                                            <Button
-                                                type="primary"
-                                                className="!bg-pink-500 !border-pink-500 !rounded-xl"
-                                                onClick={() => setOpenLessonModal(false)}
-                                            >
-                                                Tamam
-                                            </Button>
-                                        </div>
+                    {!isInstructor && (
+                        <Col xs={24}>
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <BookOutlined className="text-pink-500" />
+                                        <span>Derslerim</span>
                                     </div>
-                                </Modal>
-                            )}
-                        </Card>
-                    </Col>
+                                }
+                                className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
+                            >
+                                <List
+                                    itemLayout="horizontal"
+                                    pagination={{
+                                        pageSize: 4,
+                                        align: "center",
+                                    }}
+                                    dataSource={sortLessons(myLessons)}
+                                    renderItem={(lesson) => {
+                                        const { status, color, disabled } = getLessonStatus(lesson);
+
+                                        return (
+                                            <List.Item
+                                                className={`border border-gray-200 p-3 rounded-xl flex items-center justify-between hover:bg-rose-50 transition ${disabled
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : "cursor-pointer"
+                                                    }`}
+                                                onClick={() => handleLessonClick(lesson)}
+                                            >
+                                                <List.Item.Meta
+                                                    avatar={
+                                                        <Avatar
+                                                            size={42}
+                                                            className="bg-pink-100 text-pink-600"
+                                                            icon={<BookOutlined />}
+                                                        />
+                                                    }
+                                                    title={
+                                                        <div className="font-medium text-gray-800">
+                                                            {lesson.name}
+                                                        </div>
+                                                    }
+                                                    description={
+                                                        <div className="text-gray-500 text-xs">
+                                                            {lesson.description}
+                                                            <br />
+                                                            <span className="text-gray-400">
+                                                                {lesson.date} • {lesson.startTime} – {lesson.endTime}
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                />
+
+                                                <Tag
+                                                    color={color}
+                                                    className="!rounded-full px-3 py-1 text-xs"
+                                                >
+                                                    {status}
+                                                </Tag>
+                                            </List.Item>
+                                        );
+                                    }}
+                                />
+
+                                {selectedLesson && (
+                                    <Modal
+                                        open={openLessonModal}
+                                        onCancel={() => {
+                                            setOpenLessonModal(false);
+                                            clearInterval(window.currentCountdown);
+                                        }}
+                                        footer={null}
+                                        centered
+                                        className="rounded-2xl"
+                                    >
+                                        <div className="text-center p-4">
+                                            <h2 className="text-lg font-semibold text-pink-600 mb-2">
+                                                Derse Daha Var
+                                            </h2>
+
+                                            <p className="text-gray-700">
+                                                <strong>{selectedLesson.name}</strong> dersi henüz başlamadı.
+                                            </p>
+
+                                            <p className="text-gray-500 mt-2">
+                                                <strong>Tarih:</strong> {selectedLesson.date}
+                                                <br />
+                                                <strong>Saat:</strong> {selectedLesson.startTime} –{" "}
+                                                {selectedLesson.endTime}
+                                            </p>
+
+                                            <p className="text-pink-600 font-semibold text-lg mt-3">
+                                                {timeLeft}
+                                            </p>
+
+                                            <div className="mt-4 flex justify-center">
+                                                <Button
+                                                    type="primary"
+                                                    className="!bg-pink-500 !border-pink-500 !rounded-xl"
+                                                    onClick={() => setOpenLessonModal(false)}
+                                                >
+                                                    Tamam
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Modal>
+                                )}
+                            </Card>
+                        </Col>
+                    )}
                 </Row>
             </Content>
         </Layout>

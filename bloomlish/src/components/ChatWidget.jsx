@@ -10,6 +10,11 @@ function ChatWidget({ currentUserId, currentUserRole }) {
         return null;
     }
 
+    const getNameFromEmail = (email) => {
+        if (!email) return "";
+        return email.split("@")[0];
+    };
+
     const [chatOpen, setChatOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [users, setUsers] = useState([]);
@@ -90,7 +95,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
                 );
 
                 const formatted = res.data.map((m) => ({
-                    from: m.senderId === currentUserId ? "Ben" : selectedUser.email.split("@")[0],
+                    from: m.senderId === currentUserId ? "Me" : selectedUser.email.split("@")[0],
                     text: m.content,
                 }));
 
@@ -136,7 +141,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
 
         setMessages(prev => ({
             ...prev,
-            [selectedUser.id]: [...(prev[selectedUser.id] || []), { from: "Sen", text: input }],
+            [selectedUser.id]: [...(prev[selectedUser.id] || []), { from: "Me", text: input }],
         }));
 
         setInput("");
@@ -157,7 +162,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
             {chatOpen && (
                 <div className="w-80 h-96 bg-white shadow-xl rounded-lg flex flex-col mt-2">
                     <div className="p-4 border-b bg-gray-100 flex justify-between">
-                        <span className="font-semibold">Sohbet</span>
+                        <span className="font-semibold">Chat</span>
                         <button onClick={() => setChatOpen(false)}>✖</button>
                     </div>
 
@@ -171,11 +176,14 @@ function ChatWidget({ currentUserId, currentUserRole }) {
                                     className="flex items-center gap-2 p-2 hover:bg-gray-200 cursor-pointer rounded-md"
                                 >
                                     <div className="w-8 h-8 bg-pink-300 rounded-full flex items-center justify-center text-white font-bold">
-                                        {user.username.charAt(0).toUpperCase()}
+                                        {getNameFromEmail(user.email).charAt(0).toUpperCase()}
                                     </div>
-                                    <span>{user.username}</span>
+
+                                    <span>{getNameFromEmail(user.email)}</span>
+
                                     <span className="w-3 h-3 bg-green-500 rounded-full ml-auto"></span>
                                 </div>
+
                             ))}
                         </div>
                     )}
@@ -211,7 +219,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
                                     type="text"
                                     value={input}
                                     onChange={e => setInput(e.target.value)}
-                                    placeholder="Mesaj yaz..."
+                                    placeholder="Write a message..."
                                     onKeyDown={e => e.key === "Enter" && sendMessage()}
                                     className="flex-1 border rounded-full px-3 py-2 text-sm"
                                 />
@@ -220,7 +228,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
                                     disabled={!isConnected}
                                     className="bg-pink-500 text-white px-4 py-2 rounded-full"
                                 >
-                                    Gönder
+                                    Send
                                 </button>
                             </div>
                         </>

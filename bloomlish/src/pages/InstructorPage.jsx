@@ -162,22 +162,37 @@ function InstructorPage() {
                         Öğrenci Geri Bildirimleri
                     </h2>
 
-                    <div className="space-y-4">
-                        {feedbacks.map((f) => (
-                            <div
-                                key={f.id}
-                                onClick={() => setSelectedFeedback(f)}
-                                className="p-4 bg-pink-50 border border-pink-200 rounded-2xl text-gray-700 cursor-pointer hover:bg-pink-100 transition"
-                            >
-                                <p className="text-gray-800 italic mb-2">“{f.comment}”</p>
-                                <div className="text-xs text-gray-600 flex justify-between">
-                                    <span>{new Date(f.createdAt).toISOString().slice(0, 10)}</span>
-                                    <span>{f.rating}/5 ★</span>
-                                </div>
+                   
+                    <div className="flex flex-col items-center space-y-4">
+                        {feedbacks.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-40 w-full text-center border border-pink-200 rounded-2xl bg-white">
+                                <p className="text-sm font-semibold text-gray-600">
+                                    Henüz öğrenci geri bildirimi yok
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Geri bildirimler burada görüntülenecek
+                                </p>
                             </div>
-                        ))}
-
+                        ) : (
+                            feedbacks.map((f) => (
+                                <div
+                                    key={f.id}
+                                    onClick={() => setSelectedFeedback(f)}
+                                    className="w-full p-4 bg-pink-50 border border-pink-200 rounded-2xl text-gray-700 cursor-pointer hover:bg-pink-100 transition"
+                                >
+                                    <p className="text-gray-800 italic mb-2">“{f.comment}”</p>
+                                    <div className="text-xs text-gray-600 flex justify-between">
+                                        <span>
+                                            {new Date(f.createdAt).toISOString().slice(0, 10)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
+
+
+
                 </div>
 
                 {/* 📅 Takvim */}

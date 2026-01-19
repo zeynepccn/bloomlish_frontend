@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Upload, message, Dropdown, Rate, Input } from "antd";
-import { Layout, Card, Row, Col, Typography, Avatar, Button, Tag, Progress, List } from "antd";
 
-const { TextArea } = Input;
-
-
+import { Layout, Card, Row, Col, Typography, Avatar, Button, Tag, Progress, List, } from "antd";
 import { UserOutlined, EditOutlined, CreditCardOutlined, LogoutOutlined, SmileOutlined, TrophyOutlined, BulbOutlined, BookOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-
+const { TextArea } = Input;
 const { Content } = Layout;
 const { Title, Text } = Typography;
 export default function ProfilePage({ onLogout }) {
@@ -20,6 +17,7 @@ export default function ProfilePage({ onLogout }) {
     const [openLessonModal, setOpenLessonModal] = useState(false);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
+    const isInstructor = user?.role === "ROLE_INSTRUCTOR";
 
     const [openFeedbackModal, setOpenFeedbackModal] = useState(false);
     const [feedbackLesson, setFeedbackLesson] = useState(null);
@@ -29,8 +27,14 @@ export default function ProfilePage({ onLogout }) {
     const [feedbackSubmittedMap, setFeedbackSubmittedMap] = useState({});
 
     useEffect(() => {
+        if (!user) return;
+
+        if (user.role === "INSTRUCTOR") {
+            return;
+        }
+
         api
-            .get("/api/payments/my-lessons",)
+            .get("/api/payments/my-lessons")
             .then((res) => {
                 console.log("Dersler → ", res.data);
                 setMyLessons(res.data);
@@ -38,7 +42,8 @@ export default function ProfilePage({ onLogout }) {
             .catch((err) => {
                 console.error("Dersler çekilemedi:", err);
             });
-    }, []);
+    }, [user]);
+
 
 
     useEffect(() => {
@@ -147,8 +152,6 @@ export default function ProfilePage({ onLogout }) {
                 return;
             }
         }
-
-        // ⬇️ eski akışın aynen devam
         try {
             const res = await api.get(`/api/lessons/join-check/${lesson.id}`);
             const result = res.data;
@@ -480,186 +483,177 @@ export default function ProfilePage({ onLogout }) {
 
                 {/* GRID BOTTOM */}
                 <Row gutter={[16, 16]}>
-                    {/* Derslerim (full width) */}
-                    <Col xs={24}>
-                        <Card
-                            title={
-                                <div className="flex items-center gap-2">
-                                    <BookOutlined className="text-pink-500" />
-                                    <span>Derslerim</span>
-                                </div>
-                            }
-                            className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
-                        >
-                            <List
-                                itemLayout="horizontal"
-                                pagination={{
-                                    pageSize: 4,
-                                    align: "center",
-                                }}
-                                dataSource={sortLessons(myLessons)}
-                                renderItem={(lesson) => {
-                                    const { status, color, disabled } = getLessonStatus(lesson);
-
-                                    return (
-                                        <List.Item
-                                            className={`border border-gray-200 p-3 rounded-xl flex items-center justify-between hover:bg-rose-50 transition ${disabled
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : "cursor-pointer"
-                                                }`}
-                                            onClick={() => handleLessonClick(lesson)}
-                                        >
-                                            <List.Item.Meta
-                                                avatar={
-                                                    <Avatar
-                                                        size={42}
-                                                        className="bg-pink-100 text-pink-600"
-                                                        icon={<BookOutlined />}
-                                                    />
-                                                }
-                                                title={
-                                                    <div className="font-medium text-gray-800">
-                                                        {lesson.name}
-                                                    </div>
-                                                }
-                                                description={
-                                                    <div className="text-gray-500 text-xs">
-                                                        {lesson.description}
-                                                        <br />
-                                                        <span className="text-gray-400">
-                                                            {lesson.date} • {lesson.startTime} – {lesson.endTime}
-                                                        </span>
-                                                    </div>
-                                                }
-                                            />
-
-                                            <Tag color={color} className="!rounded-full px-3 py-1 text-xs">
-                                                {status}
-                                                {status === "Tamamlandı" && feedbackSubmittedMap[lesson.id] ? " • Gönderildi" : ""}
-                                            </Tag>
-
-                                        </List.Item>
-                                    );
-                                }}
-                            />
-
-                            {selectedLesson && (
-                                <Modal
-                                    open={openLessonModal}
-                                    onCancel={() => {
-                                
-
-                                        setOpenLessonModal(false);
-                                        clearInterval(window.currentCountdown);
+                    {!isInstructor && (
+                        <Col xs={24}>
+                            <Card
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        <BookOutlined className="text-pink-500" />
+                                        <span>Derslerim</span>
+                                    </div>
+                                }
+                                className="!rounded-2xl border border-pink-100 bg-white/80 backdrop-blur h-full"
+                            >
+                                <List
+                                    itemLayout="horizontal"
+                                    pagination={{
+                                        pageSize: 4,
+                                        align: "center",
                                     }}
-                                    footer={null}
-                                    centered
-                                    className="rounded-2xl"
-                                >
-                                    <div className="text-center p-4">
-                                        <h2 className="text-lg font-semibold text-pink-600 mb-2">
-                                            Derse Daha Var
-                                        </h2>
+                                    dataSource={sortLessons(myLessons)}
+                                    renderItem={(lesson) => {
+                                        const { status, color, disabled } = getLessonStatus(lesson);
 
-                                        <p className="text-gray-700">
-                                            <strong>{selectedLesson.name}</strong> dersi henüz başlamadı.
-                                        </p>
-
-                                        <p className="text-gray-500 mt-2">
-                                            <strong>Tarih:</strong> {selectedLesson.date}
-                                            <br />
-                                            <strong>Saat:</strong> {selectedLesson.startTime} –{" "}
-                                            {selectedLesson.endTime}
-                                        </p>
-
-                                        <p className="text-pink-600 font-semibold text-lg mt-3">
-                                            ⏳ {timeLeft}
-                                        </p>
-
-                                        <div className="mt-4 flex justify-center">
-                                            <Button
-                                                type="primary"
-                                                className="!bg-pink-500 !border-pink-500 !rounded-xl"
-                                                onClick={() => setOpenLessonModal(false)}
+                                        return (
+                                            <List.Item
+                                                className={`border border-gray-200 p-3 rounded-xl flex items-center justify-between hover:bg-rose-50 transition ${disabled
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : "cursor-pointer"
+                                                    }`}
+                                                onClick={() => handleLessonClick(lesson)}
                                             >
-                                                Tamam
-                                            </Button>
+                                                <List.Item.Meta
+                                                    avatar={
+                                                        <Avatar
+                                                            size={42}
+                                                            className="bg-pink-100 text-pink-600"
+                                                            icon={<BookOutlined />}
+                                                        />
+                                                    }
+                                                    title={
+                                                        <div className="font-medium text-gray-800">
+                                                            {lesson.name}
+                                                        </div>
+                                                    }
+                                                    description={
+                                                        <div className="text-gray-500 text-xs">
+                                                            {lesson.description}
+                                                            <br />
+                                                            <span className="text-gray-400">
+                                                                {lesson.date} • {lesson.startTime} – {lesson.endTime}
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                />
+
+                                                <Tag color={color} className="!rounded-full px-3 py-1 text-xs">
+                                                    {status}
+                                                    {status === "Tamamlandı" && feedbackSubmittedMap[lesson.id] ? " • Gönderildi" : ""}
+                                                </Tag>
+                                            </List.Item>
+                                        );
+                                    }}
+                                />
+
+                                {selectedLesson && (
+                                    <Modal
+                                        open={openLessonModal}
+                                        onCancel={() => {
+                                            setOpenLessonModal(false);
+                                            clearInterval(window.currentCountdown);
+                                        }}
+                                        footer={null}
+                                        centered
+                                        className="rounded-2xl"
+                                    >
+                                        <div className="text-center p-4">
+                                            <h2 className="text-lg font-semibold text-pink-600 mb-2">
+                                                dersiniz henüz başlamadı.
+                                            </h2>
+
+                                            <p className="text-gray-500 mt-2">
+                                                <strong>Tarih:</strong> {selectedLesson.date}
+                                                <br />
+                                                <strong>Saat:</strong> {selectedLesson.startTime} –{" "}
+                                                {selectedLesson.endTime}
+                                            </p>
+
+                                            <p className="text-pink-600 font-semibold text-lg mt-3">
+                                                {timeLeft}
+                                            </p>
+
+                                            <div className="mt-4 flex justify-center">
+                                                <Button
+                                                    type="primary"
+                                                    className="!bg-pink-500 !border-pink-500 !rounded-xl"
+                                                    onClick={() => setOpenLessonModal(false)}
+                                                >
+                                                    Tamam
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Modal>
+
+
+                                )}
+                            </Card>
+                            <Modal
+                                open={openFeedbackModal}
+                                onCancel={() => setOpenFeedbackModal(false)}
+                                centered
+                                title="Ders Değerlendir"
+                                okText="Gönder"
+                                cancelText="Vazgeç"
+                                confirmLoading={sendingFeedback}
+                                onOk={async () => {
+                                    if (!feedbackLesson) return;
+
+                                    if (!comment.trim()) {
+                                        message.error("Yorum boş olamaz.");
+                                        return;
+                                    }
+
+                                    try {
+                                        setSendingFeedback(true);
+
+                                        await api.post("/api/feedbacks", {
+                                            lessonId: feedbackLesson.id,
+                                            rating,
+                                            comment: comment.trim(),
+                                        });
+
+                                        message.success("Geri bildirimin gönderildi!");
+                                        setFeedbackSubmittedMap((prev) => ({ ...prev, [feedbackLesson.id]: true }));
+                                        setFeedbackLesson(null);
+                                        setComment("");
+                                        setRating(5);
+                                        setOpenFeedbackModal(false);
+                                    } catch (err) {
+                                        console.error("feedback post error:", err);
+                                        message.error("Geri bildirim gönderilemedi!");
+                                    } finally {
+                                        setSendingFeedback(false);
+                                    }
+                                }}
+                            >
+                                <div className="space-y-3">
+                                    <div className="text-sm text-gray-600">
+                                        <b>{feedbackLesson?.name}</b>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {feedbackLesson?.date} • {feedbackLesson?.startTime} - {feedbackLesson?.endTime}
                                         </div>
                                     </div>
-                                </Modal>
 
-                                
-                                
-                            )}
-                           
+                                    <div>
+                                        <div className="text-sm font-medium mb-1">Puan</div>
+                                        <Rate value={rating} onChange={setRating} />
+                                    </div>
 
-                        </Card>
-                        <Modal
-                            open={openFeedbackModal}
-                            onCancel={() => setOpenFeedbackModal(false)}
-                            centered
-                            title="Ders Değerlendir"
-                            okText="Gönder"
-                            cancelText="Vazgeç"
-                            confirmLoading={sendingFeedback}
-                            onOk={async () => {
-                                if (!feedbackLesson) return;
-
-                                if (!comment.trim()) {
-                                    message.error("Yorum boş olamaz.");
-                                    return;
-                                }
-
-                                try {
-                                    setSendingFeedback(true);
-
-                                    await api.post("/api/feedbacks", {
-                                        lessonId: feedbackLesson.id,
-                                        rating,
-                                        comment: comment.trim(),
-                                    });
-
-                                    message.success("Geri bildirimin gönderildi!");
-                                    setFeedbackSubmittedMap((prev) => ({ ...prev, [feedbackLesson.id]: true }));
-                                    setFeedbackLesson(null);
-                                    setComment("");
-                                    setRating(5);
-                                    setOpenFeedbackModal(false);
-                                } catch (err) {
-                                    console.error("feedback post error:", err);
-                                    message.error("Geri bildirim gönderilemedi!");
-                                } finally {
-                                    setSendingFeedback(false);
-                                }
-                            }}
-                        >
-                            <div className="space-y-3">
-                                <div className="text-sm text-gray-600">
-                                    <b>{feedbackLesson?.name}</b>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                        {feedbackLesson?.date} • {feedbackLesson?.startTime} - {feedbackLesson?.endTime}
+                                    <div>
+                                        <div className="text-sm font-medium mb-1">Yorum</div>
+                                        <TextArea
+                                            rows={4}
+                                            value={comment}
+                                            onChange={(e) => setComment(e.target.value)}
+                                            placeholder="Hocam konuyu çok güzel anlattınız..."
+                                            maxLength={500}
+                                            showCount
+                                        />
                                     </div>
                                 </div>
-
-                                <div>
-                                    <div className="text-sm font-medium mb-1">Puan</div>
-                                    <Rate value={rating} onChange={setRating} />
-                                </div>
-
-                                <div>
-                                    <div className="text-sm font-medium mb-1">Yorum</div>
-                                    <TextArea
-                                        rows={4}
-                                        value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
-                                        placeholder="Hocam konuyu çok güzel anlattınız..."
-                                        maxLength={500}
-                                        showCount
-                                    />
-                                </div>
-                            </div>
-                        </Modal>
-                    </Col>
+                            </Modal>
+                        </Col>
+                    )}
                 </Row>
             </Content>
         </Layout>

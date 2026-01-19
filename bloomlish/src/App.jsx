@@ -17,7 +17,7 @@ import BillingSketchPage from "./pages/BillingSketchPage";
 import PremiumPlanPage from "./pages/PremiumPlanPage";
 import InstructorPage from "./pages/InstructorPage";
 import CreateLessonPage from "./pages/CreateLessonPage";
-import AdminPage from "./pages/AdminPage.jsx";
+import AdminPage from "./pages/admin/AdminPage.jsx";
 import EarningsPage from "./pages/EarningsPage.jsx";
 import GamesPage from "./pages/GamesPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";

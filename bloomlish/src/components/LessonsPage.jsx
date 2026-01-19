@@ -29,7 +29,7 @@ const DEFAULT_PRICE_RANGE = [100, 1000];
 
 export default function LessonsPage() {
     const [lessons, setLessons] = useState([]);
-    const [myLessons, setMyLessons] = useState([]); // ✅ kullanıcının kayıtlı dersleri
+    const [myLessons, setMyLessons] = useState([]); 
 
     const [query, setQuery] = useState("");
     const [teacher, setTeacher] = useState(undefined);
@@ -43,7 +43,7 @@ export default function LessonsPage() {
 
     const fetchAllLessons = async () => {
         try {
-            const res = await api.get("/api/lessons"); // ✅ sadece boş dersler
+            const res = await api.get("/api/lessons"); 
             setLessons(res.data || []);
             setCurrentPage(1);
         } catch (err) {
@@ -269,7 +269,9 @@ export default function LessonsPage() {
                                 className="w-full h-11"
                                 onChange={setDateRange}
                                 format="YYYY-MM-DD"
+                                placeholder={["Başlangıç Tarihi", "Bitiş Tarihi"]}
                             />
+
                         </Col>
 
                         <Col xs={24} md={2} style={{ display: "flex", alignItems: "center" }}>

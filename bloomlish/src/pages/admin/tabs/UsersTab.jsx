@@ -49,7 +49,7 @@ export default function UsersTab({
                 <input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="email / username ara..."
+                    placeholder="email / username search..."
                     className="border rounded-xl px-3 py-2 w-72"
                 />
             </div>
@@ -64,8 +64,8 @@ export default function UsersTab({
                             <th className="p-2 text-left">Status</th>
                             <th className="p-2 text-left">Level</th>
                             <th className="p-2 text-left">Premium</th>
-                            <th className="p-2 text-left">Kayıt</th>
-                            <th className="p-2 text-left">Durum</th>
+                            <th className="p-2 text-left">Record</th>
+                            <th className="p-2 text-left">Result</th>
                         </tr>
                     </thead>
 

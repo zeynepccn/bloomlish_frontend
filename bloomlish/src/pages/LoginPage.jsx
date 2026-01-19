@@ -110,7 +110,7 @@ function LoginPage({ setIsLoggedIn }) {
                 <p className="text-sm text-pink-600 mt-4 text-center">
                     Hesabın yok mu?{" "}
                     <span
-                        onClick={() => navigate("/register")}
+                        onClick={() => navigate(fromTrial ? "/register?from=trial" : "/register")}
                         className="font-semibold cursor-pointer hover:underline"
                     >
                         Kayıt Ol

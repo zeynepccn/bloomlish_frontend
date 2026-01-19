@@ -136,7 +136,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
             await api.post("/api/messages/send", messageDto);
         } catch (err) {
             console.error(err);
-            // istersen burada toast vs gösterirsin
+           
         }
 
         setMessages(prev => ({

@@ -58,7 +58,7 @@ export default function PaymentsTab({ data = [], loading = false }) {
 
                 <Space>
                     <Input
-                        placeholder="User veya Plan ara"
+                        placeholder="User veya Plan search..."
                         allowClear
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}

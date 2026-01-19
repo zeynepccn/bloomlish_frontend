@@ -131,7 +131,7 @@ export default function AdminPage() {
             <div className="w-full max-w-6xl bg-white rounded-2xl shadow-lg p-6 text-gray-800">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-pink-700">🌸 Admin Panel</h1>
+                    <h1 className="text-2xl font-bold text-pink-700"> Admin Panel</h1>
                     <button
                         onClick={() => {
                             localStorage.removeItem("token");

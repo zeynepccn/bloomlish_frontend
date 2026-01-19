@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../api";
 function RegisterPage() {
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const fromTrial = params.get("from") === "trial";
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: "",
@@ -47,7 +50,7 @@ function RegisterPage() {
             );
 
             alert("✅ Kayıt başarılı!");
-            navigate("/login");
+            navigate(fromTrial ? "/login?from=trial" : "/login");
         } catch (error) {
             console.error(error);
             setError(error.response?.data?.message || "Kayıt sırasında bir hata oluştu");

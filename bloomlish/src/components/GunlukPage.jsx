@@ -16,7 +16,7 @@ function GunlukPage() {
                 setPosts(res.data.content || []);
             } catch (err) {
                 console.error(err);
-                message.error("Günlük yazıları alınamadı ");
+                message.error("Diary entries could not be received ");
             }
         };
 
@@ -38,18 +38,18 @@ function GunlukPage() {
                 );
                 setEditingId(null);
                 setText("");
-                message.success("Günlük güncellendi ");
+                message.success("Daily updated ");
             } else {
                 const res = await api.post("/api/notes/create", { content: text });
                 const savedPost = res.data;
 
                 setPosts((prev) => [savedPost, ...prev]);
                 setText("");
-                message.success("Günlük eklendi ");
+                message.success("Daily added ");
             }
         } catch (err) {
             console.error(err);
-            message.error("İşlem başarısız ");
+            message.error("Daily could not be saved ");
         }
     };
     const handleEdit = (post) => {
@@ -59,32 +59,32 @@ function GunlukPage() {
 
     const handleDelete = async (id) => {
         Modal.confirm({
-            title: "Emin misiniz?",
-            content: "Bu günlük yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-            okText: "Evet, sil",
+            title: "Are you sure?",
+            content: "Are you sure you want to delete this diary entry? This action cannot be undone.",
+            okText: "Yes, delete",
             okType: "danger",
-            cancelText: "Vazgeç",
+            cancelText: "Give up",
             onOk: async () => {
                 try {
                     await api.delete(`/api/notes/delete/${id}`);
                     setPosts((prev) => prev.filter((p) => p.id !== id));
-                    message.success("Yazı silindi ");
+                    message.success("The post was deleted ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Yazı silinemedi ");
+                    message.error("The post could not be deleted ");
                 }
             }
         });
     };
 
     return (
-        <PageLayout title="GÜNLÜK YAZILAR">
+        <PageLayout title="DAILY ARTICLES">
             <div className="w-full flex justify-center mb-8">
                 <div className="w-full max-w-md bg-pink-50 rounded-3xl shadow-lg p-6 border border-pink-200">
                     <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Bugün aklında ne var?"
+                        placeholder="What's on your mind today?"
                         className="w-full border border-pink-300 rounded-2xl p-3 outline-none focus:ring-2 focus:ring-pink-300 mb-4 resize-none bg-pink-50 text-pink-800 placeholder-pink-400"
                         rows="3"
                     />
@@ -92,12 +92,12 @@ function GunlukPage() {
                         onClick={handlePublish}
                         className="w-full bg-gradient-to-r from-pink-400 to-pink-500 text-white font-semibold py-2 rounded-2xl hover:brightness-110 transition shadow-md"
                     >
-                        {editingId ? "Kaydet" : "Yeni Yazı Yaz"}
+                        {editingId ? "Save" : "Write New Post"}
                     </button>
                 </div>
             </div>
 
-            {/* GÜNLÜK LİSTESİ – ortalanmış kartlar, blog ile aynı alignment */}
+            {/* DAILY LIST – centered cards, same alignment as blog */}
             <div className="space-y-4 flex flex-col items-center">
                 {posts.map((post) => (
                     <div
@@ -113,13 +113,13 @@ function GunlukPage() {
                                     onClick={() => handleEdit(post)}
                                     className="text-xs px-3 py-1 rounded-xl bg-yellow-400 text-white hover:bg-yellow-500 shadow-sm"
                                 >
-                                    Düzenle
+                                    Edit
                                 </button>
                                 <button
                                     onClick={() => handleDelete(post.id)}
                                     className="text-xs px-3 py-1 rounded-xl bg-red-400 text-white hover:bg-red-500 shadow-sm"
                                 >
-                                    Sil
+                                    Delete
                                 </button>
                             </div>
                         </div>

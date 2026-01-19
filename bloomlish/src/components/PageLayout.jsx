@@ -36,7 +36,7 @@ export default function PageLayout({ title, children }) {
                                 color: isActive ? "white" : "#be185d",
                             }}
                         >
-                            Günlüğüm
+                            My Diary
                         </Button>
                     )}
                 </NavLink>

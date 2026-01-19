@@ -60,20 +60,37 @@ function ResultsOverviewSection() {
 
     const { averageScore, averageLevel, lastResult, dailyStats } = summary;
 
+
     const lastResultDate = lastResult?.takenAt
         ? lastResult.takenAt.substring(0, 10)
         : "-";
     const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(today.getDate() - 6); // bugün dahil 7 gün
+    sevenDaysAgo.setDate(today.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    console.log("summary", summary);
+    console.log("dailyStats raw", dailyStats);
+    console.log(
+        "mapped dates",
+        (dailyStats || []).map((x) => [
+            x.date,
+            new Date(x.date),
+            new Date(x.date + "T00:00:00"),
+        ])
+    );
+    console.log("sevenDaysAgo / today", sevenDaysAgo, today);
 
     const last7DaysStats = (dailyStats || [])
         .filter((day) => {
             // day.date formatı "2025-12-01" gibi ise bu yeterli
-            const d = new Date(day.date);
+            const d = new Date(day.date + "T00:00:00");
+
             return d >= sevenDaysAgo && d <= today;
         })
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // grafikte düzgün sıralansın
+        .sort((a, b) => new Date(a.date + "T00:00:00") - new Date(b.date + "T00:00:00"));
 
     // Grafik için data
     const chartData = last7DaysStats.map((day) => ({

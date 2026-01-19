@@ -109,7 +109,7 @@ export default function GamesPage() {
                             </h1>
                             <p className="text-base text-pink-700 max-w-md mt-2">
                                 Dil öğrenirken eğlen! Mini oyunları oyna, XP kazan,
-                               ve liderlik tablosunda yüksel 
+                                ve liderlik tablosunda yüksel
                             </p>
                         </div>
 
@@ -123,62 +123,7 @@ export default function GamesPage() {
                     </div>
 
                     {/* Right side: weekly mission card */}
-                    {/*<div className="w-full md:w-[320px]">
-                        <Card
-                            className="!rounded-2xl border border-pink-200/70 bg-white/80 backdrop-blur shadow-[0_24px_48px_-12px_rgba(249,168,212,0.5)]"
-                            bodyStyle={{ padding: "16px 20px 20px 20px" }}
-                        >
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-semibold text-pink-700 bg-pink-100 px-2 py-1 rounded-lg w-fit border border-pink-200/80">
-                                        Haftalık Görev
-                                    </span>
-                                    <div className="text-sm font-medium text-pink-900 mt-2 leading-snug">
-                                        {weeklyGoal.title}
-                                    </div>
-                                </div>
 
-                                <div className="text-right">
-                                    <div className="text-[10px] text-pink-400">
-                                        Ödül
-                                    </div>
-                                    <div className="text-sm font-bold text-pink-700">
-                                        +{weeklyGoal.rewardXP} XP
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center justify-between text-xs text-pink-600">
-                                <span>
-                                    İlerleme:{" "}
-                                    <strong className="text-pink-800">
-                                        {weeklyGoal.done}/{weeklyGoal.total}
-                                    </strong>
-                                </span>
-                                <span className="text-pink-500">
-                                    {progressPercent}%
-                                </span>
-                            </div>
-
-                            <Progress
-                                percent={progressPercent}
-                                showInfo={false}
-                                strokeColor={{
-                                    from: "#f9a8d4",
-                                    to: "#fbcfe8",
-                                }}
-                                trailColor="rgba(253,242,248,0.9)"
-                                className="mt-1"
-                            />
-
-                            <AntButton
-                                type="primary"
-                                className="w-full !mt-4 !h-10 !rounded-xl !font-semibold !text-white !bg-gradient-to-r !from-pink-300 !to-pink-400 !border-none shadow-lg shadow-pink-200/60 hover:!scale-[1.02] hover:!shadow-pink-300/70 transition-transform"
-                            >
-                                Görevini Tamamla
-                            </AntButton>
-                        </Card>
-                    </div>*/}
                 </section>
 
                 {/* MAIN CONTENT AREA */}
@@ -208,55 +153,10 @@ export default function GamesPage() {
                             />
                         </div>
 
-                        {/*
-    <GameCard
-      icon={<SoundFilled className="text-xl text-white" />}
-      badgeText="Dinleme"
-      title="Dinleme Mini Oyunu"
-      desc="Duyduğunu doğru kelimeyle eşleştir!"
-      xp="+4 XP"
-      cta="DİNLE ve CEVAPLA"
-      onClick={() => navigate("/game/listen")}
-    />
 
-    <GameCard
-      icon={<ClockCircleFilled className="text-xl text-white" />}
-      badgeText="Refleks"
-      title="Hızlı Tepki Testi"
-      desc="Görseli veya sesi en hızlı şekilde eşleştir!"
-      xp="+5 XP"
-      cta="BAŞLA"
-      onClick={() => navigate("/game/reaction")}
-    />
-    */}
                     </section>
                 )}
 
-                {/*
-                {activeTab === "tasks" && (
-                    <section className="flex flex-col items-center text-center py-10">
-                        <div className="text-xl font-semibold text-pink-800">
-                            Günlük Görevler
-                        </div>
-                        <p className="text-pink-600 text-sm max-w-md mt-2 leading-relaxed">
-                            Her gün belirli görevleri tamamla. XP kazan,
-                            serini bozma ve bonus ödüller aç.
-                        </p>
-
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-                            <TaskCard
-                                title="2 oyun oyna"
-                                detail="+4 XP"
-                                completed={false}
-                            />
-                            <TaskCard
-                                title="Bugünün kelimesini çöz"
-                                detail="+2 XP"
-                                completed={true}
-                            />
-                        </div>
-                    </section>
-                )}*/}
 
                 {activeTab === "profile" && (
                     <section className="flex flex-col items-center text-center py-10">
@@ -346,7 +246,7 @@ export default function GamesPage() {
     );
 }
 
-/* ------------------- Small components ------------------- */
+
 
 function GameCard({ icon, badgeText, title, desc, xp, cta, onClick }) {
     return (

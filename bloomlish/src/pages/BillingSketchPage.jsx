@@ -118,7 +118,7 @@ export default function BillingSketchPage() {
                 }
                 setShowTrialButton(false);
             } else {
-                message.error("Deneme başlatılırken bir hata oluştu.");
+                message.error("Deneme planında olduğunuz için işlem başarısız oldu.");
             }
         }
     };
@@ -254,7 +254,7 @@ export default function BillingSketchPage() {
     return (
         <Layout className="min-h-screen bg-pink-50">
             <Content className="max-w-6xl mx-auto px-10 pb-24">
-                {/* 🔹 3 GÜNLÜK ÜCRETSİZ BUTONU – sadece showTrialButton true ise */}
+                {/*  3 GÜNLÜK ÜCRETSİZ BUTONU – sadece showTrialButton true ise */}
                 {showTrialButton && (
                     <div className="text-center mt-10 mb-8">
                         <button

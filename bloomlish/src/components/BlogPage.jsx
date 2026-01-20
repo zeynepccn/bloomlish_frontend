@@ -31,7 +31,7 @@ function BlogPage() {
                 setTotalPages(res.data.totalPages);
             } catch (err) {
                 console.error(err);
-                message.error("Postlar alınamadı ");
+                message.error("The post could not be received ");
             }
         };
 
@@ -46,10 +46,10 @@ function BlogPage() {
 
             setPosts((prev) => [savedPost, ...prev]);
             setText("");
-            message.success("Post paylaşıldı ");
+            message.success("The post was shared");
         } catch (err) {
             console.error(err);
-            message.error("Post oluşturulamadı ");
+            message.error("The post could not be created ");
         }
     };
     const handleEdit = (post) => {
@@ -67,27 +67,27 @@ function BlogPage() {
 
             setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
             setIsEditModalOpen(false);
-            message.success("Post başarıyla güncellendi ");
+            message.success("The post has been successfully updated ");
         } catch (err) {
             console.error(err);
-            message.error("Post güncellenemedi ");
+            message.error("The post could not be updated");
         }
     };
     const handleDelete = (id) => {
         Modal.confirm({
-            title: "Emin misiniz?",
-            content: "Bu gönderiyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-            okText: "Evet, sil",
+            title: "Are you sure?",
+            content: "Are you sure you want to delete this post? This action cannot be undone.",
+            okText: "Yes,delete",
             okType: "danger",
-            cancelText: "Vazgeç",
+            cancelText: "Give up",
             onOk: async () => {
                 try {
                     await api.delete(`/api/posts/delete/${id}`);
                     setPosts((prev) => prev.filter((post) => post.id !== id));
-                    message.success("Post silindi ");
+                    message.success("the post was deleted ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Post silinemedi ");
+                    message.error("the post could not be deleted");
                 }
             },
         });
@@ -102,7 +102,7 @@ function BlogPage() {
             setPosts((prev) => prev.map((post) => (post.id === id ? updatedPost : post)));
         } catch (err) {
             console.error(err);
-            message.warning("Kendi postunuzu beğenemezsiniz ");
+            message.warning("You cannot like your own post ");
         }
     };
 
@@ -120,17 +120,17 @@ function BlogPage() {
             );
         } catch (err) {
             console.error(err);
-            message.error("Yorum eklenemedi ");
+            message.error("comment could not be added ");
         }
     };
 
     const handleDeleteComment = async (postId, commentId) => {
         Modal.confirm({
-            title: "Emin misiniz?",
-            content: "Bu yorumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-            okText: "Evet, sil",
+            title: "Are you sure?",
+            content: "Are you sure you want to delete this comment? This action cannot be undone.",
+            okText: "Yes,delete",
             okType: "danger",
-            cancelText: "Vazgeç",
+            cancelText: "Give up",
             onOk: async () => {
                 try {
                     await api.delete(`/api/comments/delete/${commentId}`);
@@ -142,10 +142,10 @@ function BlogPage() {
                                 : post
                         )
                     );
-                    message.success("Yorum başarıyla silindi ");
+                    message.success("the comment was successfully deleted ");
                 } catch (err) {
                     console.error(err);
-                    message.error("Yorum silinemedi ");
+                    message.error("the comment could not be deleted ");
                 }
             },
         });
@@ -166,26 +166,25 @@ function BlogPage() {
                         : post
                 )
             );
-            message.success("Yorum güncellendi ");
+            message.success("the comment has been updated ");
         } catch (err) {
             console.error(err);
-            message.error("Yorum güncellenemedi ");
+            message.error("the comment could not be updated ");
         }
     };
 
 
     return (
-        <PageLayout title="BLOG YAZILARI">
+        <PageLayout title="BLOG POSTS">
             {/* Yeni post alanı */}
             <div className="w-full max-w-md bg-pink-50 rounded-3xl shadow-lg p-6 border border-pink-200 mx-auto mb-6">
                 <p className="text-[#e01f82] mb-4 text-center font-medium">
-                    Kendi kısa yazılarını paylaş. Favori gönderilerini beğen ve yorum yap,
-                    eğlenerek dil öğren 💗🌸
+                    Share your own short writings. Like and comment on your favorite posts, learn a language while having fun 💗🌸
                 </p>
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Bugün aklında ne var?"
+                    placeholder="What's on your mind today?"
                     className="w-full border border-pink-300 rounded-2xl p-3 outline-none focus:ring-2 focus:ring-pink-300 mb-4 resize-none bg-pink-50 text-pink-800 placeholder-pink-400"
                     rows="3"
                 />
@@ -193,7 +192,7 @@ function BlogPage() {
                     onClick={handlePublish}
                     className="w-full bg-pink-400 text-white font-semibold py-2 rounded-2xl hover:bg-pink-500 transition shadow-md"
                 >
-                    Yayımla
+                    Publish
                 </button>
             </div>
 
@@ -209,7 +208,7 @@ function BlogPage() {
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-pink-300">
                                     {post.updatedAt
-                                        ? `Düzenlendi: ${new Date(post.updatedAt).toLocaleString()}`
+                                        ? `Edited: ${new Date(post.updatedAt).toLocaleString()}`
                                         : new Date(post.createdAt).toLocaleString()}
                                 </span>
                                 {post.username?.toLowerCase() === currentEmail && (
@@ -218,13 +217,13 @@ function BlogPage() {
                                             onClick={() => handleEdit(post)}
                                             className="text-blue-500 hover:text-blue-700 font-medium"
                                         >
-                                            Düzenle
+                                            Edit
                                         </button>
                                         <button
                                             onClick={() => handleDelete(post.id)}
                                             className="text-red-500 hover:text-red-700 font-medium"
                                         >
-                                            Sil
+                                            Delete
                                         </button>
                                     </>
                                 )}
@@ -267,7 +266,7 @@ function BlogPage() {
                     onClick={() => setPage(page - 1)}
                     className="px-3 py-1 bg-pink-200 rounded disabled:opacity-50"
                 >
-                    Önceki
+                    Previous
                 </button>
                 <span>{page + 1} / {totalPages}</span>
                 <button
@@ -275,16 +274,16 @@ function BlogPage() {
                     onClick={() => setPage(page + 1)}
                     className="px-3 py-1 bg-pink-200 rounded disabled:opacity-50"
                 >
-                    Sonraki
+                    Next
                 </button>
             </div>
             <Modal
-                title="Postu Düzenle"
+                title="Edit the post"
                 open={isEditModalOpen}
                 onOk={handleSaveEdit}
                 onCancel={() => setIsEditModalOpen(false)}
-                okText="Kaydet"
-                cancelText="Vazgeç"
+                okText="Save"
+                cancelText="Cancel"
             >
                 <Input.TextArea
                     rows={4}
@@ -330,7 +329,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                 <Input
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Yorum yaz..."
+                    placeholder="write a review..."
                     className="!rounded-xl"
                 />
                 <Button
@@ -338,7 +337,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                     className="!bg-pink-500 !border-pink-500 !rounded-xl hover:!bg-pink-600"
                     onClick={handleSubmit}
                 >
-                    Gönder
+                    Send
                 </Button>
             </div>
 
@@ -364,11 +363,11 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                     {!isEditing || expandedCommentId !== c.id ? (
                                         <>
                                             <div>
-                                                💬 <strong>@{c.username}</strong>: {c.text}
+                                                <strong>@{c.username}</strong>: {c.text}
                                             </div>
                                             <span className="ml-2 text-xs text-gray-500">
                                                 {c.updatedAt
-                                                    ? `Düzenlendi: ${new Date(c.updatedAt).toLocaleString()}`
+                                                    ? `Edited: ${new Date(c.updatedAt).toLocaleString()}`
                                                     : new Date(c.createdAt).toLocaleString()}
                                             </span>
                                         </>
@@ -387,7 +386,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                                     saveEdit(c.id);
                                                 }}
                                             >
-                                                Kaydet
+                                                Save
                                             </Button>
                                             <Button
                                                 size="small"
@@ -396,7 +395,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                                     setIsEditing(false);
                                                 }}
                                             >
-                                                Vazgeç
+                                                Give up
                                             </Button>
                                         </div>
                                     )}
@@ -412,7 +411,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                                     startEdit(c);
                                                 }}
                                             >
-                                                Düzenle
+                                                Edit
                                             </Button>
                                             <Button
                                                 size="small"
@@ -422,7 +421,7 @@ function CommentSection({ postId, comments = [], onAddComment, onDeleteComment, 
                                                     onDeleteComment(postId, c.id);
                                                 }}
                                             >
-                                                Sil
+                                                Delete
                                             </Button>
                                         </div>
                                     )}

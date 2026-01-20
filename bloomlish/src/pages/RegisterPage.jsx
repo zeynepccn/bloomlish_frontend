@@ -49,7 +49,7 @@ function RegisterPage() {
                 }
             );
 
-            alert("✅ Kayıt başarılı!");
+            alert(" Kayıt başarılı!");
             navigate(fromTrial ? "/login?from=trial" : "/login");
         } catch (error) {
             console.error(error);

@@ -19,7 +19,7 @@ export default function PaymentSuccess() {
         <div className="min-h-screen flex flex-col justify-center items-center bg-green-50">
 
             <h1 className="text-4xl font-bold text-green-600 mb-4">
-                Ödeme Başarılı! 🎉
+                Ödeme Başarılı! 
             </h1>
 
             <p className="text-gray-700 text-lg mb-6">

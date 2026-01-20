@@ -181,7 +181,7 @@ function ChatWidget({ currentUserId, currentUserRole }) {
 
                                     <span>{getNameFromEmail(user.email)}</span>
 
-                                    <span className="w-3 h-3 bg-green-500 rounded-full ml-auto"></span>
+                                   
                                 </div>
 
                             ))}

@@ -10,19 +10,19 @@ export default function BloomlishStartScreen() {
             title: "Kelime Geliştirme",
             desc: "Günlük kelime pratikleri ve örnek cümlelerle kelime dağarcığını geliştir.",
             icon: <BookOutlined style={{ fontSize: 38, color: "#ec4899" }} />,
-            score: "4.8 / 5",
+            
         },
         {
             title: "Konuşma Pratiği",
             desc: "Eğitmenlerle canlı ders veya AI destekli konuşma imkânlarıyla pratiğini artır.",
             icon: <MessageOutlined style={{ fontSize: 38, color: "#ec4899" }} />,
-            score: "4.8 / 5",
+         
         },
         {
             title: "Yazma Becerisi",
             desc: "Günlük yazı (Daily Notes) imkânlarıyla yazma yeteneğini geliştir.",
             icon: <EditOutlined style={{ fontSize: 38, color: "#ec4899" }} />,
-            score: "4.7 / 5",
+        
         },
     ];
 
@@ -72,7 +72,6 @@ export default function BloomlishStartScreen() {
 
                                     <div className="mt-auto text-gray-500 text-sm space-y-1">
                                         <p> Ortalama süre: 30 dk</p>
-                                        <p> Puan: {item.score}</p>
                                     </div>
                                 </div>
                             </Card>

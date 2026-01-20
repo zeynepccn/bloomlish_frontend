@@ -87,7 +87,7 @@ export default function MatchGameCard() {
     if (isLocked) return;
 
     if (!selectedWord) {
-      message.info("Önce soldan bir kelime seç 🙂");
+      message.info("Önce soldan bir kelime seç ");
       return;
     }
 
@@ -131,7 +131,7 @@ export default function MatchGameCard() {
         const data = await res.json();
         message.success(`+${data.xpGained} XP kazandın!`);
 
-        // 🔥 HER YER HABER ALSIN
+        //  HER YER HABER ALSIN
         window.dispatchEvent(new Event("xp-updated"));
 
       } catch (e) {
@@ -144,13 +144,13 @@ export default function MatchGameCard() {
     // LEVEL GEÇİŞ MODALI
     if (levelIndex < levels.length - 1) {
       Modal.success({
-        title: "Tebrikler 🎉",
+        title: "Tebrikler ",
         content: `${currentLevel} tamamlandı! ${levels[levelIndex + 1]} seviyesine geçtin.`,
         okText: "Devam",
         onOk: () => {
           const next = levelIndex + 1;
           setLevelIndex(next);
-          setXpGiven(false); // 🔁 YENİ TUR İÇİN RESET
+          setXpGiven(false); //  YENİ TUR İÇİN RESET
           fetchRound(levels[next]);
         },
       });
@@ -281,7 +281,7 @@ export default function MatchGameCard() {
 
           {finished && (
             <div style={{ marginTop: 16, padding: 12, borderRadius: 12, background: "#fff0f6" }}>
-              🎉 Hepsini eşleştirdin! Yeni tur açabilirsin.
+              Hepsini eşleştirdin! Yeni tur açabilirsin.
             </div>
           )}
         </div>
